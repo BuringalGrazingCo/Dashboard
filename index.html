@@ -755,7 +755,7 @@ function makePnLCharts(){
   charts.margins=new Chart(document.getElementById("chart-margins"),{type:"line",
     data:{labels:MS,datasets:[
       {label:"Gross Margin %",data:D.grossMarginPct,borderColor:CHART_COLORS.green,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.green,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
-      {label:"Expense Ratio %",data:D.expenseRatio,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:D.expenseRatio.map(v=>v>100?CHART_COLORS.red:v>70?CHART_COLORS.amber:CHART_COLORS.green),pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"Expense Ratio %",data:D.expenseRatio,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.red,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
       {label:"70% Benchmark",data:Array(MS.length).fill(70),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
     ]},
     options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}%`},min:0,max:120}}}
