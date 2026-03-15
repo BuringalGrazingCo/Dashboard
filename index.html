@@ -574,130 +574,139 @@ function parseLiveData(raw){
     const kpis = raw["KPI's"];
     const cf   = raw["2026 Cashflow"];
     const bs   = raw["Balance Sheet"];
-    const lvst = raw["Livestock Numbers"];
 
     if(!pnl||!kpis) return null;
 
-    // Helper: extract numeric value from a row object by col index (0-based)
-    // The Apps Script returns rows as objects with keys = header values from row 1
-    // Since row 1 has date headers, cols are keyed by date string or col_N fallback
-    // We'll use positional extraction from the raw row arrays instead
-
-    // Re-read as positional arrays — each tab's rows array, get row by index
-    // row index = spreadsheet row - 2 (since row 1 = headers, so array index 0 = row 2)
-    const pnlRows  = pnl;
-    const kpiRows  = kpis;
-    const cfRows   = cf;
-    const bsRows   = bs;
-
-    // Get numeric value from a row object at column position (0=first data col)
-    function getVal(rows, rowIdx, colIdx){
-      if(!rows||rowIdx>=rows.length) return 0;
-      const row=rows[rowIdx];
-      if(!row) return 0;
-      const vals=Object.values(row);
-      const v=vals[colIdx];
-      if(v===undefined||v===null||v==="") return 0;
-      if(typeof v==="number") return v;
-      const n=parseFloat(String(v).replace(/[$,%\s,()]/g,"").trim());
-      return isNaN(n)?0:(String(v).includes("(")&&String(v).includes(")")?-n:n);
+    // ── Helper: find a row by searching for a label in the first column ──
+    function findRow(rows, labelSearch){
+      if(!rows) return null;
+      return rows.find(r=>{
+        const vals=Object.values(r);
+        const first=String(vals[0]||"").trim().toLowerCase();
+        return first.includes(labelSearch.toLowerCase());
+      })||null;
     }
 
-    // P&L tab: row 2=GP (idx 0), row 4=DirectCosts (idx 2), row 6=GrossMargin (idx 4)
-    // row 8=Overheads (idx 6), row 11=EBIT (idx 9), row 13=Interest (idx 11)
-    // row 15=NetProfit (idx 13), row 17=DSE (idx 15)
-    // Cols: B=Jul25(idx 1), C=Aug25(idx 2)... I=Feb26(idx 8) — but row objects skip col A label
-    // After parsing, col index 0=col A(label), 1=colB(Jul25)...8=colI(Feb26)
+    // ── Helper: extract monthly values (8 months) from a row ──
+    // Skips the first column (label), takes next 8 numeric values
+    function getMonths(row){
+      if(!row) return Array(8).fill(0);
+      const vals=Object.values(row);
+      const result=[];
+      // Find where numbers start (skip label cols)
+      let started=false;
+      for(let i=0;i<vals.length&&result.length<8;i++){
+        const v=vals[i];
+        const s=String(v||"").trim();
+        // Skip empty and text-only columns
+        if(s===""||s===null) { if(started) result.push(0); continue; }
+        const isNum=typeof v==="number"||(!isNaN(parseFloat(s.replace(/[$,%\s,()/]/g,""))));
+        if(isNum&&!isNaN(parseFloat(s.replace(/[$,%\s,()/]/g,"")))){
+          const n=parseFloat(s.replace(/[$,%\s,]/g,"").replace("(","-").replace(")",""));
+          result.push(isNaN(n)?0:n);
+          started=true;
+        } else if(started){
+          result.push(0);
+        }
+      }
+      while(result.length<8) result.push(0);
+      return result.slice(0,8);
+    }
 
-    const months=8;
+    // ── P&L tab ───────────────────────────────────────────────
+    const gpRow    = findRow(pnl,"Gross Profit");
+    const dcRow    = findRow(pnl,"Direct Costs");
+    const gmRow    = findRow(pnl,"Gross Margin");
+    const ohRow    = findRow(pnl,"Overheads");
+    const ebitRow  = findRow(pnl,"EBIT");
+    const intRow   = findRow(pnl,"Interest");
+    const npRow    = findRow(pnl,"Net Profit");
+    const dseRow   = findRow(pnl,"DSE");
+
+    // ── KPI's tab ─────────────────────────────────────────────
+    const gmPctRow = findRow(kpis,"Gross Margin");
+    const ohPctRow = findRow(kpis,"OH Ratio");
+    const expRow   = findRow(kpis,"Expense Ratio");
+    const roamRow  = findRow(kpis,"Return On Assets");
+    const roeRow   = findRow(kpis,"Return on Equity");
+    const gmdseRow = findRow(kpis,"GM/DSE");
+    const icRow    = findRow(kpis,"Interest Cover");
+    const iaGPRow  = findRow(kpis,"Interest as % GP");
+
+    // ── 2026 Cashflow tab ─────────────────────────────────────
+    const cafdsRow = cf ? findRow(cf,"Cash Available for Debt Service") : null;
+    const cadsRow  = cf ? findRow(cf,"Cash After Debt Service") : null;
+
+    // ── Balance Sheet tab ─────────────────────────────────────
+    const assetsRow = bs ? findRow(bs,"Total Assets") : null;
+    const liabRow   = bs ? findRow(bs,"Total Liabilities") : null;
+    const equityRow = bs ? findRow(bs,"Equity") : null;
+    const nab1Row   = bs ? findRow(bs,"NAB Loan") : null;
+    // NAB Loan 2 = find second NAB loan row
+    let nab2Row = null;
+    if(bs){
+      const nabRows=bs.filter(r=>String(Object.values(r)[0]||"").toLowerCase().includes("nab loan"));
+      if(nabRows.length>=2) nab2Row=nabRows[1];
+      else nab2Row=nabRows[0]||null;
+    }
+
+    // ── Build result ──────────────────────────────────────────
     const result={
-      months:FALLBACK.months,
-      monthsShort:FALLBACK.monthsShort,
-      grossProfit:   [],directCosts:[],grossMargin:[],overheads:[],
-      ebit:          [],interest:   [],netProfit:  [],dse:       [],
-      grossMarginPct:[],expenseRatio:[],ohRatio:   [],roam:      [],
-      roe:           [],gmDse:      [],interestCover:[],interestAsGP:[],
-      cafds:         [],cashAfterDS:[],
-      totalAssets:   [],totalLiab:  [],equity:     [],
-      nab1:          [],nab2:       [],
+      months:        FALLBACK.months,
+      monthsShort:   FALLBACK.monthsShort,
+      grossProfit:   getMonths(gpRow),
+      directCosts:   getMonths(dcRow),
+      grossMargin:   getMonths(gmRow),
+      overheads:     getMonths(ohRow),
+      ebit:          getMonths(ebitRow),
+      interest:      getMonths(intRow),
+      netProfit:     getMonths(npRow),
+      dse:           getMonths(dseRow),
+      grossMarginPct:getMonths(gmPctRow),
+      ohRatio:       getMonths(ohPctRow),
+      expenseRatio:  getMonths(expRow),
+      roam:          getMonths(roamRow),
+      roe:           getMonths(roeRow),
+      gmDse:         getMonths(gmdseRow),
+      interestCover: getMonths(icRow),
+      interestAsGP:  getMonths(iaGPRow),
+      cafds:         cafdsRow  ? getMonths(cafdsRow)  : FALLBACK.cafds,
+      cashAfterDS:   cadsRow   ? getMonths(cadsRow)   : FALLBACK.cashAfterDS,
+      totalAssets:   assetsRow ? getMonths(assetsRow) : FALLBACK.totalAssets,
+      totalLiab:     liabRow   ? getMonths(liabRow)   : FALLBACK.totalLiab,
+      equity:        equityRow ? getMonths(equityRow) : FALLBACK.equity,
+      nab1:          nab1Row   ? getMonths(nab1Row)   : FALLBACK.nab1,
+      nab2:          nab2Row   ? getMonths(nab2Row)   : FALLBACK.nab2,
       eyci:          FALLBACK.eyci,
     };
 
-    for(let m=0;m<months;m++){
-      const c=m+1; // col index: 1=Jul25, 2=Aug25...8=Feb26
-      result.grossProfit.push(   getVal(pnlRows, 0,  c));
-      result.directCosts.push(   getVal(pnlRows, 2,  c));
-      result.grossMargin.push(   getVal(pnlRows, 4,  c));
-      result.overheads.push(     getVal(pnlRows, 6,  c));
-      result.ebit.push(          getVal(pnlRows, 9,  c));
-      result.interest.push(      getVal(pnlRows, 11, c));
-      result.netProfit.push(     getVal(pnlRows, 13, c));
-      result.dse.push(           getVal(pnlRows, 15, c));
+    // Sanity check — gross profit should be > $100k
+    if(result.grossProfit.every(v=>Math.abs(v)<100000)){
+      console.warn("parseLiveData: GP values look wrong, using fallback",result.grossProfit);
+      return null;
     }
 
-    // KPI's tab: row 1=headers, row 3=Equity(idx1), row 7=GrossMarginRatio(idx5)
-    // row 8=OHRatio(idx6), row 9=ExpenseRatio(idx7), row 10=ROAM(idx8)
-    // row 11=ROE(idx9), row 13=GM/DSE(idx11), row 17=InterestCover(idx15), row 20=InterestAsGP(idx18)
-    // Cols: C=Jul25(idx2), D=Aug25(idx3)...J=Feb26(idx9)
-    for(let m=0;m<months;m++){
-      const c=m+2; // col index: 2=Jul25...9=Feb26
-      result.grossMarginPct.push( getVal(kpiRows, 5,  c)*100||getVal(kpiRows,5,c));
-      result.ohRatio.push(        getVal(kpiRows, 6,  c)*100||getVal(kpiRows,6,c));
-      result.expenseRatio.push(   getVal(kpiRows, 7,  c)*100||getVal(kpiRows,7,c));
-      result.roam.push(           getVal(kpiRows, 8,  c)*100||getVal(kpiRows,8,c));
-      result.roe.push(            getVal(kpiRows, 9,  c)*100||getVal(kpiRows,9,c));
-      result.gmDse.push(          getVal(kpiRows, 11, c));
-      result.interestCover.push(  getVal(kpiRows, 15, c));
-      result.interestAsGP.push(   getVal(kpiRows, 18, c)*100||getVal(kpiRows,18,c));
-    }
+    // Fix percentage values stored as decimals (0.84 → 84%)
+    const fixPct=arr=>arr.map(v=>Math.abs(v)>0&&Math.abs(v)<=2?v*100:v);
+    result.grossMarginPct = fixPct(result.grossMarginPct);
+    result.expenseRatio   = fixPct(result.expenseRatio);
+    result.ohRatio        = fixPct(result.ohRatio);
+    result.roam           = fixPct(result.roam);
+    result.roe            = fixPct(result.roe);
+    result.interestAsGP   = fixPct(result.interestAsGP);
 
-    // Cashflow tab: row 7=CAFDS(idx5), row 12=CashAfterDS(idx10)
-    // Cols: B=Jul25(idx1)...I=Feb26(idx8)
-    if(cfRows){
-      for(let m=0;m<months;m++){
-        const c=m+1;
-        result.cafds.push(      getVal(cfRows, 5,  c));
-        result.cashAfterDS.push(getVal(cfRows, 10, c));
-      }
-    } else {
-      result.cafds=FALLBACK.cafds;
-      result.cashAfterDS=FALLBACK.cashAfterDS;
-    }
-
-    // Balance Sheet: rows counted from row 1 header
-    // Total Assets row 40 = idx 38, Total Liabilities row 65 = idx 63, Equity row 67 = idx 65
-    // NAB Loan row 57 = idx 55, NAB Loan Part Nundle row 58 = idx 56
-    // Cols: D=Jul25(idx3)...K=Feb26(idx10)
-    if(bsRows){
-      for(let m=0;m<months;m++){
-        const c=m+3;
-        result.totalAssets.push( getVal(bsRows, 38, c));
-        result.totalLiab.push(   getVal(bsRows, 63, c));
-        result.equity.push(      getVal(bsRows, 65, c));
-        result.nab1.push(        getVal(bsRows, 55, c));
-        result.nab2.push(        getVal(bsRows, 56, c));
-      }
-    } else {
-      result.totalAssets=FALLBACK.totalAssets;
-      result.totalLiab=FALLBACK.totalLiab;
-      result.equity=FALLBACK.equity;
-      result.nab1=FALLBACK.nab1;
-      result.nab2=FALLBACK.nab2;
-    }
-
-    // Sanity check — if all zeros something went wrong, use fallback
-    if(result.grossProfit.every(v=>v===0)) return null;
-
-    // Fix percentage values — KPI sheet stores as decimals (0.84 not 84)
-    const fixPct=(arr)=>arr.map(v=>Math.abs(v)<=1.5?v*100:v);
-    result.grossMarginPct=fixPct(result.grossMarginPct);
-    result.expenseRatio  =fixPct(result.expenseRatio);
-    result.ohRatio       =fixPct(result.ohRatio);
-    result.roam          =fixPct(result.roam);
-    result.roe           =fixPct(result.roe);
-    result.interestAsGP  =fixPct(result.interestAsGP);
+    console.log("parseLiveData success:",{
+      gp: result.grossProfit,
+      ic: result.interestCover,
+      gm: result.grossMarginPct,
+    });
 
     return result;
+  }catch(e){
+    console.error("parseLiveData error:",e);
+    return null;
+  }
+}
   }catch(e){
     console.error("parseLiveData error:",e);
     return null;
