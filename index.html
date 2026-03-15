@@ -711,11 +711,6 @@ function parseLiveData(raw){
     return null;
   }
 }
-  }catch(e){
-    console.error("parseLiveData error:",e);
-    return null;
-  }
-}
 
 // CHART HELPERS
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
