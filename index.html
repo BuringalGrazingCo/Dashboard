@@ -539,19 +539,169 @@ async function syncData(silent){
     clearTimeout(timeout);
     const json=await res.json();
     if(json.status==="ok"){
-      usingLive=true;
+      const parsed=parseLiveData(json.data);
+      if(parsed){
+        D=parsed;
+        usingLive=true;
+        // Refresh current tab charts with live data
+        setTab(currentTab);
+      }
       const t=new Date(json.updated).toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
       const pill=document.getElementById("data-pill");
       pill.className="data-pill";
-      document.getElementById("data-pill-text").textContent=`Google Sheets (Live) · ${t}`;
+      pill.querySelector("#data-pill-text").textContent=`Google Sheets (Live) · ${t}`;
     }else{throw new Error(json.message);}
   }catch(e){
     usingLive=false;
     const pill=document.getElementById("data-pill");
     pill.className="data-pill offline";
-    document.getElementById("data-pill-text").textContent="Snapshot — Feb 26";
+    pill.querySelector("#data-pill-text").textContent="Snapshot — Feb 26";
   }
   if(!silent){btn.disabled=false;btn.textContent="↻ Sync";}
+}
+
+// ── LIVE DATA PARSER ─────────────────────────────────────────
+// Maps your Google Sheet structure to dashboard data
+// Tab: 2026 P&L — cols B-I = Jul25→Feb26, rows: 2=GP,4=DirectCosts,6=GrossMargin,8=Overheads,11=EBIT,13=Interest,15=NetProfit,17=DSE
+// Tab: KPI's — cols C-J = Jul25→Feb26, rows: 7=GrossMarginRatio,8=OHRatio,9=ExpenseRatio,10=ROAM,11=ROE,13=GM/DSE,17=InterestCover,20=InterestAsGP
+// Tab: 2026 Cashflow — cols B-I = Jul25→Feb26, rows: 7=CAFDS,12=CashAfterDS
+// Tab: Balance Sheet — cols D-K = Jul25→Feb26, rows: 40=TotalAssets,65=TotalLiabilities,67=Equity
+// Tab: Livestock Numbers — col B, rows: 4=CommBreeders,5=PTICRecipients,6=RegBreeders,7=Donors,8=HeiferComm,9=HeiferReg,10=Steers
+
+function parseLiveData(raw){
+  try{
+    const pnl  = raw["2026 P&L"];
+    const kpis = raw["KPI's"];
+    const cf   = raw["2026 Cashflow"];
+    const bs   = raw["Balance Sheet"];
+    const lvst = raw["Livestock Numbers"];
+
+    if(!pnl||!kpis) return null;
+
+    // Helper: extract numeric value from a row object by col index (0-based)
+    // The Apps Script returns rows as objects with keys = header values from row 1
+    // Since row 1 has date headers, cols are keyed by date string or col_N fallback
+    // We'll use positional extraction from the raw row arrays instead
+
+    // Re-read as positional arrays — each tab's rows array, get row by index
+    // row index = spreadsheet row - 2 (since row 1 = headers, so array index 0 = row 2)
+    const pnlRows  = pnl;
+    const kpiRows  = kpis;
+    const cfRows   = cf;
+    const bsRows   = bs;
+
+    // Get numeric value from a row object at column position (0=first data col)
+    function getVal(rows, rowIdx, colIdx){
+      if(!rows||rowIdx>=rows.length) return 0;
+      const row=rows[rowIdx];
+      if(!row) return 0;
+      const vals=Object.values(row);
+      const v=vals[colIdx];
+      if(v===undefined||v===null||v==="") return 0;
+      if(typeof v==="number") return v;
+      const n=parseFloat(String(v).replace(/[$,%\s,()]/g,"").trim());
+      return isNaN(n)?0:(String(v).includes("(")&&String(v).includes(")")?-n:n);
+    }
+
+    // P&L tab: row 2=GP (idx 0), row 4=DirectCosts (idx 2), row 6=GrossMargin (idx 4)
+    // row 8=Overheads (idx 6), row 11=EBIT (idx 9), row 13=Interest (idx 11)
+    // row 15=NetProfit (idx 13), row 17=DSE (idx 15)
+    // Cols: B=Jul25(idx 1), C=Aug25(idx 2)... I=Feb26(idx 8) — but row objects skip col A label
+    // After parsing, col index 0=col A(label), 1=colB(Jul25)...8=colI(Feb26)
+
+    const months=8;
+    const result={
+      months:FALLBACK.months,
+      monthsShort:FALLBACK.monthsShort,
+      grossProfit:   [],directCosts:[],grossMargin:[],overheads:[],
+      ebit:          [],interest:   [],netProfit:  [],dse:       [],
+      grossMarginPct:[],expenseRatio:[],ohRatio:   [],roam:      [],
+      roe:           [],gmDse:      [],interestCover:[],interestAsGP:[],
+      cafds:         [],cashAfterDS:[],
+      totalAssets:   [],totalLiab:  [],equity:     [],
+      nab1:          [],nab2:       [],
+      eyci:          FALLBACK.eyci,
+    };
+
+    for(let m=0;m<months;m++){
+      const c=m+1; // col index: 1=Jul25, 2=Aug25...8=Feb26
+      result.grossProfit.push(   getVal(pnlRows, 0,  c));
+      result.directCosts.push(   getVal(pnlRows, 2,  c));
+      result.grossMargin.push(   getVal(pnlRows, 4,  c));
+      result.overheads.push(     getVal(pnlRows, 6,  c));
+      result.ebit.push(          getVal(pnlRows, 9,  c));
+      result.interest.push(      getVal(pnlRows, 11, c));
+      result.netProfit.push(     getVal(pnlRows, 13, c));
+      result.dse.push(           getVal(pnlRows, 15, c));
+    }
+
+    // KPI's tab: row 1=headers, row 3=Equity(idx1), row 7=GrossMarginRatio(idx5)
+    // row 8=OHRatio(idx6), row 9=ExpenseRatio(idx7), row 10=ROAM(idx8)
+    // row 11=ROE(idx9), row 13=GM/DSE(idx11), row 17=InterestCover(idx15), row 20=InterestAsGP(idx18)
+    // Cols: C=Jul25(idx2), D=Aug25(idx3)...J=Feb26(idx9)
+    for(let m=0;m<months;m++){
+      const c=m+2; // col index: 2=Jul25...9=Feb26
+      result.grossMarginPct.push( getVal(kpiRows, 5,  c)*100||getVal(kpiRows,5,c));
+      result.ohRatio.push(        getVal(kpiRows, 6,  c)*100||getVal(kpiRows,6,c));
+      result.expenseRatio.push(   getVal(kpiRows, 7,  c)*100||getVal(kpiRows,7,c));
+      result.roam.push(           getVal(kpiRows, 8,  c)*100||getVal(kpiRows,8,c));
+      result.roe.push(            getVal(kpiRows, 9,  c)*100||getVal(kpiRows,9,c));
+      result.gmDse.push(          getVal(kpiRows, 11, c));
+      result.interestCover.push(  getVal(kpiRows, 15, c));
+      result.interestAsGP.push(   getVal(kpiRows, 18, c)*100||getVal(kpiRows,18,c));
+    }
+
+    // Cashflow tab: row 7=CAFDS(idx5), row 12=CashAfterDS(idx10)
+    // Cols: B=Jul25(idx1)...I=Feb26(idx8)
+    if(cfRows){
+      for(let m=0;m<months;m++){
+        const c=m+1;
+        result.cafds.push(      getVal(cfRows, 5,  c));
+        result.cashAfterDS.push(getVal(cfRows, 10, c));
+      }
+    } else {
+      result.cafds=FALLBACK.cafds;
+      result.cashAfterDS=FALLBACK.cashAfterDS;
+    }
+
+    // Balance Sheet: rows counted from row 1 header
+    // Total Assets row 40 = idx 38, Total Liabilities row 65 = idx 63, Equity row 67 = idx 65
+    // NAB Loan row 57 = idx 55, NAB Loan Part Nundle row 58 = idx 56
+    // Cols: D=Jul25(idx3)...K=Feb26(idx10)
+    if(bsRows){
+      for(let m=0;m<months;m++){
+        const c=m+3;
+        result.totalAssets.push( getVal(bsRows, 38, c));
+        result.totalLiab.push(   getVal(bsRows, 63, c));
+        result.equity.push(      getVal(bsRows, 65, c));
+        result.nab1.push(        getVal(bsRows, 55, c));
+        result.nab2.push(        getVal(bsRows, 56, c));
+      }
+    } else {
+      result.totalAssets=FALLBACK.totalAssets;
+      result.totalLiab=FALLBACK.totalLiab;
+      result.equity=FALLBACK.equity;
+      result.nab1=FALLBACK.nab1;
+      result.nab2=FALLBACK.nab2;
+    }
+
+    // Sanity check — if all zeros something went wrong, use fallback
+    if(result.grossProfit.every(v=>v===0)) return null;
+
+    // Fix percentage values — KPI sheet stores as decimals (0.84 not 84)
+    const fixPct=(arr)=>arr.map(v=>Math.abs(v)<=1.5?v*100:v);
+    result.grossMarginPct=fixPct(result.grossMarginPct);
+    result.expenseRatio  =fixPct(result.expenseRatio);
+    result.ohRatio       =fixPct(result.ohRatio);
+    result.roam          =fixPct(result.roam);
+    result.roe           =fixPct(result.roe);
+    result.interestAsGP  =fixPct(result.interestAsGP);
+
+    return result;
+  }catch(e){
+    console.error("parseLiveData error:",e);
+    return null;
+  }
 }
 
 // CHART HELPERS
@@ -722,15 +872,28 @@ function makeMarketsCharts(){
 
 // KPI CARDS
 function renderKPIs(){
+  const latest=D.grossProfit.length-1;
+  const gp=D.grossProfit[latest];
+  const np=D.netProfit[latest];
+  const ic=D.interestCover[latest];
+  const dse=D.dse[latest];
+  const gmd=D.gmDse[latest];
+  const roam=D.roam[latest];
+  const gm=D.grossMarginPct[latest];
+  const eq=D.equity[latest];
+  const assets=D.totalAssets[latest];
+  const eqPct=assets>0?((eq/assets)*100).toFixed(1):89;
+
+  const npFmt=np<0?`-$${Math.abs(np/1000).toFixed(0)}k`:`$${(np/1000).toFixed(0)}k`;
   const kpis=[
-    {label:"Total Assets",   v:"$32.78M", cls:"neutral", sub:"↓ from $34.67M Jul 25",    sub_cls:""},
-    {label:"Equity Ratio",   v:"89%",     cls:"good",    sub:"$29.23M net equity",         sub_cls:"good"},
-    {label:"Net Profit (Feb)",v:"-$166k", cls:"warn",    sub:"Loss month — monitor closely",sub_cls:"warn"},
-    {label:"Interest Cover", v:"0.06x",   cls:"warn",    sub:"Benchmark >1.75x",           sub_cls:"warn"},
-    {label:"DSE Load",       v:"20,538",  cls:"good",    sub:"↓ from 26,618 peak (Sep 25)",sub_cls:"good"},
-    {label:"GM per DSE",     v:"$36.58",  cls:"warn",    sub:"Benchmark >$65",             sub_cls:"warn"},
-    {label:"ROAM",           v:"0.03%",   cls:"warn",    sub:"Benchmark >4%",              sub_cls:"warn"},
-    {label:"Gross Margin",   v:"58.97%",  cls:"warn",    sub:"Benchmark >70%",             sub_cls:"warn"},
+    {label:"Total Assets",   v:fmtK(assets||32782674), cls:"neutral", sub:`Equity: ${fmtK(eq||29233555)}`,  sub_cls:""},
+    {label:"Equity Ratio",   v:`${eqPct}%`,            cls:"good",    sub:"Strong asset backing",            sub_cls:"good"},
+    {label:"Net Profit",     v:npFmt,                  cls:np<0?"warn":"good", sub:np<0?"Loss — monitor closely":"Profitable month", sub_cls:np<0?"warn":"good"},
+    {label:"Interest Cover", v:`${ic.toFixed(2)}x`,    cls:ic>=1.75?"good":ic>=1?"neutral":"warn", sub:"Benchmark >1.75x", sub_cls:ic<1.75?"warn":"good"},
+    {label:"DSE Load",       v:(dse||20538).toLocaleString(), cls:"good", sub:"Reducing towards target", sub_cls:"good"},
+    {label:"GM per DSE",     v:`$${(gmd||36.58).toFixed(2)}`, cls:gmd>=65?"good":gmd>=45?"neutral":"warn", sub:"Benchmark >$65", sub_cls:gmd<65?"warn":"good"},
+    {label:"ROAM",           v:`${(roam||0.03).toFixed(2)}%`, cls:roam>=4?"good":roam>=2?"neutral":"warn",  sub:"Benchmark >4%",  sub_cls:roam<4?"warn":"good"},
+    {label:"Gross Margin",   v:`${(gm||58.97).toFixed(1)}%`,  cls:gm>=70?"good":gm>=55?"neutral":"warn",   sub:"Benchmark >70%", sub_cls:gm<70?"warn":"good"},
   ];
   document.getElementById("kpi-grid").innerHTML=kpis.map(k=>`
     <div class="kpi-card ${k.cls}">
