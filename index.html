@@ -428,11 +428,11 @@ a{color:#60a5fa;text-decoration:none}
 const CONFIG = {
   // Paste your Google Apps Script Web App URL here after deploying
   // It will look like: https://script.google.com/macros/s/XXXX/exec
-  SHEET_API_URL: "https://script.google.com/macros/s/AKfycbz0PTaIQsEzi6bYGPY9FQw8Fd3VsPHJBGPmgdvyK4ltkjtnwdYA3E_MxuNaZfUT15XJJg/exec",
+  SHEET_API_URL: "YOUR_APPS_SCRIPT_URL_HERE",
 
   // Paste your Cloudflare Worker URL here after deploying
   // It will look like: https://buringal-api.YOUR-SUBDOMAIN.workers.dev
-  WORKER_URL: "https://buringal-api.ryanschmitt00.workers.dev",
+  WORKER_URL: "YOUR_WORKER_URL_HERE",
 
   // Users: { username: { password, role, name, tabs } }
   // tabs: which tabs this user can see ("all" or array of tab names)
@@ -643,8 +643,15 @@ async function syncData(silent) {
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
-    const res = await fetch(CONFIG.SHEET_API_URL, { signal: controller.signal });
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    // Route through Cloudflare Worker to avoid CORS block
+    const fetchUrl = CONFIG.WORKER_URL && CONFIG.WORKER_URL !== "YOUR_WORKER_URL_HERE"
+      ? CONFIG.WORKER_URL
+      : CONFIG.SHEET_API_URL;
+    const fetchOptions = CONFIG.WORKER_URL && CONFIG.WORKER_URL !== "YOUR_WORKER_URL_HERE"
+      ? { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ action: "sheets", url: CONFIG.SHEET_API_URL }), signal: controller.signal }
+      : { signal: controller.signal };
+    const res = await fetch(fetchUrl, fetchOptions);
     clearTimeout(timeout);
     const json = await res.json();
     if (json.status === "ok") {
