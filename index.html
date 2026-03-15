@@ -649,10 +649,12 @@ async function syncData(silent) {
     const json = await res.json();
     if (json.status === "ok") {
       liveData = json.data;
-      D = parseLiveData(liveData) || FALLBACK;
+      const parsed = parseLiveData(liveData);
+      if (parsed) D = parsed;
+      // else keep FALLBACK data but still show Live connection status
       usingLive = true;
       const t = new Date(json.updated).toLocaleTimeString("en-AU", {hour:"2-digit",minute:"2-digit"});
-      updateDataBanner(true, `Live from Google Sheets · Updated ${t}`);
+      updateDataBanner(true, `Connected to Google Sheets · Charts show Feb 26 actuals · Updated ${t}`);
       status.textContent = `Synced ${t}`;
       status.className = "sync-status live";
     } else {
@@ -676,15 +678,27 @@ function updateDataBanner(live, msg) {
 }
 
 // Parse live Google Sheets data into the same structure as FALLBACK
-// Adapt this function once you know your exact sheet tab/column names
 function parseLiveData(raw) {
   try {
-    // Try common tab names from your sheet
-    const pnlTab = raw["P&L"] || raw["Cashflow"] || raw["Summary"] || null;
-    if (!pnlTab || !pnlTab.length) return null;
+    // Check we have data from the sheet
+    const tabs = Object.keys(raw);
+    if (!tabs.length) return null;
 
-    // If your sheet has a recognisable structure, map it here
-    // For now return null to use fallback — update after seeing your actual column names
+    // We can confirm connection is live — data is flowing
+    // The sheet tabs visible are: Balance Sheet, KPI's, P&L, Equity, Gross Margin Ratio etc
+    // For now return FALLBACK data but mark connection as live
+    // Full column mapping will be added once sheet structure is confirmed
+    const pnl  = raw["P&L"] || raw["Cashflow"] || null;
+    const bal  = raw["Balance Sheet"] || null;
+    const kpis = raw["KPI's"] || raw["KPIs"] || null;
+
+    // If we can read at least one tab we know the connection works
+    if (pnl || bal || kpis) {
+      // Return null here to use FALLBACK display data for now
+      // but the banner will show Live because json.status === "ok"
+      return null;
+    }
+
     return null;
   } catch(e) {
     return null;
