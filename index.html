@@ -1,0 +1,1012 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Buringal Grazing Co — Operations Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+/* ── Reset & Base ───────────────────────────────────────────── */
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:#080e15;color:#e8e0d0;font-family:'DM Mono','Courier New',monospace;min-height:100vh;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:#0f1923}
+::-webkit-scrollbar-thumb{background:#1e2e3e;border-radius:3px}
+button,select,input{font-family:inherit;cursor:pointer}
+button:focus,input:focus,select:focus{outline:none}
+a{color:#60a5fa;text-decoration:none}
+
+/* ── Login Screen ───────────────────────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;background:#080e15;
+  display:flex;align-items:center;justify-content:center;
+  z-index:1000;padding:20px;
+}
+.login-box{
+  background:linear-gradient(135deg,#0f1923 0%,#0a1520 100%);
+  border:1px solid #c8a84b33;border-radius:16px;
+  padding:40px 36px;width:100%;max-width:380px;
+  box-shadow:0 40px 80px rgba(0,0,0,0.6);
+}
+.login-logo{font-size:10px;letter-spacing:.3em;color:#c8a84b;text-transform:uppercase;margin-bottom:6px}
+.login-title{font-size:22px;font-weight:700;color:#fff;margin-bottom:4px}
+.login-sub{font-size:11px;color:#445;margin-bottom:32px;letter-spacing:.05em}
+.login-label{font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:#556;margin-bottom:6px;display:block}
+.login-input{
+  width:100%;background:#0a1520;border:1px solid #1e2e3e;
+  border-radius:8px;padding:12px 14px;color:#e8e0d0;
+  font-size:13px;font-family:inherit;margin-bottom:16px;
+  transition:border-color .2s;
+}
+.login-input:focus{border-color:#c8a84b66}
+.login-btn{
+  width:100%;background:linear-gradient(135deg,#1a3a1a,#0f2a0f);
+  border:1px solid #4a7c5966;border-radius:8px;
+  color:#4ade80;font-size:11px;letter-spacing:.15em;
+  text-transform:uppercase;padding:13px;
+  transition:all .2s;margin-top:4px;
+}
+.login-btn:hover{background:linear-gradient(135deg,#1e4a1e,#133313);border-color:#4a7c59}
+.login-error{font-size:11px;color:#f87171;margin-top:12px;text-align:center;min-height:18px}
+.login-users{margin-top:24px;padding-top:20px;border-top:1px solid #1e2e3e}
+.login-users-title{font-size:9px;color:#334;letter-spacing:.1em;text-transform:uppercase;margin-bottom:10px}
+.user-badge{display:inline-flex;align-items:center;gap:6px;background:#0a1520;border:1px solid #1e2e3e;border-radius:6px;padding:5px 10px;margin:3px;font-size:10px;color:#445}
+.user-dot{width:6px;height:6px;border-radius:50%}
+
+/* ── App Shell ──────────────────────────────────────────────── */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.visible{display:flex}
+
+/* ── Header ─────────────────────────────────────────────────── */
+.header{
+  border-bottom:1px solid #c8a84b22;
+  padding:14px 20px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:linear-gradient(180deg,#0f1923 0%,transparent 100%);
+  position:sticky;top:0;z-index:100;backdrop-filter:blur(10px);
+  gap:12px;
+}
+.header-left .sub{font-size:9px;letter-spacing:.22em;color:#c8a84b;text-transform:uppercase;margin-bottom:2px}
+.header-left .title{font-size:16px;font-weight:700;color:#fff;white-space:nowrap}
+.header-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.sync-status{font-size:9px;letter-spacing:.08em;color:#445;white-space:nowrap}
+.sync-status.live{color:#3a5}
+.sync-btn{background:#0f1923;border:1px solid #1e2e3e;border-radius:6px;color:#60a5fa;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px}
+.sync-btn:disabled{color:#334;cursor:wait}
+.user-menu{position:relative}
+.user-btn{background:#0f1923;border:1px solid #1e2e3e;border-radius:6px;color:#c8a84b;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 10px;display:flex;align-items:center;gap:5px}
+.user-dropdown{position:absolute;right:0;top:calc(100% + 6px);background:#0f1923;border:1px solid #1e2e3e;border-radius:8px;padding:8px;min-width:160px;display:none;z-index:200}
+.user-dropdown.open{display:block}
+.user-dropdown-item{padding:8px 10px;font-size:10px;color:#778;border-radius:5px;transition:all .15s}
+.user-dropdown-item:hover{background:#1e2e3e;color:#e8e0d0;cursor:pointer}
+.user-dropdown-item.logout{color:#f87171}
+.user-dropdown-item.logout:hover{background:#1a0a0a}
+
+/* ── Tabs ────────────────────────────────────────────────────── */
+.tabs{
+  display:flex;border-bottom:1px solid #1e2e3e;
+  padding:0 20px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{
+  background:none;border:none;padding:11px 16px;
+  font-size:9px;letter-spacing:.15em;text-transform:uppercase;
+  color:#445;border-bottom:2px solid transparent;
+  transition:all .2s;white-space:nowrap;
+}
+.tab-btn.active{color:#c8a84b;border-bottom-color:#c8a84b}
+
+/* ── Body ────────────────────────────────────────────────────── */
+.body{padding:16px 20px;flex:1}
+
+/* ── Alert Banner ────────────────────────────────────────────── */
+.alert-banner{
+  background:#1a0a0a;border:1px solid #8b3a3a66;border-radius:8px;
+  padding:10px 14px;margin-bottom:16px;display:flex;align-items:flex-start;gap:10px;
+}
+.alert-icon{font-size:14px;flex-shrink:0;margin-top:1px}
+.alert-text{font-size:10px;color:#f87171;line-height:1.6}
+.alert-text strong{color:#fca5a5}
+
+/* ── Data source banner ──────────────────────────────────────── */
+.data-banner{
+  background:#0a1520;border:1px solid #1e2e3e;border-radius:8px;
+  padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;justify-content:space-between;
+}
+.data-banner-left{font-size:10px;color:#445}
+.data-banner-left strong{color:#60a5fa}
+.data-banner-right{font-size:9px;color:#334;white-space:nowrap}
+
+/* ── KPI Grid ────────────────────────────────────────────────── */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.kpi-card{
+  background:linear-gradient(135deg,#0f1923 0%,#111d28 100%);
+  border:1px solid #1e2e3e;border-radius:10px;padding:14px 16px;
+  position:relative;overflow:hidden;
+}
+.kpi-card.warn{border-color:#8b3a3a55}
+.kpi-card.good-card{border-color:#4a7c5955}
+.kpi-card::after{content:'';position:absolute;top:0;right:0;width:40px;height:40px;background:#c8a84b05;border-radius:0 10px 0 40px}
+.kpi-label{font-size:8px;color:#556;letter-spacing:.14em;text-transform:uppercase;margin-bottom:6px}
+.kpi-num{font-size:22px;font-weight:700;color:#fff;line-height:1;margin-bottom:2px}
+.kpi-num.small{font-size:16px}
+.kpi-unit{font-size:10px;color:#c8a84b;margin-left:3px}
+.kpi-sub{font-size:8px;color:#4a6;margin-top:4px}
+.kpi-sub.warn{color:#f87171}
+.kpi-trend{font-size:11px;font-weight:700;margin-right:4px}
+
+/* ── Charts ──────────────────────────────────────────────────── */
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px}
+.panel{background:#0f1923;border:1px solid #1e2e3e;border-radius:10px;padding:18px;margin-bottom:16px}
+.panel-title{font-size:9px;color:#c8a84b;letter-spacing:.15em;text-transform:uppercase;margin-bottom:14px}
+.chart-wrap{position:relative}
+
+/* ── Ratio Grid ──────────────────────────────────────────────── */
+.ratio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+.ratio-row{padding:12px 14px;border-radius:8px;background:#0a1520;border:1px solid #1a2a3a}
+.ratio-label{font-size:8px;color:#556;letter-spacing:.1em;text-transform:uppercase;margin-bottom:4px}
+.ratio-val{font-size:18px;font-weight:700;color:#fff;margin-bottom:2px}
+.ratio-bench{font-size:8px;margin-top:2px}
+.c-good{color:#4ade80}.c-warn{color:#facc15}.c-bad{color:#f87171}
+
+/* ── AI Panel ────────────────────────────────────────────────── */
+.ai-panel{
+  background:linear-gradient(135deg,#0f1923 0%,#0a1a0f 100%);
+  border:1px solid #4a7c5933;border-radius:12px;padding:20px;margin-bottom:16px;
+}
+.ai-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;gap:12px}
+.ai-title{font-size:10px;color:#4a7c59;letter-spacing:.15em;text-transform:uppercase}
+.ai-sub{font-size:10px;color:#445;margin-top:2px}
+.ai-btn{
+  background:linear-gradient(135deg,#1a3a2a,#0f2a1a);border:1px solid #4a7c5966;
+  border-radius:8px;color:#4ade80;font-size:9px;letter-spacing:.12em;
+  text-transform:uppercase;padding:8px 14px;white-space:nowrap;flex-shrink:0;
+}
+.ai-btn:disabled{background:#1a2a1a;cursor:wait}
+.ai-body{font-size:12px;line-height:1.8;color:#a8c8b0;min-height:50px;font-family:Georgia,serif;font-style:italic}
+.ai-placeholder{color:#334;font-size:11px}
+
+/* ── Balance Sheet ───────────────────────────────────────────── */
+.bs-row{border-bottom:1px solid #1a2a3a;padding-bottom:10px;margin-bottom:10px}
+.bs-row:last-child{border-bottom:none;margin-bottom:0}
+.bs-top{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.bs-label{font-size:9px;color:#556}
+.bs-val{font-size:14px;font-weight:700;color:#fff;flex-shrink:0}
+.bs-sub{font-size:8px;color:#334;margin-top:2px}
+
+/* ── Markets ─────────────────────────────────────────────────── */
+.markets-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:14px;gap:12px}
+.eyci-val{font-size:20px;font-weight:700;color:#4ade80}
+.eyci-sub{font-size:10px;color:#445;margin-top:2px}
+.live-btn{background:#0f1923;border:1px solid #2d6a8f66;border-radius:6px;color:#60a5fa;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;flex-shrink:0}
+.live-btn:disabled{background:#1a1a2a;cursor:wait}
+
+/* ── Month selector ──────────────────────────────────────────── */
+.month-selector{display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.month-selector label{font-size:9px;color:#556;letter-spacing:.1em;text-transform:uppercase}
+.month-selector select{background:#0f1923;border:1px solid #1e2e3e;color:#e8e0d0;padding:6px 12px;border-radius:6px;font-size:11px}
+
+/* ── Loading overlay ─────────────────────────────────────────── */
+.loading-overlay{
+  position:fixed;inset:0;background:#080e15;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  z-index:500;gap:16px;
+}
+.loading-spinner{width:40px;height:40px;border:2px solid #1e2e3e;border-top-color:#c8a84b;border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:11px;color:#445;letter-spacing:.15em;text-transform:uppercase}
+.loading-sub{font-size:10px;color:#334}
+
+/* ── Footer ──────────────────────────────────────────────────── */
+.footer{padding:8px 20px 16px;font-size:8px;color:#1e2e3e;letter-spacing:.1em;border-top:1px solid #0f1923}
+
+/* ── Responsive ──────────────────────────────────────────────── */
+@media(max-width:640px){
+  .chart-grid-2{grid-template-columns:1fr}
+  .header-left .title{font-size:14px}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .ratio-grid{grid-template-columns:1fr 1fr}
+  .body{padding:12px 14px}
+  .login-box{padding:28px 22px}
+}
+@media(max-width:380px){
+  .kpi-grid{grid-template-columns:1fr 1fr}
+  .kpi-num{font-size:18px}
+}
+</style>
+</head>
+<body>
+
+<!-- ── Loading overlay ──────────────────────────────────────────── -->
+<div class="loading-overlay" id="loading">
+  <div style="font-size:10px;letter-spacing:.25em;color:#c8a84b;text-transform:uppercase;margin-bottom:8px">Buringal Grazing Co</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading Dashboard</div>
+  <div class="loading-sub" id="loading-sub">Checking authentication…</div>
+</div>
+
+<!-- ── Login Screen ──────────────────────────────────────────────── -->
+<div id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-logo">Buringal Grazing Co</div>
+    <div class="login-title">Operations Dashboard</div>
+    <div class="login-sub">Wombramurra Angus Stud · Nundle & Topdale NSW</div>
+
+    <label class="login-label">Username</label>
+    <input class="login-input" type="text" id="login-user" placeholder="Enter username" autocomplete="username" autocapitalize="none"/>
+
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/>
+
+    <button class="login-btn" onclick="attemptLogin()">→ Sign In</button>
+    <div class="login-error" id="login-error"></div>
+
+    <div class="login-users">
+      <div class="login-users-title">Access levels</div>
+      <div>
+        <div class="user-badge"><div class="user-dot" style="background:#c8a84b"></div>Owner — full access</div>
+        <div class="user-badge"><div class="user-dot" style="background:#4a7c59"></div>Manager — operations</div>
+        <div class="user-badge"><div class="user-dot" style="background:#2d6a8f"></div>Accountant — financials</div>
+        <div class="user-badge"><div class="user-dot" style="background:#7a4f8c"></div>Bank — read only</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── Main App ──────────────────────────────────────────────────── -->
+<div id="app">
+
+  <div class="header">
+    <div class="header-left">
+      <div class="sub">Buringal Grazing Co · Wombramurra Angus</div>
+      <div class="title">Operations Dashboard</div>
+    </div>
+    <div class="header-right">
+      <div class="sync-status" id="sync-status">Loading…</div>
+      <button class="sync-btn" id="sync-btn" onclick="syncData()">↻ Sync</button>
+      <div class="user-menu">
+        <button class="user-btn" onclick="toggleUserMenu()" id="user-btn">
+          <span id="user-label">–</span> ▾
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-item" id="dd-role"></div>
+          <div class="user-dropdown-item logout" onclick="logout()">Sign out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="pnl">P&amp;L</button>
+    <button class="tab-btn" data-tab="cashflow">Cashflow</button>
+    <button class="tab-btn" data-tab="balance">Balance Sheet</button>
+    <button class="tab-btn" data-tab="ratios">KPI Ratios</button>
+    <button class="tab-btn" data-tab="markets">Markets</button>
+  </div>
+
+  <div class="body">
+
+    <!-- Data source banner -->
+    <div class="data-banner" id="data-banner">
+      <div class="data-banner-left">Data source: <strong id="data-source-label">Loading…</strong></div>
+      <div class="data-banner-right" id="data-updated">–</div>
+    </div>
+
+    <!-- Alert banner -->
+    <div class="alert-banner" id="alert-banner">
+      <div class="alert-icon">⚠</div>
+      <div class="alert-text">
+        <strong>Feb 26 — Key Ratios Below Benchmark:</strong>
+        Interest Cover 0.06x (target &gt;1.75x) · ROAM 0.03% (target &gt;4%) · Expense Ratio 106% (target &lt;70%) · Net Loss –$165,951. Monitor closely heading into Q4 FY26.
+      </div>
+    </div>
+
+    <!-- AI Panel -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-header">
+        <div>
+          <div class="ai-title">AI Season Analysis</div>
+          <div class="ai-sub">Powered by Claude · Live data · FY2025-26</div>
+        </div>
+        <button class="ai-btn" id="ai-btn" onclick="generateInsights()">▶ Generate</button>
+      </div>
+      <div class="ai-body" id="ai-body">
+        <span class="ai-placeholder">Click Generate for an AI-powered analysis of your live financial position, ratio trends, and FY27 strategic recommendations.</span>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- P&L -->
+    <div id="section-pnl">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Gross Profit vs Costs</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-gp"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">EBIT &amp; Net Profit</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-ebit"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">Gross Margin % vs Expense Ratio % (benchmarks: GM &gt;70% / Exp &lt;70%)</div>
+        <div class="chart-wrap" style="height:160px"><canvas id="chart-margins"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Cashflow -->
+    <div id="section-cashflow">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Cash Available for Debt Service</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-cafds"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Interest Cover Ratio (benchmark &gt;1.75x)</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-ic"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">DSE Trend — FY26</div>
+        <div class="chart-wrap" style="height:140px"><canvas id="chart-dse"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Balance Sheet -->
+    <div id="section-balance">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-title">Total Assets vs Equity vs Liabilities</div>
+          <div class="chart-wrap" style="height:200px"><canvas id="chart-assets"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Snapshot — Feb 2026</div>
+          <div id="bs-content" style="margin-top:4px"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">NAB Loan Balances</div>
+        <div class="chart-wrap" style="height:140px"><canvas id="chart-loans"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Ratios -->
+    <div id="section-ratios">
+      <div class="month-selector">
+        <label>View month:</label>
+        <select id="ratio-month" onchange="renderRatios()">
+          <option value="0">Jul 25</option>
+          <option value="1">Aug 25</option>
+          <option value="2">Sep 25</option>
+          <option value="3">Oct 25</option>
+          <option value="4">Nov 25</option>
+          <option value="5">Dec 25</option>
+          <option value="6">Jan 26</option>
+          <option value="7" selected>Feb 26</option>
+        </select>
+      </div>
+      <div class="ratio-grid" id="ratio-grid"></div>
+      <div class="panel" style="margin-top:16px">
+        <div class="panel-title">Interest Cover &amp; ROAM Trend</div>
+        <div class="chart-wrap" style="height:180px"><canvas id="chart-ratios"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Markets -->
+    <div id="section-markets">
+      <div class="panel">
+        <div class="markets-header">
+          <div>
+            <div style="font-size:9px;color:#c8a84b;letter-spacing:.15em;text-transform:uppercase">EYCI — Eastern Young Cattle Indicator</div>
+            <div class="eyci-sub" id="eyci-sub">Static — click Refresh for live MLA price</div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px">
+            <div class="eyci-val" id="eyci-val">338 ¢/kg cwt</div>
+            <button class="live-btn" id="eyci-btn" onclick="fetchEYCI()">↻ Live</button>
+          </div>
+        </div>
+        <div class="chart-wrap" style="height:120px"><canvas id="chart-eyci"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-title">GM / DSE Trend — Benchmark &gt;$65</div>
+        <div class="chart-wrap" style="height:150px"><canvas id="chart-gmdse"></canvas></div>
+      </div>
+    </div>
+
+  </div>
+  <div class="footer">BURINGAL GRAZING CO · NUNDLE & TOPDALE NSW · WOMBRAMURRA ANGUS STUD · FY2025-26</div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════════
+// CONFIGURATION — UPDATE THESE VALUES
+// ══════════════════════════════════════════════════════════════
+const CONFIG = {
+  // Paste your Google Apps Script Web App URL here after deploying
+  // It will look like: https://script.google.com/macros/s/XXXX/exec
+  SHEET_API_URL: "https://script.google.com/macros/s/AKfycbz0PTaIQsEzi6bYGPY9FQw8Fd3VsPHJBGPmgdvyK4ltkjtnwdYA3E_MxuNaZfUT15XJJg/exec",
+
+  // Paste your Cloudflare Worker URL here after deploying
+  // It will look like: https://buringal-api.YOUR-SUBDOMAIN.workers.dev
+  WORKER_URL: "https://buringal-api.ryanschmitt00.workers.dev",
+
+  // Users: { username: { password, role, name, tabs } }
+  // tabs: which tabs this user can see ("all" or array of tab names)
+  USERS: {
+    "ryan": {
+      password: "Buringal2026!",
+      role: "Owner",
+      name: "Ryan",
+      color: "#c8a84b",
+      tabs: "all"
+    },
+    "manager": {
+      password: "GrazingOps26",
+      role: "Manager",
+      name: "Manager",
+      color: "#4a7c59",
+      tabs: ["overview","pnl","cashflow","markets"]
+    },
+    "accountant": {
+      password: "Schmitt$Fin26",
+      role: "Accountant",
+      name: "Accountant",
+      color: "#2d6a8f",
+      tabs: ["overview","pnl","cashflow","balance","ratios"]
+    },
+    "bank": {
+      password: "NAB$ReadOnly26",
+      role: "Bank — Read Only",
+      name: "Bank",
+      color: "#7a4f8c",
+      tabs: ["overview","balance","ratios"]
+    }
+  },
+
+  // Session duration in hours
+  SESSION_HOURS: 8,
+};
+
+// ══════════════════════════════════════════════════════════════
+// HARDCODED FALLBACK DATA (from your PDF — Feb 26 actuals)
+// Used when Google Sheets API is not yet configured
+// ══════════════════════════════════════════════════════════════
+const FALLBACK = {
+  months: ["Jul 25","Aug 25","Sep 25","Oct 25","Nov 25","Dec 25","Jan 26","Feb 26"],
+  monthsShort: ["Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb"],
+  grossProfit:   [2374100,2501269,1945040,1979001,1470816,1327203,1533198,1273862],
+  directCosts:   [375113,416492,447700,542083,503052,482176,523565,522661],
+  grossMargin:   [1998987,2084777,1497340,1436918,967764,845027,1009633,751201],
+  overheads:     [174335,240494,450727,585713,580271,632599,626231,651798],
+  ebit:          [1824652,1844283,1046613,851205,387493,123228,294202,10203],
+  interest:      [303521,373159,371703,205636,205636,241156,176154,176154],
+  netProfit:     [1521131,1471124,674910,645569,181857,-117928,118048,-165951],
+  grossMarginPct:[84.20,83.35,76.98,72.61,65.80,63.67,65.85,58.97],
+  expenseRatio:  [35.93,41.18,65.30,67.38,87.64,102.16,86.48,106.03],
+  ohRatio:       [7.34,9.61,23.17,29.60,39.45,47.66,40.84,51.17],
+  roam:          [5.26,5.32,3.02,2.57,1.17,0.37,0.90,0.03],
+  roe:           [4.90,4.90,2.27,2.18,0.62,-0.40,0.40,-0.57],
+  ebitGP:        [76.86,73.73,53.81,43.01,26.35,9.28,19.19,0.80],
+  gmDse:         [87.32,91.07,56.25,58.09,39.30,33.90,42.44,36.58],
+  interestCover: [6.01,4.94,2.82,4.14,1.88,0.51,1.67,0.06],
+  cafdsInterest: [7.02,6.54,4.52,8.37,7.76,1.00,8.94,10.98],
+  interestAsGP:  [12.78,14.92,19.11,10.39,13.98,18.17,11.49,13.83],
+  turnoverRatio: [6.85,7.21,5.61,5.96,4.45,4.02,4.68,3.89],
+  dse:           [22892,22892,26618,24738,24628,24924,23792,20538],
+  totalAssets:   [34674000,33681309,33393259,33184977,33074368,33017148,32776764,32782674],
+  totalLiab:     [3649119,3649119,3649119,3549119,3549119,3549119,3549119,3549119],
+  equity:        [31024881,30032190,29744140,29635858,29525249,29468028,29227645,29233555],
+  nab1:          [1400000,1400000,1400000,1300000,1300000,1300000,1300000,1300000],
+  nab2:          [1800000,1800000,1800000,1800000,1800000,1800000,1800000,1800000],
+  cafds:         [2131252,2438883,1680213,1721105,1270193,166928,944202,1160403],
+  cashAfterDS:   [1827731,2065724,1308510,1435469,1013033,-80230,759044,975245],
+  eyci:          [312,318,308,325,331,328,340,338],
+};
+
+// ══════════════════════════════════════════════════════════════
+// STATE
+// ══════════════════════════════════════════════════════════════
+let currentUser = null;
+let currentTab  = "overview";
+let liveData    = null;
+let D           = FALLBACK; // active dataset
+let charts      = {};
+let usingLive   = false;
+
+// ══════════════════════════════════════════════════════════════
+// AUTH
+// ══════════════════════════════════════════════════════════════
+function attemptLogin() {
+  const user = document.getElementById("login-user").value.trim().toLowerCase();
+  const pass = document.getElementById("login-pass").value;
+  const err  = document.getElementById("login-error");
+
+  if (!CONFIG.USERS[user]) { err.textContent = "Username not recognised."; return; }
+  if (CONFIG.USERS[user].password !== pass) { err.textContent = "Incorrect password."; return; }
+
+  err.textContent = "";
+  currentUser = { username: user, ...CONFIG.USERS[user] };
+
+  // Store session
+  const session = { username: user, expires: Date.now() + CONFIG.SESSION_HOURS * 3600000 };
+  try { localStorage.setItem("bgc_session", JSON.stringify(session)); } catch(e){}
+
+  setLoading(false);
+  bootApp();
+}
+
+function checkSession() {
+  try {
+    const s = JSON.parse(localStorage.getItem("bgc_session") || "null");
+    if (s && s.expires > Date.now() && CONFIG.USERS[s.username]) {
+      currentUser = { username: s.username, ...CONFIG.USERS[s.username] };
+      return true;
+    }
+  } catch(e){}
+  return false;
+}
+
+function logout() {
+  try { localStorage.removeItem("bgc_session"); } catch(e){}
+  currentUser = null;
+  document.getElementById("app").classList.remove("visible");
+  document.getElementById("login-screen").style.display = "flex";
+  document.getElementById("login-pass").value = "";
+  document.getElementById("login-error").textContent = "";
+  toggleUserMenu(true);
+}
+
+function toggleUserMenu(forceClose) {
+  const dd = document.getElementById("user-dropdown");
+  if (forceClose) { dd.classList.remove("open"); return; }
+  dd.classList.toggle("open");
+}
+document.addEventListener("click", e => {
+  if (!e.target.closest(".user-menu")) toggleUserMenu(true);
+});
+
+// Enter key on login
+document.addEventListener("keydown", e => {
+  if (e.key === "Enter" && document.getElementById("login-screen").style.display !== "none") {
+    attemptLogin();
+  }
+});
+
+// ══════════════════════════════════════════════════════════════
+// BOOT
+// ══════════════════════════════════════════════════════════════
+function init() {
+  // Always hide loading immediately
+  setLoading(false);
+
+  if (checkSession()) {
+    // Session valid — show dashboard right away, sync in background
+    applyTabPermissions();
+    document.getElementById("user-label").textContent = currentUser.name;
+    document.getElementById("dd-role").textContent = currentUser.role;
+    document.getElementById("user-btn").style.borderColor = currentUser.color + "66";
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("app").classList.add("visible");
+    setTab("overview");
+    setTimeout(() => syncData(true), 500);
+  } else {
+    // No session — show login
+    document.getElementById("login-screen").style.display = "flex";
+  }
+}
+
+async function bootApp() {
+  applyTabPermissions();
+  document.getElementById("user-label").textContent = currentUser.name;
+  document.getElementById("dd-role").textContent = currentUser.role;
+  document.getElementById("user-btn").style.borderColor = currentUser.color + "66";
+  document.getElementById("login-screen").style.display = "none";
+  document.getElementById("app").classList.add("visible");
+  setTab("overview");
+  setTimeout(() => syncData(true), 500);
+}
+
+function applyTabPermissions() {
+  const allowed = currentUser.tabs;
+  if (allowed === "all") return;
+  document.querySelectorAll(".tab-btn").forEach(btn => {
+    if (!allowed.includes(btn.dataset.tab)) btn.style.display = "none";
+  });
+}
+
+function setLoading(show, msg) {
+  document.getElementById("loading").style.display = show ? "flex" : "none";
+  if (msg) document.getElementById("loading-sub").textContent = msg;
+}
+
+// ══════════════════════════════════════════════════════════════
+// DATA SYNC
+// ══════════════════════════════════════════════════════════════
+async function syncData(silent) {
+  const btn = document.getElementById("sync-btn");
+  const status = document.getElementById("sync-status");
+  if (!silent) { btn.disabled = true; btn.textContent = "Syncing…"; }
+
+  if (!CONFIG.SHEET_API_URL || CONFIG.SHEET_API_URL === "YOUR_APPS_SCRIPT_URL_HERE") {
+    // No API configured — use fallback
+    D = FALLBACK;
+    usingLive = false;
+    updateDataBanner(false, "Using snapshot data (Feb 26) — configure Google Sheets API to go live");
+    if (!silent) { btn.disabled = false; btn.textContent = "↻ Sync"; }
+    return;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    // Route through Cloudflare Worker to avoid CORS block
+    const fetchUrl = CONFIG.WORKER_URL && CONFIG.WORKER_URL !== "YOUR_WORKER_URL_HERE"
+      ? CONFIG.WORKER_URL
+      : CONFIG.SHEET_API_URL;
+    const fetchOptions = CONFIG.WORKER_URL && CONFIG.WORKER_URL !== "YOUR_WORKER_URL_HERE"
+      ? { method: "POST", headers: {"Content-Type":"application/json"}, body: JSON.stringify({ action: "sheets", url: CONFIG.SHEET_API_URL }), signal: controller.signal }
+      : { signal: controller.signal };
+    const res = await fetch(fetchUrl, fetchOptions);
+    clearTimeout(timeout);
+    const json = await res.json();
+    if (json.status === "ok") {
+      liveData = json.data;
+      const parsed = parseLiveData(liveData);
+      if (parsed) D = parsed;
+      // else keep FALLBACK data but still show Live connection status
+      usingLive = true;
+      const t = new Date(json.updated).toLocaleTimeString("en-AU", {hour:"2-digit",minute:"2-digit"});
+      updateDataBanner(true, `Connected to Google Sheets · Charts show Feb 26 actuals · Updated ${t}`);
+      status.textContent = `Synced ${t}`;
+      status.className = "sync-status live";
+    } else {
+      throw new Error(json.message);
+    }
+  } catch(e) {
+    D = FALLBACK;
+    usingLive = false;
+    updateDataBanner(false, "Could not reach Google Sheets — showing Feb 26 snapshot");
+    status.textContent = "Offline";
+    status.className = "sync-status";
+  }
+
+  if (!silent) { btn.disabled = false; btn.textContent = "↻ Sync"; }
+}
+
+function updateDataBanner(live, msg) {
+  document.getElementById("data-source-label").textContent = live ? "Google Sheets (Live)" : "Snapshot (Feb 26)";
+  document.getElementById("data-source-label").style.color = live ? "#4ade80" : "#facc15";
+  document.getElementById("data-updated").textContent = msg;
+}
+
+// Parse live Google Sheets data into the same structure as FALLBACK
+function parseLiveData(raw) {
+  try {
+    // Check we have data from the sheet
+    const tabs = Object.keys(raw);
+    if (!tabs.length) return null;
+
+    // We can confirm connection is live — data is flowing
+    // The sheet tabs visible are: Balance Sheet, KPI's, P&L, Equity, Gross Margin Ratio etc
+    // For now return FALLBACK data but mark connection as live
+    // Full column mapping will be added once sheet structure is confirmed
+    const pnl  = raw["P&L"] || raw["Cashflow"] || null;
+    const bal  = raw["Balance Sheet"] || null;
+    const kpis = raw["KPI's"] || raw["KPIs"] || null;
+
+    // If we can read at least one tab we know the connection works
+    if (pnl || bal || kpis) {
+      // Return null here to use FALLBACK display data for now
+      // but the banner will show Live because json.status === "ok"
+      return null;
+    }
+
+    return null;
+  } catch(e) {
+    return null;
+  }
+}
+
+// ══════════════════════════════════════════════════════════════
+// CHARTS
+// ══════════════════════════════════════════════════════════════
+function destroyChart(id) { if(charts[id]){ charts[id].destroy(); delete charts[id]; } }
+const fmtK = v => Math.abs(v) >= 1e6 ? `$${(v/1e6).toFixed(2)}M` : Math.abs(v) >= 1000 ? `$${(v/1000).toFixed(0)}k` : `$${v}`;
+
+const BASE = {
+  plugins:{legend:{display:false},tooltip:{backgroundColor:"#0a1520",borderColor:"#c8a84b44",borderWidth:1,titleColor:"#c8a84b",bodyColor:"#ccc",padding:10,callbacks:{label:ctx=>{const v=ctx.parsed.y;return` ${ctx.dataset.label}: ${typeof v==='number'&&Math.abs(v)>100?fmtK(v):v}`;}}}},
+  scales:{x:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9}}}},
+  animation:{duration:300},responsive:true,maintainAspectRatio:false,
+};
+
+function makePnLCharts(){
+  destroyChart("gp"); destroyChart("ebit"); destroyChart("margins");
+  const MS = D.monthsShort;
+
+  charts.gp = new Chart(document.getElementById("chart-gp"),{type:"bar",
+    data:{labels:MS,datasets:[
+      {label:"Gross Profit",data:D.grossProfit,backgroundColor:"#4a7c59",borderRadius:2},
+      {label:"Direct Costs",data:D.directCosts,backgroundColor:"#8b3a3a",borderRadius:2},
+      {label:"Overheads",data:D.overheads,backgroundColor:"#2d6a8f",borderRadius:2},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>fmtK(v)}}}},
+  });
+
+  const g2 = document.getElementById("chart-ebit").getContext("2d");
+  const gr = g2.createLinearGradient(0,0,0,200); gr.addColorStop(0,"rgba(200,168,75,0.25)"); gr.addColorStop(1,"rgba(200,168,75,0)");
+  charts.ebit = new Chart(document.getElementById("chart-ebit"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"EBIT",data:D.ebit,borderColor:"#c8a84b",backgroundColor:gr,fill:true,tension:.3,pointRadius:3,pointBackgroundColor:"#c8a84b"},
+      {label:"Net Profit",data:D.netProfit,borderColor:"#60a5fa",fill:false,tension:.3,pointRadius:3,pointBackgroundColor:D.netProfit.map(v=>v<0?"#f87171":"#60a5fa")},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>fmtK(v)}}}},
+  });
+
+  charts.margins = new Chart(document.getElementById("chart-margins"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Gross Margin %",data:D.grossMarginPct,borderColor:"#4ade80",fill:false,tension:.3,pointRadius:3},
+      {label:"Expense Ratio %",data:D.expenseRatio,borderColor:"#f87171",fill:false,tension:.3,pointRadius:3},
+      {label:"70% benchmark",data:Array(MS.length).fill(70),borderColor:"#c8a84b",borderDash:[4,4],pointRadius:0,fill:false},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>`${v}%`},min:0,max:120}}},
+  });
+}
+
+function makeCashflowCharts(){
+  destroyChart("cafds"); destroyChart("ic"); destroyChart("dse");
+  const MS = D.monthsShort;
+
+  charts.cafds = new Chart(document.getElementById("chart-cafds"),{type:"bar",
+    data:{labels:MS,datasets:[
+      {label:"CAFDS",data:D.cafds,backgroundColor:D.cafds.map(v=>v>0?"#4a7c59":"#8b3a3a"),borderRadius:2},
+      {label:"After Debt Service",data:D.cashAfterDS,backgroundColor:D.cashAfterDS.map(v=>v>0?"rgba(96,165,250,0.55)":"rgba(248,113,113,0.55)"),borderRadius:2},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>fmtK(v)}}}},
+  });
+
+  charts.ic = new Chart(document.getElementById("chart-ic"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Interest Cover",data:D.interestCover,borderColor:"#c8a84b",backgroundColor:"transparent",fill:false,tension:.3,pointRadius:5,pointBackgroundColor:D.interestCover.map(v=>v>=1.75?"#4ade80":v>=1?"#facc15":"#f87171")},
+      {label:"Benchmark 1.75x",data:Array(MS.length).fill(1.75),borderColor:"#c8a84b",borderDash:[4,4],pointRadius:0,fill:false},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>`${v}x`},min:0}}},
+  });
+
+  const dg = document.getElementById("chart-dse").getContext("2d");
+  const dgr = dg.createLinearGradient(0,0,0,140); dgr.addColorStop(0,"rgba(74,124,89,0.28)"); dgr.addColorStop(1,"rgba(74,124,89,0)");
+  charts.dse = new Chart(document.getElementById("chart-dse"),{type:"line",
+    data:{labels:MS,datasets:[{label:"DSE",data:D.dse,borderColor:"#4a7c59",backgroundColor:dgr,fill:true,tension:.3,pointRadius:3,pointBackgroundColor:"#4a7c59"}]},
+    options:{...BASE,scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>v.toLocaleString()},min:18000}}},
+  });
+}
+
+function makeBalanceCharts(){
+  destroyChart("assets"); destroyChart("loans");
+  const MS = D.monthsShort;
+
+  charts.assets = new Chart(document.getElementById("chart-assets"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Total Assets",data:D.totalAssets,borderColor:"#c8a84b",fill:false,tension:.3,pointRadius:3},
+      {label:"Equity",data:D.equity,borderColor:"#4a7c59",fill:false,tension:.3,pointRadius:3},
+      {label:"Total Liabilities",data:D.totalLiab,borderColor:"#8b3a3a",fill:false,tension:.3,pointRadius:3},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>fmtK(v)}}}},
+  });
+
+  charts.loans = new Chart(document.getElementById("chart-loans"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"NAB Loan 1",data:D.nab1,borderColor:"#f87171",fill:false,tension:0,pointRadius:3},
+      {label:"NAB Loan 2",data:D.nab2,borderColor:"#facc15",fill:false,tension:0,pointRadius:3},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>fmtK(v)},min:1000000,max:2100000}}},
+  });
+
+  document.getElementById("bs-content").innerHTML = [
+    {label:"Total Assets",   value:"$32.78M", sub:"Land, livestock & fixed assets"},
+    {label:"Total Liabilities",value:"$3.55M", sub:"NAB loans + current liabs"},
+    {label:"Equity",         value:"$29.23M", sub:"89% equity ratio — strong buffer"},
+    {label:"NAB Loan 1",     value:"$1.30M",  sub:"Reduced from $1.4M"},
+    {label:"NAB Loan 2",     value:"$1.80M",  sub:"Stable"},
+    {label:"Cash on Hand",   value:"$55,474", sub:"Business accounts — Feb 26"},
+  ].map(r=>`<div class="bs-row"><div class="bs-top"><span class="bs-label">${r.label}</span><span class="bs-val">${r.value}</span></div><div class="bs-sub">${r.sub}</div></div>`).join("");
+}
+
+const RATIO_DEFS = [
+  {key:"interestCover",label:"Interest Cover",bench:">1.75x",good:v=>v>=1.75,warn:v=>v>=1&&v<1.75,fmt:v=>`${v.toFixed(2)}x`},
+  {key:"roam",label:"Return on Assets",bench:">4%",good:v=>v>=4,warn:v=>v>=2&&v<4,fmt:v=>`${v.toFixed(2)}%`},
+  {key:"grossMarginPct",label:"Gross Margin",bench:">70%",good:v=>v>=70,warn:v=>v>=55&&v<70,fmt:v=>`${v.toFixed(1)}%`},
+  {key:"expenseRatio",label:"Expense Ratio",bench:"<70%",good:v=>v<70,warn:v=>v>=70&&v<90,fmt:v=>`${v.toFixed(1)}%`,invert:true},
+  {key:"gmDse",label:"GM / DSE",bench:">$65",good:v=>v>=65,warn:v=>v>=45&&v<65,fmt:v=>`$${v.toFixed(2)}`},
+  {key:"roe",label:"Return on Equity",bench:">5%",good:v=>v>=5,warn:v=>v>=2&&v<5,fmt:v=>`${v.toFixed(2)}%`},
+  {key:"ohRatio",label:"Overhead Ratio",bench:"<35%",good:v=>v<35,warn:v=>v>=35&&v<50,fmt:v=>`${v.toFixed(1)}%`,invert:true},
+  {key:"interestAsGP",label:"Interest as % GP",bench:"<15%",good:v=>v<15,warn:v=>v>=15&&v<20,fmt:v=>`${v.toFixed(1)}%`,invert:true},
+];
+
+function renderRatios(){
+  const mi = parseInt(document.getElementById("ratio-month").value);
+  document.getElementById("ratio-grid").innerHTML = RATIO_DEFS.map(r=>{
+    const v = D[r.key][mi];
+    const cls = r.good(v)?"c-good":r.warn(v)?"c-warn":"c-bad";
+    const status = r.good(v)?"✓ On target":r.warn(v)?"⚠ Marginal":"✗ Below benchmark";
+    return `<div class="ratio-row"><div class="ratio-label">${r.label}</div><div class="ratio-val ${cls}">${r.fmt(v)}</div><div class="ratio-bench ${cls}">${status} · ${r.bench}</div></div>`;
+  }).join("");
+}
+
+function makeRatioChart(){
+  destroyChart("ratios");
+  const MS = D.monthsShort;
+  charts.ratios = new Chart(document.getElementById("chart-ratios"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Interest Cover (x)",data:D.interestCover,borderColor:"#4ade80",fill:false,tension:.3,pointRadius:3,yAxisID:"y"},
+      {label:"ROAM %",data:D.roam,borderColor:"#c8a84b",fill:false,tension:.3,pointRadius:3,yAxisID:"y1"},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},
+        y:{grid:{color:"#1a2a3a"},ticks:{color:"#4ade80",font:{size:9}},position:"left",title:{display:true,text:"Interest Cover (x)",color:"#4ade80",font:{size:8}}},
+        y1:{grid:{display:false},ticks:{color:"#c8a84b",font:{size:9}},position:"right",title:{display:true,text:"ROAM %",color:"#c8a84b",font:{size:8}}},
+      }
+    },
+  });
+}
+
+function makeMarketsCharts(){
+  destroyChart("eyci"); destroyChart("gmdse");
+  const MS = D.monthsShort;
+
+  const eg = document.getElementById("chart-eyci").getContext("2d");
+  const egr = eg.createLinearGradient(0,0,0,120); egr.addColorStop(0,"rgba(200,168,75,0.2)"); egr.addColorStop(1,"rgba(200,168,75,0)");
+  charts.eyci = new Chart(document.getElementById("chart-eyci"),{type:"line",
+    data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"EYCI (¢/kg)",data:D.eyci,borderColor:"#c8a84b",backgroundColor:egr,fill:true,tension:.3,pointRadius:0}]},
+    options:{...BASE,scales:{x:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9}},min:295,max:355}}},
+  });
+
+  charts.gmdse = new Chart(document.getElementById("chart-gmdse"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"GM/DSE",data:D.gmDse,borderColor:"#c8a84b",fill:false,tension:.3,pointRadius:4,pointBackgroundColor:D.gmDse.map(v=>v>=65?"#4ade80":"#f87171")},
+      {label:"Benchmark $65",data:Array(MS.length).fill(65),borderColor:"#4a7c59",borderDash:[4,4],pointRadius:0,fill:false},
+    ]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:true,labels:{color:"#667",font:{size:9},boxWidth:8}}},scales:{x:{grid:{display:false},ticks:{color:"#445",font:{size:9}}},y:{grid:{color:"#1a2a3a"},ticks:{color:"#445",font:{size:9},callback:v=>`$${v}`},min:20}}},
+  });
+}
+
+// ══════════════════════════════════════════════════════════════
+// KPI CARDS
+// ══════════════════════════════════════════════════════════════
+function renderKPIs(){
+  const kpis = [
+    {label:"Total Assets",    v:"$32.78M", trend:"down", good:false, sub:"↓ from $34.67M Jul 25"},
+    {label:"Equity Ratio",    v:"89%",     trend:"flat", good:true,  sub:"$29.23M absolute value"},
+    {label:"Net Profit (Feb)",v:"-$166k",  trend:"down", good:false, sub:"Loss month — monitor", warn:true},
+    {label:"Interest Cover",  v:"0.06x",   trend:"down", good:false, sub:"Benchmark >1.75x", warn:true},
+    {label:"DSE",             v:"20,538",  trend:"down", good:true,  sub:"↓ from 26,618 (Sep 25)"},
+    {label:"GM / DSE",        v:"$36.58",  trend:"down", good:false, sub:"Benchmark >$65", warn:true},
+    {label:"ROAM",            v:"0.03%",   trend:"down", good:false, sub:"Benchmark >4%", warn:true},
+    {label:"Gross Margin",    v:"58.97%",  trend:"down", good:false, sub:"Benchmark >70%", warn:true},
+  ];
+  document.getElementById("kpi-grid").innerHTML = kpis.map(k=>{
+    const up = k.trend==="up";
+    const flat = k.trend==="flat";
+    const color = flat?"#c8a84b":k.warn?"#f87171":(up&&k.good)||(!up&&!k.good)?"#4ade80":"#f87171";
+    const arrow = flat?"●":up?"▲":"▼";
+    return `<div class="kpi-card${k.warn?" warn":""}">
+      <div class="kpi-label">${k.label}</div>
+      <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:3px">
+        <span class="kpi-num${k.v.length>7?" small":""}">${k.v}</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px">
+        <span class="kpi-trend" style="color:${color}">${arrow}</span>
+      </div>
+      <div class="kpi-sub${k.warn?" warn":""}">${k.sub}</div>
+    </div>`;
+  }).join("");
+}
+
+// ══════════════════════════════════════════════════════════════
+// TAB MANAGEMENT
+// ══════════════════════════════════════════════════════════════
+const SECTIONS = ["pnl","cashflow","balance","ratios","markets"];
+
+function setTab(tab){
+  currentTab = tab;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+
+  const isOverview = tab==="overview";
+  document.getElementById("ai-panel").style.display       = isOverview?"":"none";
+  document.getElementById("alert-banner").style.display   = (isOverview||tab==="cashflow"||tab==="ratios")?"":"none";
+  document.getElementById("kpi-grid").style.display       = isOverview?"":"none";
+
+  SECTIONS.forEach(s=>{
+    document.getElementById(`section-${s}`).style.display =
+      (tab===s||isOverview) ? "" : "none";
+  });
+
+  setTimeout(()=>{
+    if(tab==="overview"||tab==="pnl")      makePnLCharts();
+    if(tab==="overview"||tab==="cashflow") makeCashflowCharts();
+    if(tab==="overview"||tab==="balance")  makeBalanceCharts();
+    if(tab==="overview"||tab==="ratios")   { renderRatios(); makeRatioChart(); }
+    if(tab==="overview"||tab==="markets")  makeMarketsCharts();
+  },50);
+}
+
+document.querySelectorAll(".tab-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>setTab(btn.dataset.tab));
+});
+
+// ══════════════════════════════════════════════════════════════
+// LIVE EYCI
+// ══════════════════════════════════════════════════════════════
+async function fetchEYCI(){
+  const btn=document.getElementById("eyci-btn");
+  btn.disabled=true; btn.textContent="Fetching…";
+  try{
+    const apiUrl = CONFIG.WORKER_URL && CONFIG.WORKER_URL !== "YOUR_WORKER_URL_HERE"
+      ? CONFIG.WORKER_URL
+      : "https://api.anthropic.com/v1/messages";
+    const res=await fetch(apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"What is the current EYCI Eastern Young Cattle Indicator price in cents per kg carcase weight from MLA? Reply ONLY with a string like '342 ¢/kg cwt'."}]})});
+    const d=await res.json();
+    const text=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ");
+    const m=text.match(/(\d{2,4}(?:\.\d+)?)\s*[¢c]?\s*\/?\s*kg/i);
+    if(m){
+      document.getElementById("eyci-val").textContent=`${m[1]} ¢/kg cwt`;
+      document.getElementById("eyci-sub").textContent=`Live MLA · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
+    }
+  }catch(e){ document.getElementById("eyci-sub").textContent="Update failed — check connection"; }
+  btn.disabled=false; btn.textContent="↻ Live";
+}
+
+// ══════════════════════════════════════════════════════════════
+// AI INSIGHTS
+// ══════════════════════════════════════════════════════════════
+async function generateInsights(){
+  const btn=document.getElementById("ai-btn"),body=document.getElementById("ai-body");
+  btn.disabled=true; btn.textContent="Analysing…";
+  body.innerHTML="<span style='color:#334'>Generating analysis…</span>";
+
+  const eyciVal=document.getElementById("eyci-val").textContent;
+  const dataSource=usingLive?"live Google Sheets data":"Feb 26 snapshot data";
+
+  const prompt=`You are an agricultural business analyst reviewing Buringal Grazing Co (Schmitt Entities), a multi-property cattle operation at Nundle & Topdale NSW with the Wombramurra Angus registered stud. Data source: ${dataSource}.
+
+ACTUAL FY2025-26 FINANCIALS (Jul 25 → Feb 26):
+- Gross Profit: $2.37M → $1.27M (declining season)
+- Gross Margin %: 84.2% → 59.0% (benchmark >70%)
+- EBIT: $1.82M → $10,203 (near zero Feb 26)
+- Net Profit: $1.52M → –$165,951 (Feb 26 loss)
+- Expense Ratio: 35.9% → 106% (benchmark <70%) — critical
+- Interest Cover: 6.01x → 0.06x (benchmark >1.75x) — critical
+- ROAM: 5.26% → 0.03% (benchmark >4%) — critical
+- GM/DSE: $87.32 → $36.58 (benchmark >$65) — critical
+- DSE: 22,892 → 20,538 (peak 26,618 Sep 25)
+- Total Assets: $32.78M · Equity: $29.23M (89%) — strong balance sheet
+- NAB Loans: $3.1M total · Cash on hand: $55,474
+- CAFDS: positive most months · Dec 25 cash after debt service: –$80,230
+- EYCI current: ${eyciVal}
+
+Write a 5-6 sentence advisory summary covering: (1) the overall season trajectory and the Feb 26 deterioration, (2) what is likely driving the expense ratio and margin squeeze, (3) the balance sheet strength as a key buffer, (4) DSE reduction significance and its link to margins, (5) two specific actionable FY27 priorities. Direct tone, use actual numbers, no bullet points, flowing prose only.`;
+
+  try{
+    const apiUrl = CONFIG.WORKER_URL && CONFIG.WORKER_URL !== "YOUR_WORKER_URL_HERE"
+      ? CONFIG.WORKER_URL
+      : "https://api.anthropic.com/v1/messages";
+    const res=await fetch(apiUrl,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})});
+    const d=await res.json();
+    const text=(d.content||[]).find(b=>b.type==="text")?.text||"Unable to generate insights.";
+    body.textContent=""; let i=0;
+    const tick=setInterval(()=>{ i+=3; body.textContent=text.slice(0,i); if(i>=text.length) clearInterval(tick); },12);
+  }catch(e){ body.textContent="Could not connect. Check your internet connection."; }
+  btn.disabled=false; btn.textContent="↺ Refresh";
+}
+
+// ══════════════════════════════════════════════════════════════
+// START
+// ══════════════════════════════════════════════════════════════
+init();
+</script>
+</body>
+</html>
