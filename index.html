@@ -583,7 +583,7 @@ async function init() {
 
   if (checkSession()) {
     setLoading(true, "Loading dashboard…");
-    await bootApp();
+    bootApp();
   } else {
     setLoading(false);
     document.getElementById("login-screen").style.display = "flex";
@@ -591,7 +591,7 @@ async function init() {
 }
 
 async function bootApp() {
-  setLoading(true, "Loading dashboard…");
+  setLoading(false);
 
   // Apply tab visibility per user role
   applyTabPermissions();
