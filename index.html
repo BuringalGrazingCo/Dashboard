@@ -183,7 +183,7 @@ button:focus,input:focus,select:focus{outline:none}
 </head>
 <body>
 
-<div class="loading-overlay" id="loading">
+<div class="loading-overlay" id="loading" style="display:none">
   <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
     <div style="width:32px;height:32px;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800">B</div>
     <span style="font-size:15px;font-weight:700;color:#1a2332">Buringal Grazing Co</span>
@@ -505,9 +505,13 @@ document.addEventListener("keydown",e=>{if(e.key==="Enter"&&document.getElementB
 
 // BOOT
 function init(){
-  setLoading(false);
-  if(checkSession()){bootApp();}
-  else{document.getElementById("login-screen").style.display="flex";}
+  try{
+    if(checkSession()){bootApp();}
+    else{document.getElementById("login-screen").style.display="flex";}
+  }catch(e){
+    console.error("Init error:",e);
+    document.getElementById("login-screen").style.display="flex";
+  }
 }
 function bootApp(){
   applyTabPermissions();
