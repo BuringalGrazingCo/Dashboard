@@ -2242,121 +2242,147 @@ let activeSaleyardFilter = "all";
 
 // ── Fetch saleyard report via AI web search ───────────────────
 async function fetchSaleyardReport(saleyard) {
-  // Step 1: Fetch the raw HTML via Worker
-  try {
-    const htmlRes = await fetch(CONFIG.WORKER_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"fetch_url", url: saleyard.url })
-    });
-    const htmlData = await htmlRes.json();
-
-    if(htmlData.html) {
-      // Step 2: Parse the HTML client-side
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(htmlData.html, "text/html");
-      const bodyText = doc.body?.innerText || doc.body?.textContent || "";
-
-      // Extract report date
-      const dateMatch = bodyText.match(/Report Date[:\s]+([^\n\r]+)/i);
-      const date = dateMatch ? dateMatch[1].trim() : null;
-
-      // Extract yarding
-      const yardingMatch = bodyText.match(/Total Yarding[:\s]+([0-9,]+)/i);
-      const yarding = yardingMatch ? parseInt(yardingMatch[1].replace(/,/g,"")) : null;
-
-      // Extract commentary - text between "Commentary" and reporter name or next section
-      const commMatch = bodyText.match(/Commentary\s*\n([\s\S]{50,800}?)(?:\n[A-Z][a-z]+ [A-Z][a-z]+\s*$|\n\n\n)/m);
-      const commentary = commMatch ? commMatch[1].trim().replace(/\s+/g," ") : null;
-
-      // Extract prices using regex patterns
-      const prices = {
-        feederSteers:   extractPrice(bodyText, ["feeder steer","yearling feeder steer","feeder steers"]),
-        feederHeifers:  extractPrice(bodyText, ["feeder heifer","yearling heifer","heifers to feed"]),
-        restockerSteers:extractPrice(bodyText, ["restocker steer","restocker steers"]),
-        cows:           extractPrice(bodyText, ["processor cow","cows to the processor","prime cow","2 and 3 score cow"]),
-        heavySteers:    extractPrice(bodyText, ["prime grown steer","heavy steer","grown steer"]),
-        bullocksBulls:  extractPrice(bodyText, ["bull","bullock"]),
-      };
-
-      // Extract trend
-      const trend = bodyText.match(/\bdearer\b/i)?"dearer":bodyText.match(/\bcheaper\b/i)?"cheaper":bodyText.match(/\bfirm\b/i)?"firm":"mixed";
-
-      // Extract sale type
-      const saleTypeMatch = bodyText.match(/(Physical Store Sale|Physical Prime Sale|Store Sale|Prime Sale|Online Sale|Special Sale)/i);
-      const saleType = saleTypeMatch ? saleTypeMatch[1] : "Cattle Sale";
-
-      // Extract reporter
-      const reporterMatch = bodyText.match(/(?:Commentary[\s\S]{100,800}?)([A-Z][a-z]+ [A-Z][a-z]+)\s*$/m);
-      const reporter = reporterMatch ? reporterMatch[1] : null;
-
-      if(date || yarding || commentary) {
-        return { date, saleType, yarding, commentary, prices, trend, reporter };
-      }
-    }
-  } catch(e) {
-    console.warn("Direct fetch failed, trying AI:", e.message);
-  }
-
-  // Step 3: Fallback to AI web search
-  const prompt = `Search for the latest MLA/NLRS cattle saleyard report for ${saleyard.name} (${saleyard.short}) ${saleyard.state}. Check: ${saleyard.url}
-
-Reply with ONLY this JSON (no markdown, no explanation):
-{"date":"9 March 2026","saleType":"Physical Store Sale","yarding":5320,"commentary":"brief commentary","prices":{"feederSteers":"450-514c/kg","feederHeifers":"320-441c/kg","restockerSteers":"500-540c/kg","cows":"310-425c/kg","heavySteers":"426-480c/kg","bullocksBulls":null},"trend":"dearer","reporter":"Reporter Name"}`;
-
+  // Use AI with web search — ask it to search AND summarise in plain text first,
+  // then we extract structured data from that plain text response
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
       method:"POST", headers:{"Content-Type":"application/json"},
       body: JSON.stringify({
-        model:"claude-sonnet-4-20250514", max_tokens:1000,
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1500,
         tools:[{type:"web_search_20250305",name:"web_search"}],
-        messages:[{role:"user",content:prompt}]
+        messages:[{role:"user",content:`Search for the latest MLA NLRS cattle saleyard report for ${saleyard.name} ${saleyard.short} ${saleyard.state} Australia. 
+Try: ${saleyard.url}
+Also search: "${saleyard.name} cattle sale MLA NLRS 2026"
+
+After searching, provide a structured summary in this EXACT format with these EXACT labels on separate lines:
+DATE: [report date]
+SALE_TYPE: [type of sale e.g. Physical Store Sale]
+YARDING: [total head count as number only]
+TREND: [dearer OR firm OR cheaper OR mixed]
+REPORTER: [reporter name]
+FEEDER_STEERS: [price range e.g. 450-514c/kg]
+FEEDER_HEIFERS: [price range]
+RESTOCKER_STEERS: [price range]
+COWS: [price range]
+HEAVY_STEERS: [price range]
+BULLS: [price range]
+COMMENTARY: [one paragraph summary of the market]
+
+If a field is not available write N/A. Do not add any other text before or after this block.`}]
       })
     });
     const d = await res.json();
-    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
-    const clean = text.replace(/```json|```/g,"").trim();
-    const m = clean.match(/\{[\s\S]*\}/);
-    if(m) return JSON.parse(m[0]);
-  } catch(e) {}
-  return {error:"unavailable"};
-}
+    if(d.error) throw new Error(d.error.message||"API error");
 
-function extractPrice(text, keywords) {
-  for(const kw of keywords) {
-    const re = new RegExp(kw + '[^.\\n]{0,80}?(\\d{2,4}(?:\\.\\d)?c?(?:\\s*to\\s*|-|–)\\s*\\d{2,4}(?:\\.\\d)?c?(?:\\/kg)?)', 'i');
-    const m = text.match(re);
-    if(m) return m[1].trim().replace(/c\/kg/gi,"c/kg").replace(/\s+/g," ");
+    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+    if(!text.trim()) throw new Error("Empty response");
+
+    // Parse the labelled format
+    const get = (label) => {
+      const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
+      return m ? m[1].trim() : null;
+    };
+    const yardingRaw = get("YARDING");
+    const yarding = yardingRaw ? parseInt(yardingRaw.replace(/[^0-9]/g,"")) : null;
+
+    const result = {
+      date:        get("DATE"),
+      saleType:    get("SALE_TYPE"),
+      yarding:     isNaN(yarding) ? null : yarding,
+      trend:       get("TREND")?.toLowerCase(),
+      reporter:    get("REPORTER"),
+      commentary:  get("COMMENTARY"),
+      prices: {
+        feederSteers:    get("FEEDER_STEERS"),
+        feederHeifers:   get("FEEDER_HEIFERS"),
+        restockerSteers: get("RESTOCKER_STEERS"),
+        cows:            get("COWS"),
+        heavySteers:     get("HEAVY_STEERS"),
+        bullocksBulls:   get("BULLS"),
+      }
+    };
+
+    // Clean up N/A values
+    Object.keys(result.prices).forEach(k => {
+      if(!result.prices[k]||result.prices[k]==="N/A") result.prices[k]=null;
+    });
+    if(result.date==="N/A") result.date=null;
+    if(result.saleType==="N/A") result.saleType=null;
+    if(result.reporter==="N/A") result.reporter=null;
+    if(result.commentary==="N/A") result.commentary=null;
+
+    // Sanity check — if we got at least a date or yarding it worked
+    if(result.date||result.yarding||result.commentary) return result;
+    return {error:"no_data_found"};
+
+  } catch(e) {
+    console.error("fetchSaleyardReport error:", e.message);
+    return {error:"unavailable"};
   }
-  return null;
 }
 
 // ── Fetch all MLA indicators at once ─────────────────────────
 async function fetchAllIndicators() {
-  const prompt = `Visit https://www.mla.com.au/prices-markets/cattle-prices/eycireport/ and find the current cattle price indicators for today.
-
-I need the EYCI (Eastern Young Cattle Indicator), National Young Cattle, Feeder Steer, Restocker Steer, Heavy Steer, and Processor Cow values.
-
-Reply with ONLY this JSON (no markdown, no explanation):
-{"date":"today","eyci":{"value":888.33,"change":-8.83},"nationalYoung":{"value":null,"change":null},"feederSteer":{"value":null,"change":null},"restockerSteer":{"value":null,"change":null},"heavySteer":{"value":null,"change":null},"processorCow":{"value":null,"change":null}}
-Use actual values found. change = day-on-day movement in cents. null if not found.`;
-
-  const res = await fetch(CONFIG.WORKER_URL, {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({
-      model:"claude-sonnet-4-20250514",
-      max_tokens:800,
-      tools:[{type:"web_search_20250305",name:"web_search"}],
-      messages:[{role:"user",content:prompt}]
-    })
-  });
-  const d = await res.json();
-  const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   try {
-    const clean = text.replace(/```json|```/g,"").trim();
-    const m = clean.match(/\{[\s\S]*\}/);
-    if(m) return JSON.parse(m[0]);
-  } catch(e){}
-  return null;
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        model:"claude-sonnet-4-20250514",
+        max_tokens:1000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages:[{role:"user",content:`Search the MLA website for today's cattle price indicators. 
+Try: https://www.mla.com.au/prices-markets/cattle-prices/
+Also try: https://www.mla.com.au/prices-markets/cattle-prices/eycireport/
+
+After searching, provide the values in this EXACT format with these EXACT labels on separate lines:
+DATE: [today's date]
+EYCI: [value in c/kg cwt e.g. 888.33]
+EYCI_CHANGE: [day change e.g. -8.83]
+NATIONAL_YOUNG: [value]
+NATIONAL_YOUNG_CHANGE: [day change]
+FEEDER_STEER: [value in c/kg lwt]
+FEEDER_STEER_CHANGE: [day change]
+RESTOCKER_STEER: [value in c/kg lwt]
+RESTOCKER_STEER_CHANGE: [day change]
+HEAVY_STEER: [value in c/kg cwt]
+HEAVY_STEER_CHANGE: [day change]
+PROCESSOR_COW: [value in c/kg cwt]
+PROCESSOR_COW_CHANGE: [day change]
+
+Write N/A if not found. No other text.`}]
+      })
+    });
+    const d = await res.json();
+    if(d.error) return null;
+
+    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+    if(!text.trim()) return null;
+
+    const getNum = (label) => {
+      const m = text.match(new RegExp(`^${label}:\\s*([\\-0-9.]+)`,"mi"));
+      if(!m||m[1]==="N/A") return null;
+      const v = parseFloat(m[1]);
+      return isNaN(v)?null:v;
+    };
+    const getStr = (label) => {
+      const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
+      return m&&m[1]!=="N/A"?m[1].trim():null;
+    };
+
+    return {
+      date:           getStr("DATE"),
+      eyci:           {value:getNum("EYCI"),           change:getNum("EYCI_CHANGE")},
+      nationalYoung:  {value:getNum("NATIONAL_YOUNG"), change:getNum("NATIONAL_YOUNG_CHANGE")},
+      feederSteer:    {value:getNum("FEEDER_STEER"),   change:getNum("FEEDER_STEER_CHANGE")},
+      restockerSteer: {value:getNum("RESTOCKER_STEER"),change:getNum("RESTOCKER_STEER_CHANGE")},
+      heavySteer:     {value:getNum("HEAVY_STEER"),    change:getNum("HEAVY_STEER_CHANGE")},
+      processorCow:   {value:getNum("PROCESSOR_COW"),  change:getNum("PROCESSOR_COW_CHANGE")},
+    };
+  } catch(e) {
+    console.error("fetchAllIndicators error:", e);
+    return null;
+  }
 }
 
 // ── Render the full Livestock Markets section ─────────────────
