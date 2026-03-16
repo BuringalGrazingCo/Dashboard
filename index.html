@@ -2398,10 +2398,10 @@ function parseAgoraHTML(html, saleType) {
   const nm = nearRe.exec(clean);
   if(nm) date = nm[1];
  
-  // Format 2: "17 March 2026" anywhere in page
+  // Format 2: "17 March 2026" or "17th March 2026" anywhere in page
   if(!date) {
-    const dm = clean.match(new RegExp("\\b(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+202\\d)\\b","i"));
-    if(dm) date = dm[1];
+    const dm = clean.match(new RegExp("\\b(\\d{1,2}(?:st|nd|rd|th)?\\s+(?:" + MONTHS + ")\\s+202\\d)\\b","i"));
+    if(dm) date = dm[1].replace(/(?<=\d)(st|nd|rd|th)/i,""); // strip ordinal suffix
   }
  
   // Format 3: ISO "2026-03-17" — convert to readable
@@ -2488,6 +2488,26 @@ function parseAgoraHTML(html, saleType) {
     }
   }
  
+  // If no table rows found, extract prices from body text (Agora inline format)
+  // e.g. "Feeder steers were firm to slightly cheaper... from 380c to 524c/kg"
+  if(rows.length === 0) {
+    const pricePatterns = [
+      { re: /feeder\s+steer[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,     name: "Feeder Steers" },
+      { re: /feeder\s+heifer[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,    name: "Feeder Heifers" },
+      { re: /restocker\s+steer[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,  name: "Restocker Steers" },
+      { re: /restocker\s+heifer[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi, name: "Restocker Heifers" },
+      { re: /processor\s+cow[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,    name: "Processor Cows" },
+      { re: /heavy\s+steer[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,      name: "Heavy Steers" },
+      { re: /prime\s+yearling[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,   name: "Prime Yearlings" },
+      { re: /yearling\s+steer[s]?[^.]*?(\d{3,}(?:[–\-]\d{3,})?)\s*c(?:\/kg)?/gi,   name: "Yearling Steers" },
+    ];
+    const searchText = commentary || bodyText;
+    for(const pp of pricePatterns) {
+      const m = pp.re.exec(searchText);
+      if(m) rows.push({ category: pp.name, unit: "c/kg lwt", avgPrice: m[1]+"c/kg", fromSearch: true });
+    }
+  }
+ 
   return { date, yarding, change, trend, commentary, saleType, priceRows: rows,
     source: "Agora Livestock / MLA NLRS - "+(saleType==="store"?"Store Sale":"Physical Sale") };
 }
@@ -2495,94 +2515,113 @@ function parseAgoraHTML(html, saleType) {
  
 async function fetchSaleyardReport(saleyard, saleType) {
  
-  // ── PRIMARY: Direct fetch of Agora Livestock HTML ────────────────────────
-  // Agora publishes NLRS sale reports as static indexed pages
-  try {
-    const res = await fetch(CONFIG.WORKER_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        action:       "mla_sale_report",
-        saleyardCode: saleyard.nlrs,
-        saleyardName: saleyard.name,
-        saleType:     saleType,
-      })
-    });
-    const d = await res.json();
+  // Fetch Agora HTML and report/6 in parallel
+  const [agoraResult, r6Result] = await Promise.allSettled([
  
-    if(d.html) {
-      console.log(`${saleyard.name} Agora HTML fetched: ${d.html.length} chars`);
-      // Debug: show text around the sale type keyword to find date format
-      const typeKw = saleType === "store" ? "store" : "physical";
-      const cleanDebug = d.html.replace(/<style[\s\S]*?<\/style>/gi,"").replace(/<script[\s\S]*?<\/script>/gi,"").replace(/<head[\s\S]*?<\/head>/gi,"");
-      const kwIdx = cleanDebug.toLowerCase().indexOf(typeKw);
-      if(kwIdx > 0) {
-        const nearby = cleanDebug.slice(Math.max(0,kwIdx-50), kwIdx+300).replace(/<[^>]+>/g," ").replace(/\s+/g," ");
-        console.log(`${saleyard.name} text near "${typeKw}":`, nearby);
-      }
-      const parsed = parseAgoraHTML(d.html, saleType);
-      console.log(`${saleyard.name} parsed:`, JSON.stringify(parsed).slice(0,300));
-      if(parsed.date || parsed.yarding || parsed.commentary) {
-        return parsed;
-      }
-      console.warn(`${saleyard.name} HTML fetched but couldn't parse data`);
-    } else if(d.error) {
-      console.warn(`${saleyard.name} Agora fetch error:`, d.error);
-    }
-  } catch(e) {
-    console.warn(`${saleyard.name} fetch error:`, e.message);
+    // Agora: date, yarding, change, commentary
+    fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"mla_sale_report", saleyardCode:saleyard.nlrs, saleyardName:saleyard.name, saleType })
+    }).then(r=>r.json()),
+ 
+    // report/6: precise indicator prices for last 90 days (2 sale dates for change calc)
+    fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"mla_saleyard", saleyardId:saleyard.mlaId })
+    }).then(r=>r.json()),
+  ]);
+ 
+  // ── Parse Agora HTML ──────────────────────────────────
+  let agoraData = null;
+  if(agoraResult.status === "fulfilled" && agoraResult.value?.html) {
+    const html = agoraResult.value.html;
+    console.log(`${saleyard.name} Agora HTML: ${html.length} chars`);
+    agoraData = parseAgoraHTML(html, saleType);
+    console.log(`${saleyard.name} Agora parsed: date=${agoraData.date}, yarding=${agoraData.yarding}`);
   }
  
-  // ── FALLBACK: MLA Statistics API report/6 (indicator data) ───────────────
-  console.log(`${saleyard.name} falling back to report/6`);
-  try {
-    const res = await fetch(CONFIG.WORKER_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"mla_saleyard", saleyardId: saleyard.mlaId })
-    });
-    const d = await res.json();
-    if(d.error) throw new Error(d.error);
+  // ── Parse report/6 for price trend boxes ─────────────
+  const IND = {
+    0: {name:"EYCI",           unit:"¢/kg cwt", color:"#1a4a2e"},
+    2: {name:"Restocker Steers",unit:"¢/kg lwt", color:"#8b5cf6"},
+    3: {name:"Feeder Steers",  unit:"¢/kg lwt", color:"#3b82f6"},
+    4: {name:"Heavy Steers",   unit:"¢/kg lwt", color:"#dc2626"},
+    12:{name:"Restocker Heifers",unit:"¢/kg lwt",color:"#a855f7"},
+    13:{name:"Processor Cows", unit:"¢/kg lwt", color:"#d97706"},
+    17:{name:"Feeder Heifers", unit:"¢/kg lwt", color:"#0ea5e9"},
+  };
  
-    const cattleRows = (d.data||[]).filter(r => r.species_id === "Cattle");
-    if(!cattleRows.length) return { error:"no_data_found" };
- 
+  let priceRows = [];
+  if(r6Result.status === "fulfilled" && r6Result.value?.data) {
+    const cattleRows = r6Result.value.data.filter(r => r.species_id === "Cattle");
     const allDates   = [...new Set(cattleRows.map(r=>r.calendar_date))].sort((a,b)=>b.localeCompare(a));
-    const targetDate = (saleType==="store" && allDates.length>1) ? allDates[1] : allDates[0];
-    const saleRows   = cattleRows.filter(r=>r.calendar_date===targetDate);
  
-    const IND = {
-      0:{name:"EYCI",unit:"¢/kg cwt"},2:{name:"Restocker Steers",unit:"¢/kg lwt"},
-      3:{name:"Feeder Steers",unit:"¢/kg lwt"},4:{name:"Heavy Steers",unit:"¢/kg lwt"},
-      12:{name:"Restocker Heifers",unit:"¢/kg lwt"},13:{name:"Processor Cows",unit:"¢/kg lwt"},
-      14:{name:"Young Cattle",unit:"¢/kg lwt"},17:{name:"Feeder Heifers",unit:"¢/kg lwt"},
+    // Use most recent date for Physical, second most recent for Store
+    const d1 = allDates[0];
+    const d2 = allDates[1] || null;  // previous sale date for change calc
+ 
+    const sale1 = cattleRows.filter(r=>r.calendar_date===d1);
+    const sale2 = d2 ? cattleRows.filter(r=>r.calendar_date===d2) : [];
+ 
+    const getVal = (rows, indId) => {
+      const r = rows.find(r=>r.indicator_id===indId);
+      return r ? Math.round(parseFloat(r.indicator_value)*100)/100 : null;
+    };
+    const getHead = (rows, indId) => {
+      const r = rows.find(r=>r.indicator_id===indId);
+      return r ? parseInt(r.head_count)||0 : 0;
     };
  
-    const priceRows = saleRows
-      .filter(r=>IND[r.indicator_id])
-      .sort((a,b)=>a.indicator_id-b.indicator_id)
-      .map(r=>({
-        category: IND[r.indicator_id].name,
-        unit:     IND[r.indicator_id].unit,
-        headCount:parseInt(r.head_count)||0,
-        avgPrice: parseFloat(r.indicator_value).toFixed(2),
+    priceRows = Object.entries(IND).map(([id, meta]) => {
+      const v1 = getVal(sale1, parseInt(id));
+      const v2 = getVal(sale2, parseInt(id));
+      if(!v1) return null;
+      const chg = (v2 != null) ? Math.round((v1-v2)*100)/100 : null;
+      return {
+        category:  meta.name,
+        unit:      meta.unit,
+        color:     meta.color,
+        headCount: getHead(sale1, parseInt(id)),
+        avgPrice:  v1.toFixed(2),
+        change:    chg,
         fromSearch:false,
-      }));
+      };
+    }).filter(Boolean);
+  }
  
-    const dateStr = new Date(targetDate+"T00:00:00").toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"});
+  // ── Merge: prefer Agora for date/yarding/commentary, report/6 for prices ──
+  if(agoraData && (agoraData.date || agoraData.yarding || agoraData.commentary)) {
+    return {
+      date:       agoraData.date,
+      yarding:    agoraData.yarding,
+      change:     agoraData.change,
+      trend:      agoraData.trend,
+      commentary: agoraData.commentary,
+      saleType:   saleType,
+      priceRows:  priceRows.length ? priceRows : agoraData.priceRows,
+      source:     "MLA/NLRS · " + (saleType==="store"?"Store Sale":"Physical Sale"),
+    };
+  }
+ 
+  // ── Fallback: report/6 only ───────────────────────────
+  if(priceRows.length) {
+    const r6 = r6Result.value;
+    const cattleRows = (r6?.data||[]).filter(r=>r.species_id==="Cattle");
+    const allDates   = [...new Set(cattleRows.map(r=>r.calendar_date))].sort((a,b)=>b.localeCompare(a));
+    const targetDate = allDates[0];
+    const dateStr    = targetDate ? new Date(targetDate+"T00:00:00").toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"}) : null;
     return {
       date:      dateStr,
-      rawDate:   targetDate,
-      yarding:   Math.max(...saleRows.map(r=>parseInt(r.head_count)||0)),
+      yarding:   Math.max(...cattleRows.filter(r=>r.calendar_date===targetDate).map(r=>parseInt(r.head_count)||0), 0)||null,
       saleType:  saleType,
       priceRows: priceRows,
-      allDates:  allDates,
-      trend:     null, commentary:null,
-      source:    "MLA Statistics API (indicator averages — live report unavailable)",
+      source:    "MLA Statistics API (indicator averages)",
     };
-  } catch(e) {
-    console.error(`${saleyard.name} fallback error:`, e.message);
-    return { error:"unavailable", message: e.message };
   }
+ 
+  return { error:"no_data_found" };
 }
+ 
  
 function renderLivestockMarketsTab() {
   const container = document.getElementById("section-markets");
@@ -3017,21 +3056,23 @@ function renderSaleyardCard(sy, data) {
  
   const saleLabel = (data.saleType==="store") ? "Store Sale" : "Physical Sale";
  
-  // Build price rows table if available
+  // Price trend boxes — show ▲/▼ change vs previous sale
   const rowsHtml = data.priceRows?.length ? `
-    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:12px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px;margin-bottom:12px">
       ${data.priceRows.map(r=>{
-        // Handle both formats: report/6 numeric avgPrice, or web search string like "478c/kg lwt"
-        const priceDisplay = r.avgPrice
-          ? (r.fromSearch ? r.avgPrice : `${r.avgPrice}¢`)
-          : "—";
-        const headDisplay = r.headCount ? (r.headCount).toLocaleString()+"hd" : "";
-        const avgHeadDisplay = r.avgHead && r.avgHead!=="N/A" ? ` · avg ${r.avgHead}` : "";
+        const price = r.avgPrice ? (r.fromSearch ? r.avgPrice : `${r.avgPrice}¢`) : "—";
+        const chgColor = !r.change ? "#8898aa" : r.change > 0 ? "#16a34a" : "#dc2626";
+        const chgIcon  = !r.change ? "" : r.change > 0 ? "▲" : "▼";
+        const chgText  = r.change != null ? `${chgIcon} ${Math.abs(r.change).toFixed(1)}¢` : "";
+        const chgBg    = !r.change ? "transparent" : r.change > 0 ? "#f0fdf4" : "#fef2f2";
+        const borderCol = r.color || "#e2e8f0";
+        const headTxt  = r.headCount ? `${r.headCount.toLocaleString()} hd` : "";
         return `
-        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:8px 10px">
-          <div style="font-size:9px;color:#8898aa;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${r.category}</div>
-          <div style="font-size:15px;font-weight:700;color:#1a4a2e">${priceDisplay}</div>
-          <div style="font-size:9px;color:#a0aec0">${r.unit}${headDisplay?" · "+headDisplay:""}${avgHeadDisplay}</div>
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:8px 10px;border-left:3px solid ${borderCol}">
+          <div style="font-size:9px;color:#8898aa;font-weight:600;text-transform:uppercase;letter-spacing:.03em;margin-bottom:4px">${r.category}</div>
+          <div style="font-size:16px;font-weight:700;color:#1a2332;line-height:1">${price}</div>
+          <div style="font-size:9px;color:#8898aa;margin-top:2px">${r.unit}${headTxt?" · "+headTxt:""}</div>
+          ${chgText ? `<div style="font-size:9px;font-weight:700;color:${chgColor};background:${chgBg};border-radius:4px;padding:2px 4px;margin-top:4px;display:inline-block">${chgText} vs prev</div>` : ""}
         </div>`;
       }).join("")}
     </div>` : "";
@@ -3298,4 +3339,4 @@ function switchWeatherModel(model) {
 init();
 </script>
 </body>
-</html>
+</html> 
