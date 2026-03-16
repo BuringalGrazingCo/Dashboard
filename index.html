@@ -405,7 +405,7 @@ button:focus,input:focus,select:focus{outline:none}
         <div class="markets-header">
           <div>
             <div style="font-size:11px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Eastern Young Cattle Indicator (EYCI)</div>
-            <div class="eyci-price" id="eyci-val">888.33 ¢/kg cwt</div>
+            <div class="eyci-price" id="eyci-val">897.15 ¢/kg cwt</div>
             <div class="eyci-label" id="eyci-sub">Static — click Refresh for live MLA price</div>
           </div>
           <button class="live-btn" id="eyci-btn" onclick="fetchEYCI()">↻ Refresh Live Price</button>
@@ -2473,7 +2473,7 @@ function renderLivestockMarketsTab() {
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right">
             <div style="font-size:10px;color:#8898aa">Current (lwt)</div>
-            <div id="eyci-val" style="font-size:20px;font-weight:700;color:#1a4a2e">888.33 ¢/kg cwt</div>
+            <div id="eyci-val" style="font-size:20px;font-weight:700;color:#1a4a2e">897.15 ¢/kg cwt</div>
           </div>
           <div style="display:flex;gap:6px">
             <button onclick="setEYCIRange(5)"  id="eyci-r5"  style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">5Y</button>
@@ -2560,8 +2560,8 @@ const EYCI_MONTHLY = {
   "2025-01":625,"2025-02":648,"2025-03":672,"2025-04":698,"2025-05":720,
   "2025-06":742,"2025-07":762,"2025-08":780,"2025-09":800,"2025-10":820,
   "2025-11":845,"2025-12":868,
-  // 2026 — current (Mar 16 = 888.33)
-  "2026-01":875,"2026-02":880,"2026-03":888,
+  // 2026 — current (Mar 15 = 897.15 per MLA API)
+  "2026-01":875,"2026-02":880,"2026-03":897,
 };
 
 // Annual averages for All Time view
@@ -2571,7 +2571,7 @@ const EYCI_ANNUAL = {
   2010:333,2011:376,2012:330,2013:354,2014:430,
   2015:492,2016:545,2017:605,2018:528,2019:465,
   2020:615,2021:890,2022:785,2023:555,2024:544,
-  2025:740,2026:888,
+  2025:740,2026:897,
 };
 
 const EYCI_EVENTS = {
@@ -2580,7 +2580,7 @@ const EYCI_EVENTS = {
   "2022-06":"Post-peak decline",
   "2023-06":"Market trough",
   "2025-03":"Recovery rally",
-  "2026-03":"Current: 888.33¢",
+  "2026-03":"Current: 897.15¢ (15 Mar)",
 };
 
 let eyciRangeYears = 5;
@@ -2920,7 +2920,7 @@ async function generateMarketInsights() {
       return `${sy?.name} (${d.date||"latest"}): ${d.yarding?.toLocaleString()||"?"}hd yarded${prices?` — ${prices}`:""}`;
     }).join("\n");
 
-  const eyciVal = document.getElementById("eyci-val")?.textContent || "888.33 ¢/kg cwt";
+  const eyciVal = document.getElementById("eyci-val")?.textContent || "897.15 ¢/kg cwt";
 
   const prompt = `You are a senior livestock market analyst advising Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW running the Wombramurra Angus.
 
