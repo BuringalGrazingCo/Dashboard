@@ -2282,6 +2282,19 @@ function buildIndicatorStats(windowData) {
     if(best && best.calendar_date !== sorted[0].calendar_date) v1W = parseFloat(best.indicator_value);
   }
 
+  // 1D: previous trading day value (second most recent in current window)
+  let v1D = null;
+  if(sorted.length > 1) {
+    // Find the most recent entry that is actually a different value (prev trading day)
+    for(let i = 1; i < sorted.length; i++) {
+      const candidate = parseFloat(sorted[i].indicator_value);
+      if(!isNaN(candidate) && sorted[i].calendar_date !== sorted[0].calendar_date) {
+        v1D = candidate;
+        break;
+      }
+    }
+  }
+
   const v  = curr.value;
   const chg = (ref) => (ref != null && !isNaN(ref)) ? Math.round((v - ref) * 100) / 100 : null;
 
@@ -2289,6 +2302,7 @@ function buildIndicatorStats(windowData) {
     value:     Math.round(v * 100) / 100,
     date:      curr.date,
     headCount: curr.head,
+    change1D:  chg(v1D),
     change1W:  chg(v1W),
     change1M:  chg(month?.value),
     change1Y:  chg(year?.value),
@@ -2433,7 +2447,11 @@ function renderLivestockMarketsTab() {
             <div style="font-size:10px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${ind.name}</div>
             <div style="font-size:22px;font-weight:700;color:#1a2332" id="ind-val-${ind.id}">—</div>
             <div style="font-size:10px;color:#8898aa;margin-top:1px">${ind.unit}</div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:8px" id="ind-chg-${ind.id}">
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-top:8px" id="ind-chg-${ind.id}">
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1D</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
               <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
                 <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
                 <div style="font-size:9px;color:#8898aa">—</div>
@@ -2935,24 +2953,28 @@ async function refreshAllIndicators() {
         if(valEl && d.value != null) { valEl.textContent = d.value.toFixed(2); anyUpdated = true; }
 
         if(chgEl) {
-          const fmt = (chg, pct) => {
+          const fmt = (chg) => {
             if(chg == null) return `<div style="font-size:9px;color:#a0aec0">—</div>`;
             const pos = chg > 0, col = chg===0?"#8898aa":pos?"#16a34a":"#dc2626";
             return `<div style="font-size:9px;font-weight:700;color:${col}">${pos?"+":""}${chg.toFixed(1)}¢</div>`;
           };
           // Rebuild the 1W/1M/1Y grid
           chgEl.innerHTML = `
+            <div style="background:${d.change1D==null?"#f0f2f5":d.change1D>0?"#f0fdf4":d.change1D<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1D</div>
+              ${fmt(d.change1D)}
+            </div>
             <div style="background:${d.change1W==null?"#f0f2f5":d.change1W>0?"#f0fdf4":d.change1W<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
               <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
-              ${fmt(d.change1W, d.pct1W)}
+              ${fmt(d.change1W)}
             </div>
             <div style="background:${d.change1M==null?"#f0f2f5":d.change1M>0?"#f0fdf4":d.change1M<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
               <div style="font-size:8px;color:#a0aec0;font-weight:600">1M</div>
-              ${fmt(d.change1M, d.pct1M)}
+              ${fmt(d.change1M)}
             </div>
             <div style="background:${d.change1Y==null?"#f0f2f5":d.change1Y>0?"#f0fdf4":d.change1Y<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
               <div style="font-size:8px;color:#a0aec0;font-weight:600">1Y</div>
-              ${fmt(d.change1Y, d.pct1Y)}
+              ${fmt(d.change1Y)}
             </div>`;
         }
       });
