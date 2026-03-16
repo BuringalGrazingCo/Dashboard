@@ -2340,11 +2340,18 @@ async function fetchAllIndicators() {
       body: JSON.stringify({ action:"mla_all_indicators" })
     });
     const d = await res.json();
+    console.log("fetchAllIndicators raw response:", JSON.stringify(d).slice(0,500));
     if(d.error) throw new Error(d.error);
 
     const out = { date: null };
     for(const r of (d.results||[])) {
+      // Log raw window data for first indicator (EYCI) to debug
+      if(r.indicatorId === 0) {
+        const curr = r.windowData?.current || [];
+        console.log(`EYCI current window: ${curr.length} rows, latest: ${curr.length ? JSON.stringify(curr[curr.length-1]) : "none"}`);
+      }
       const result = buildIndicatorStats(r.windowData || {});
+      if(r.indicatorId === 0) console.log("EYCI buildIndicatorStats result:", JSON.stringify(result));
       if(!result) continue;
       if(!out.date || result.date > out.date) out.date = result.date;
       switch(r.indicatorId) {
