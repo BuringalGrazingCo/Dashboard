@@ -973,11 +973,12 @@ async function fetchEYCI(){
     const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},
       body:JSON.stringify({action:"mla_indicators",indicatorId:0})});
     const d=await res.json();
-    const rows=d.data||[];
-    const result = getMostRecentIndicatorValue(rows, 0);
-    if(result && result.value){
-      document.getElementById("eyci-val").textContent=`${result.value.toFixed(2)} ¢/kg cwt`;
-      document.getElementById("eyci-sub").textContent=`MLA Statistics API · Data to ${result.date} · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
+    const rows=(d.data||[]).filter(r=>r.indicator_id===0);
+    const latest = rows.sort((a,b)=>b.calendar_date.localeCompare(a.calendar_date))[0];
+    if(latest){
+      const val = parseFloat(latest.indicator_value).toFixed(2);
+      document.getElementById("eyci-val").textContent=`${val} ¢/kg cwt`;
+      document.getElementById("eyci-sub").textContent=`MLA Statistics API · Data to ${latest.calendar_date} · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
     }
   }catch(e){document.getElementById("eyci-sub").textContent="Update failed — check connection";}
   btn.disabled=false;btn.textContent="↻ Refresh Live Price";
@@ -2242,57 +2243,68 @@ let saleyardData = {};   // { saleyardId: { physical: {...}, store: {...} } }
 let indicatorData = {};
 let activeSaleyardFilter = "all";
 
-// ── Helper: get value from sorted data array closest to N days ago ────────────
-function getValueNDaysAgo(sortedRows, daysAgo) {
-  // sortedRows: descending by date. Find row closest to daysAgo days before most recent.
-  if(!sortedRows.length) return null;
-  const latestDate = new Date(sortedRows[0].calendar_date + "T00:00:00");
-  const targetDate = new Date(latestDate.getTime() - daysAgo * 86400000);
-  // Find closest row to targetDate
-  let best = null, bestDiff = Infinity;
-  for(const r of sortedRows) {
-    const d = new Date(r.calendar_date + "T00:00:00");
-    const diff = Math.abs(d.getTime() - targetDate.getTime());
-    if(diff < bestDiff) { bestDiff = diff; best = r; }
-  }
-  return best ? parseFloat(best.indicator_value) : null;
+// ── Helper: get most recent value from a flat rows array ─────────────────────
+function getLatestValue(rows) {
+  if(!rows || !rows.length) return null;
+  const sorted = [...rows].filter(r => r.indicator_value != null)
+    .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
+  if(!sorted.length) return null;
+  return { value: parseFloat(sorted[0].indicator_value), date: sorted[0].calendar_date, head: sorted[0].head_count };
 }
 
-// ── Helper: get most recent + 1W/1M/1Y changes from full data array ──────────
-function getIndicatorStats(dataArr, indicatorId) {
-  if(!Array.isArray(dataArr)) return null;
-  const rows = dataArr
-    .filter(r => r.species_id === "Cattle" && r.indicator_id === indicatorId)
+// ── Helper: get representative value from a window of rows ───────────────────
+function getWindowValue(rows) {
+  // Use the most recent row in the window as the reference value
+  return getLatestValue(rows);
+}
+
+// ── Build indicator stats from windowed data ──────────────────────────────────
+function buildIndicatorStats(windowData) {
+  const curr  = getLatestValue(windowData.current || []);
+  const month = getWindowValue(windowData.month   || []);
+  const year  = getWindowValue(windowData.year    || []);
+
+  if(!curr || curr.value == null || isNaN(curr.value)) return null;
+
+  // 1W: find value 7 days before current from the current window
+  const sorted = [...(windowData.current||[])].filter(r => r.indicator_value != null)
     .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
-  if(!rows.length) return null;
+  const latestDate = sorted.length ? new Date(sorted[0].calendar_date + "T00:00:00") : null;
+  let v1W = null;
+  if(latestDate && sorted.length > 1) {
+    const target = new Date(latestDate.getTime() - 7 * 86400000);
+    let best = null, bestDiff = Infinity;
+    for(const r of sorted) {
+      const diff = Math.abs(new Date(r.calendar_date+"T00:00:00") - target);
+      if(diff < bestDiff) { bestDiff = diff; best = r; }
+    }
+    // Only use as 1W ref if it's actually a different day
+    if(best && best.calendar_date !== sorted[0].calendar_date) v1W = parseFloat(best.indicator_value);
+  }
 
-  const latest = rows[0];
-  const value  = parseFloat(latest.indicator_value);
-  if(isNaN(value)) return null;
-
-  const v1W = getValueNDaysAgo(rows, 7);
-  const v1M = getValueNDaysAgo(rows, 30);
-  const v1Y = getValueNDaysAgo(rows, 365);
-
-  const chg = (ref) => (ref != null && !isNaN(ref)) ? Math.round((value - ref) * 100) / 100 : null;
-  const pct = (ref) => (ref != null && !isNaN(ref) && ref !== 0) ? Math.round(((value - ref) / ref) * 1000) / 10 : null;
+  const v  = curr.value;
+  const chg = (ref) => (ref != null && !isNaN(ref)) ? Math.round((v - ref) * 100) / 100 : null;
 
   return {
-    value:    Math.round(value * 100) / 100,
-    date:     latest.calendar_date,
-    headCount: latest.head_count,
-    change1W: chg(v1W), pct1W: pct(v1W),
-    change1M: chg(v1M), pct1M: pct(v1M),
-    change1Y: chg(v1Y), pct1Y: pct(v1Y),
+    value:     Math.round(v * 100) / 100,
+    date:      curr.date,
+    headCount: curr.head,
+    change1W:  chg(v1W),
+    change1M:  chg(month?.value),
+    change1Y:  chg(year?.value),
   };
 }
 
-// Keep old name for fetchEYCI compatibility
+// Keep for fetchEYCI compatibility — works on flat array from single indicator call
 function getMostRecentIndicatorValue(dataArr, indicatorId) {
-  return getIndicatorStats(dataArr, indicatorId);
+  if(!Array.isArray(dataArr)) return null;
+  const rows = dataArr.filter(r => r.indicator_id === indicatorId || indicatorId == null);
+  const latest = getLatestValue(rows);
+  if(!latest) return null;
+  return { value: latest.value, date: latest.date, headCount: latest.head };
 }
 
-// ── Fetch all MLA national indicators (13 months for 1W/1M/1Y deltas) ────────
+// ── Fetch all MLA national indicators — windowed to avoid pagination ──────────
 async function fetchAllIndicators() {
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
@@ -2304,8 +2316,7 @@ async function fetchAllIndicators() {
 
     const out = { date: null };
     for(const r of (d.results||[])) {
-      const rows = r.data?.data || [];
-      const result = getIndicatorStats(rows, r.indicatorId);
+      const result = buildIndicatorStats(r.windowData || {});
       if(!result) continue;
       if(!out.date || result.date > out.date) out.date = result.date;
       switch(r.indicatorId) {
