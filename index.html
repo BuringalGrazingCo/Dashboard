@@ -2217,52 +2217,82 @@ Use the actual historical data provided. Be specific and direct.`;
 // ══════════════════════════════════════════════════════════════
 
 const SALEYARDS = [
-  { id:"tamworth",  name:"Tamworth",       short:"TAM",  mlaId:"TAM", state:"NSW", region:"New England" },
-  { id:"armidale",  name:"Armidale",       short:"ARM",  mlaId:"ARM", state:"NSW", region:"New England" },
-  { id:"inverell",  name:"Inverell",       short:"INV",  mlaId:"INV", state:"NSW", region:"New England" },
-  { id:"ctlx",      name:"CTLX Carcoar",   short:"CTL",  mlaId:"CTL", state:"NSW", region:"Central Tablelands" },
-  { id:"dubbo",     name:"Dubbo",          short:"DUB",  mlaId:"DUB", state:"NSW", region:"Central West" },
-  { id:"wagga",     name:"Wagga Wagga",    short:"WAG",  mlaId:"WAG", state:"NSW", region:"Riverina" },
-  { id:"barnawartha",name:"NVLX Barnawartha",short:"BAN",mlaId:"BAN", state:"VIC", region:"North East VIC" },
-  { id:"dalby",     name:"Dalby",          short:"DAL",  mlaId:"DAL", state:"QLD", region:"Darling Downs" },
-  { id:"roma",      name:"Roma",           short:"ROM",  mlaId:"ROM", state:"QLD", region:"Maranoa" },
+  { id:"tamworth",    name:"Tamworth",         short:"TAM",  nlrs:"TRLX", mlaId:"TAM", state:"NSW", region:"New England" },
+  { id:"armidale",    name:"Armidale",          short:"ARM",  nlrs:"ARM",  mlaId:"ARM", state:"NSW", region:"New England" },
+  { id:"inverell",    name:"Inverell",          short:"INV",  nlrs:"IRLX", mlaId:"INV", state:"NSW", region:"New England" },
+  { id:"ctlx",        name:"CTLX Carcoar",      short:"CTL",  nlrs:"CTL",  mlaId:"CTL", state:"NSW", region:"Central Tablelands" },
+  { id:"dubbo",       name:"Dubbo",             short:"DUB",  nlrs:"DLCO", mlaId:"DUB", state:"NSW", region:"Central West" },
+  { id:"wagga",       name:"Wagga Wagga",       short:"WAG",  nlrs:"WWLX", mlaId:"WAG", state:"NSW", region:"Riverina" },
+  { id:"barnawartha", name:"NVLX Barnawartha",  short:"BAN",  nlrs:"BAN",  mlaId:"BAN", state:"VIC", region:"North East VIC" },
+  { id:"dalby",       name:"Dalby",             short:"DAL",  nlrs:"DALB", mlaId:"DAL", state:"QLD", region:"Darling Downs" },
+  { id:"roma",        name:"Roma",              short:"ROM",  nlrs:"ROMA", mlaId:"ROM", state:"QLD", region:"Maranoa" },
 ];
 
 // MLA indicator IDs confirmed from /indicator endpoint
-// 0=EYCI(cwt), 2=Restocker Steer(lwt), 3=Feeder Steer(lwt), 4=Heavy Steer(lwt), 13=Processor Cow(lwt), 14=National Young(lwt)
 const MLA_INDICATORS = [
-  { id:"eyci",       name:"EYCI",                  desc:"Eastern Young Cattle Indicator",      unit:"¢/kg cwt", color:"#1a4a2e", mlaId:0  },
-  { id:"nychc",      name:"National Young Cattle",  desc:"National Young Cattle Indicator",     unit:"¢/kg lwt", color:"#2d7a4f", mlaId:14 },
-  { id:"feeder",     name:"Feeder Steer",           desc:"250–330kg",                           unit:"¢/kg lwt", color:"#3b82f6", mlaId:3  },
-  { id:"restocker",  name:"Restocker Steer",        desc:"Yearling restocker",                  unit:"¢/kg lwt", color:"#8b5cf6", mlaId:2  },
-  { id:"heavy",      name:"Heavy Steer",            desc:"Processor heavy steer",               unit:"¢/kg lwt", color:"#dc2626", mlaId:4  },
-  { id:"cow",        name:"Processor Cow",          desc:"Manufacturing cow",                   unit:"¢/kg lwt", color:"#d97706", mlaId:13 },
+  { id:"eyci",      name:"EYCI",                 desc:"Eastern Young Cattle Indicator",  unit:"¢/kg cwt", color:"#1a4a2e", mlaId:0  },
+  { id:"nychc",     name:"National Young Cattle", desc:"National Young Cattle Indicator", unit:"¢/kg lwt", color:"#2d7a4f", mlaId:14 },
+  { id:"feeder",    name:"Feeder Steer",          desc:"250–330kg",                       unit:"¢/kg lwt", color:"#3b82f6", mlaId:3  },
+  { id:"restocker", name:"Restocker Steer",       desc:"Yearling restocker",              unit:"¢/kg lwt", color:"#8b5cf6", mlaId:2  },
+  { id:"heavy",     name:"Heavy Steer",           desc:"Processor heavy steer",           unit:"¢/kg lwt", color:"#dc2626", mlaId:4  },
+  { id:"cow",       name:"Processor Cow",         desc:"Manufacturing cow",               unit:"¢/kg lwt", color:"#d97706", mlaId:13 },
 ];
 
-let saleyardData = {};
+let saleyardData = {};   // { saleyardId: { physical: {...}, store: {...} } }
 let indicatorData = {};
 let activeSaleyardFilter = "all";
 
-// ── Helper: get most recent value from MLA report/5 or report/6 data array ──
-function getMostRecentIndicatorValue(dataArr, indicatorId) {
+// ── Helper: get value from sorted data array closest to N days ago ────────────
+function getValueNDaysAgo(sortedRows, daysAgo) {
+  // sortedRows: descending by date. Find row closest to daysAgo days before most recent.
+  if(!sortedRows.length) return null;
+  const latestDate = new Date(sortedRows[0].calendar_date + "T00:00:00");
+  const targetDate = new Date(latestDate.getTime() - daysAgo * 86400000);
+  // Find closest row to targetDate
+  let best = null, bestDiff = Infinity;
+  for(const r of sortedRows) {
+    const d = new Date(r.calendar_date + "T00:00:00");
+    const diff = Math.abs(d.getTime() - targetDate.getTime());
+    if(diff < bestDiff) { bestDiff = diff; best = r; }
+  }
+  return best ? parseFloat(best.indicator_value) : null;
+}
+
+// ── Helper: get most recent + 1W/1M/1Y changes from full data array ──────────
+function getIndicatorStats(dataArr, indicatorId) {
   if(!Array.isArray(dataArr)) return null;
-  const filtered = dataArr
+  const rows = dataArr
     .filter(r => r.species_id === "Cattle" && r.indicator_id === indicatorId)
     .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
-  if(!filtered.length) return null;
-  const latest = filtered[0];
-  const prev   = filtered[1] || null;
+  if(!rows.length) return null;
+
+  const latest = rows[0];
   const value  = parseFloat(latest.indicator_value);
-  const prevV  = prev ? parseFloat(prev.indicator_value) : null;
+  if(isNaN(value)) return null;
+
+  const v1W = getValueNDaysAgo(rows, 7);
+  const v1M = getValueNDaysAgo(rows, 30);
+  const v1Y = getValueNDaysAgo(rows, 365);
+
+  const chg = (ref) => (ref != null && !isNaN(ref)) ? Math.round((value - ref) * 100) / 100 : null;
+  const pct = (ref) => (ref != null && !isNaN(ref) && ref !== 0) ? Math.round(((value - ref) / ref) * 1000) / 10 : null;
+
   return {
-    value:  isNaN(value) ? null : Math.round(value * 100) / 100,
-    change: (prevV != null && !isNaN(prevV)) ? Math.round((value - prevV) * 100) / 100 : null,
-    date:   latest.calendar_date,
+    value:    Math.round(value * 100) / 100,
+    date:     latest.calendar_date,
     headCount: latest.head_count,
+    change1W: chg(v1W), pct1W: pct(v1W),
+    change1M: chg(v1M), pct1M: pct(v1M),
+    change1Y: chg(v1Y), pct1Y: pct(v1Y),
   };
 }
 
-// ── Fetch all MLA national indicators via report/5 (parallel) ────────────────
+// Keep old name for fetchEYCI compatibility
+function getMostRecentIndicatorValue(dataArr, indicatorId) {
+  return getIndicatorStats(dataArr, indicatorId);
+}
+
+// ── Fetch all MLA national indicators (13 months for 1W/1M/1Y deltas) ────────
 async function fetchAllIndicators() {
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
@@ -2272,11 +2302,10 @@ async function fetchAllIndicators() {
     const d = await res.json();
     if(d.error) throw new Error(d.error);
 
-    // d.results = [{indicatorId:0, data:{message,data:[...]}}, ...]
     const out = { date: null };
     for(const r of (d.results||[])) {
       const rows = r.data?.data || [];
-      const result = getMostRecentIndicatorValue(rows, r.indicatorId);
+      const result = getIndicatorStats(rows, r.indicatorId);
       if(!result) continue;
       if(!out.date || result.date > out.date) out.date = result.date;
       switch(r.indicatorId) {
@@ -2295,70 +2324,63 @@ async function fetchAllIndicators() {
   }
 }
 
-// ── Fetch single saleyard data via report/6 ──────────────────────────────────
-async function fetchSaleyardReport(saleyard) {
+// ── Fetch full MLA sale report (Physical or Store) via AI web search ──────────
+async function fetchSaleyardReport(saleyard, saleType) {
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ action:"mla_saleyard", saleyardId: saleyard.mlaId })
+      body: JSON.stringify({
+        action:       "mla_sale_report",
+        saleyardCode: saleyard.nlrs,
+        saleyardName: saleyard.name,
+        saleType:     saleType   // "physical" or "store"
+      })
     });
     const d = await res.json();
-    if(d.error) throw new Error(d.error);
+    if(d.error) throw new Error(d.error.message || JSON.stringify(d.error));
 
-    const rows = d.data || [];
-    if(!rows.length) return { error:"no_data_found" };
+    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+    if(!text.trim()) throw new Error("Empty response");
 
-    // Get most recent sale date for cattle
-    const cattleRows = rows.filter(r => r.species_id === "Cattle");
-    if(!cattleRows.length) return { error:"no_data_found" };
-
-    const latestDate = cattleRows
-      .map(r => r.calendar_date)
-      .sort((a,b) => b.localeCompare(a))[0];
-
-    const saleRows = cattleRows.filter(r => r.calendar_date === latestDate);
-
-    // Sum head count across all indicators on that date for total yarding
-    const totalHead = saleRows.reduce((sum, r) => sum + (parseInt(r.head_count)||0), 0);
-    // Use the max head_count row as the best yarding proxy (avoid double counting)
-    const maxHeadRow = saleRows.reduce((best, r) => (!best || parseInt(r.head_count) > parseInt(best.head_count)) ? r : best, null);
-    const yarding = maxHeadRow ? parseInt(maxHeadRow.head_count) : null;
-
-    const getVal = (indicatorId) => {
-      const row = saleRows.find(r => r.indicator_id === indicatorId);
-      return row ? Math.round(parseFloat(row.indicator_value) * 100) / 100 : null;
+    const get = (label) => {
+      const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
+      const v = m ? m[1].trim() : null;
+      return (v && v !== "N/A" && v !== "n/a") ? v : null;
     };
+    const yardingRaw = get("YARDING");
+    const yarding = yardingRaw ? parseInt(yardingRaw.replace(/[^0-9]/g,"")) : null;
 
-    // Format date nicely
-    const dateObj = new Date(latestDate + "T00:00:00");
-    const dateStr = dateObj.toLocaleDateString("en-AU", {day:"numeric", month:"long", year:"numeric"});
+    // Parse ROW lines into price table
+    const rows = [];
+    const rowMatches = [...text.matchAll(/^ROW:\s*(.+)$/gmi)];
+    for(const m of rowMatches) {
+      const parts = m[1].split("|").map(s=>s.trim());
+      if(parts.length >= 4) rows.push({
+        category:   parts[0],
+        weightRange:parts[1],
+        headCount:  parts[2],
+        avgLwt:     parts[3],
+        minHead:    parts[4]||null,
+        avgHead:    parts[5]||null,
+        maxHead:    parts[6]||null,
+      });
+    }
 
     return {
-      date:     dateStr,
-      rawDate:  latestDate,
-      saleType: "MLA Indicator Report",
-      yarding:  yarding,
-      trend:    null,   // MLA API does not provide trend
-      reporter: "MLA/NLRS",
-      commentary: null,
-      prices: {
-        feederSteers:    getVal(3)  ? `${getVal(3)}¢/kg lwt`  : null,
-        feederHeifers:   getVal(17) ? `${getVal(17)}¢/kg lwt` : null,
-        restockerSteers: getVal(2)  ? `${getVal(2)}¢/kg lwt`  : null,
-        cows:            getVal(13) ? `${getVal(13)}¢/kg lwt` : null,
-        heavySteers:     getVal(4)  ? `${getVal(4)}¢/kg lwt`  : null,
-        eyci:            getVal(0)  ? `${getVal(0)}¢/kg cwt`  : null,
-      },
-      mlaRows: saleRows, // keep raw rows for AI analysis
+      date:       get("REPORT_DATE"),
+      yarding:    isNaN(yarding) ? null : yarding,
+      change:     get("CHANGE"),
+      trend:      get("TREND")?.toLowerCase(),
+      commentary: get("COMMENTARY"),
+      saleType:   saleType,
+      priceRows:  rows,
     };
   } catch(e) {
-    console.error(`${saleyard.name} MLA fetch error:`, e.message);
+    console.error(`${saleyard.name} ${saleType} fetch error:`, e.message);
     return { error:"unavailable", message: e.message };
   }
 }
 
-
-// ── Render the full Livestock Markets section ─────────────────
 function renderLivestockMarketsTab() {
   const container = document.getElementById("section-markets");
   if(!container) return;
@@ -2394,14 +2416,27 @@ function renderLivestockMarketsTab() {
           <div style="font-size:10px;color:#a0aec0">Updates on demand only</div>
         </div>
       </div>
-      <div id="indicators-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+      <div id="indicators-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px">
         ${MLA_INDICATORS.map(ind=>`
           <div id="indicator-${ind.id}" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;border-left:3px solid ${ind.color}">
             <div style="font-size:10px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${ind.name}</div>
             <div style="font-size:22px;font-weight:700;color:#1a2332" id="ind-val-${ind.id}">—</div>
-            <div style="font-size:10px;color:#8898aa;margin-top:2px">${ind.unit}</div>
-            <div style="font-size:10px;margin-top:4px" id="ind-chg-${ind.id}"></div>
-            <div style="font-size:9px;color:#a0aec0;margin-top:2px">${ind.desc}</div>
+            <div style="font-size:10px;color:#8898aa;margin-top:1px">${ind.unit}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:3px;margin-top:8px" id="ind-chg-${ind.id}">
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1M</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1Y</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:#a0aec0;margin-top:5px">${ind.desc}</div>
           </div>`).join("")}
       </div>
     </div>
@@ -2425,22 +2460,32 @@ function renderLivestockMarketsTab() {
     <div id="saleyards-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:20px">
       ${SALEYARDS.map(sy=>`
         <div class="panel" id="saleyard-card-${sy.id}" style="margin-bottom:0;border-top:3px solid #e2e8f0" data-state="${sy.state.toLowerCase()}" data-region="${sy.region.toLowerCase().replace(" ","")}">
-          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+          <!-- Card header -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
             <div>
               <div style="font-size:13px;font-weight:700;color:#1a2332">${sy.name}</div>
-              <div style="font-size:10px;color:#8898aa">${sy.short} · ${sy.region} · ${sy.state}</div>
+              <div style="font-size:10px;color:#8898aa">${sy.nlrs} · ${sy.region} · ${sy.state}</div>
             </div>
-            <div style="display:flex;gap:6px;align-items:center">
-              <span id="saleyard-badge-${sy.id}" style="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa">Not loaded</span>
-              <button onclick="fetchSingleSaleyard('${sy.id}')" id="saleyard-btn-${sy.id}"
-                style="font-size:9px;font-weight:600;padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">
-                Fetch
-              </button>
-            </div>
+            <span id="saleyard-badge-${sy.id}" style="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa">Not loaded</span>
+          </div>
+          <!-- Physical / Store toggle + Refresh -->
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+            <button onclick="setSaleyardType('${sy.id}','physical')" id="saleyard-type-physical-${sy.id}"
+              style="font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">
+              Physical
+            </button>
+            <button onclick="setSaleyardType('${sy.id}','store')" id="saleyard-type-store-${sy.id}"
+              style="font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">
+              Store
+            </button>
+            <button onclick="fetchSingleSaleyard('${sy.id}')" id="saleyard-btn-${sy.id}"
+              style="font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer;margin-left:auto">
+              Refresh
+            </button>
           </div>
           <div id="saleyard-content-${sy.id}">
             <div style="text-align:center;padding:20px;color:#a0aec0;font-size:12px;font-style:italic">
-              Click Fetch to load latest report
+              Select Physical or Store sale then click Refresh
             </div>
           </div>
         </div>`).join("")}
@@ -2730,75 +2775,105 @@ function buildEYCIHistoricalChart(years) {
     }
   });
 }
+// ── Sale type state per saleyard (default: physical) ─────────
+const saleyardSaleType = {};
+function setSaleyardType(saleyardId, saleType) {
+  saleyardSaleType[saleyardId] = saleType;
+  // Update toggle button styles
+  const btnP = document.getElementById(`saleyard-type-physical-${saleyardId}`);
+  const btnS = document.getElementById(`saleyard-type-store-${saleyardId}`);
+  if(btnP) { btnP.style.background = saleType==="physical"?"#1a4a2e":"#f8fafc"; btnP.style.color = saleType==="physical"?"#fff":"#4a5568"; btnP.style.borderColor = saleType==="physical"?"#1a4a2e":"#e2e8f0"; }
+  if(btnS) { btnS.style.background = saleType==="store"?"#1a4a2e":"#f8fafc"; btnS.style.color = saleType==="store"?"#fff":"#4a5568"; btnS.style.borderColor = saleType==="store"?"#1a4a2e":"#e2e8f0"; }
+}
+
+// ── Render saleyard card content from data ────────────────────
+function renderSaleyardCard(sy, data) {
+  const badge = document.getElementById(`saleyard-badge-${sy.id}`);
+  const content = document.getElementById(`saleyard-content-${sy.id}`);
+  const card = document.getElementById(`saleyard-card-${sy.id}`);
+
+  if(data.error) {
+    content.innerHTML=`<div style="padding:12px;color:#8898aa;font-size:12px;font-style:italic">No recent MLA data found. This saleyard may not have traded recently or the report is unavailable.</div>`;
+    badge.textContent="No data"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa;font-weight:600";
+    card.style.borderTopColor="#cbd5e0";
+    return;
+  }
+
+  const trendColor = data.trend?.includes("dear")?"#16a34a":data.trend?.includes("cheap")?"#dc2626":"#d97706";
+  const trendBg    = data.trend?.includes("dear")?"#f0fdf4":data.trend?.includes("cheap")?"#fef2f2":"#fffbeb";
+  card.style.borderTopColor = data.trend ? trendColor : "#2d7a4f";
+
+  badge.textContent = data.date||"Latest";
+  badge.style.cssText=`font-size:9px;padding:3px 8px;border-radius:20px;background:${data.trend?trendBg:"#f0fdf4"};color:${data.trend?trendColor:"#166534"};font-weight:600`;
+
+  const saleLabel = (data.saleType==="store") ? "Store Sale" : "Physical Sale";
+
+  // Build price rows table if available
+  const rowsHtml = data.priceRows?.length ? `
+    <div style="margin-bottom:12px;overflow-x:auto">
+      <table style="width:100%;border-collapse:collapse;font-size:10px">
+        <thead>
+          <tr style="background:#f0f2f5">
+            <th style="text-align:left;padding:4px 6px;color:#4a5568;font-weight:600">Category</th>
+            <th style="text-align:left;padding:4px 6px;color:#4a5568;font-weight:600">Wt</th>
+            <th style="text-align:right;padding:4px 6px;color:#4a5568;font-weight:600">Hd</th>
+            <th style="text-align:right;padding:4px 6px;color:#4a5568;font-weight:600">Avg c/kg</th>
+            <th style="text-align:right;padding:4px 6px;color:#4a5568;font-weight:600">Avg $/hd</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${data.priceRows.map((r,i)=>`
+            <tr style="border-top:1px solid #f0f2f5;background:${i%2===0?"#fff":"#fafafa"}">
+              <td style="padding:4px 6px;color:#1a2332;font-weight:500">${r.category}</td>
+              <td style="padding:4px 6px;color:#4a5568">${r.weightRange||"—"}</td>
+              <td style="padding:4px 6px;color:#4a5568;text-align:right">${r.headCount||"—"}</td>
+              <td style="padding:4px 6px;color:#1a4a2e;font-weight:600;text-align:right">${r.avgLwt||"—"}</td>
+              <td style="padding:4px 6px;color:#1a2332;font-weight:600;text-align:right">${r.avgHead||"—"}</td>
+            </tr>`).join("")}
+        </tbody>
+      </table>
+    </div>` : "";
+
+  content.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      ${data.date?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#1e40af">📅 ${data.date}</div>`:""}
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#4a5568">🏷 ${saleLabel}</div>
+      ${data.trend?`<div style="background:${trendBg};border:1px solid ${trendColor}33;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:${trendColor};text-transform:capitalize">${data.trend==="dearer"?"▲":data.trend==="cheaper"?"▼":"→"} ${data.trend}</div>`:""}
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:#1a2332">${data.yarding?.toLocaleString()||"—"}</div>
+        <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Head Yarded</div>
+        ${data.change?`<div style="font-size:9px;font-weight:600;color:${data.change.startsWith("+")||parseInt(data.change)>0?"#16a34a":"#dc2626"};margin-top:1px">${data.change} vs prev</div>`:""}
+      </div>
+    </div>
+    ${rowsHtml}
+    ${data.commentary?`<div style="background:#fffef0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#4a5568;line-height:1.6;max-height:120px;overflow-y:auto">${data.commentary}</div>`:""}
+    <div style="font-size:9px;color:#a0aec0;margin-top:8px">Source: MLA/NLRS · ${saleLabel}</div>
+  `;
+}
+
 // ── Fetch single saleyard ─────────────────────────────────────
 async function fetchSingleSaleyard(saleyardId) {
   const sy = SALEYARDS.find(s=>s.id===saleyardId);
   if(!sy) return;
-  const btn = document.getElementById(`saleyard-btn-${saleyardId}`);
-  const badge = document.getElementById(`saleyard-badge-${saleyardId}`);
+  const btn     = document.getElementById(`saleyard-btn-${saleyardId}`);
+  const badge   = document.getElementById(`saleyard-badge-${saleyardId}`);
   const content = document.getElementById(`saleyard-content-${saleyardId}`);
-  const card = document.getElementById(`saleyard-card-${saleyardId}`);
+  const saleType = saleyardSaleType[saleyardId] || "physical";
 
   btn.disabled=true; btn.textContent="Loading…";
   badge.textContent="Fetching…";
   badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#fffbeb;color:#92400e";
-  content.innerHTML=`<div style="text-align:center;padding:20px;color:#a0aec0;font-size:11px">Fetching latest report from MLA/NLRS…</div>`;
+  content.innerHTML=`<div style="text-align:center;padding:24px;color:#a0aec0;font-size:11px">Fetching ${saleType} sale report from MLA/NLRS…</div>`;
 
   try {
-    const data = await fetchSaleyardReport(sy);
-    saleyardData[saleyardId] = data;
-
-    if(data.error) {
-      content.innerHTML=`<div style="padding:12px;color:#8898aa;font-size:12px">No recent MLA data found for this saleyard. It may not have traded in the past 30 days.</div>`;
-      badge.textContent="No data"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa;font-weight:600";
-      card.style.borderTopColor="#3b82f6";
-    } else {
-      const trendColor = data.trend?.toLowerCase().includes("dear")?"#16a34a":data.trend?.toLowerCase().includes("cheap")?"#dc2626":"#d97706";
-      const trendBg = data.trend?.toLowerCase().includes("dear")?"#f0fdf4":data.trend?.toLowerCase().includes("cheap")?"#fef2f2":"#fffbeb";
-      card.style.borderTopColor = trendColor;
-
-      badge.textContent = data.date||"Latest";
-      badge.style.cssText=`font-size:9px;padding:3px 8px;border-radius:20px;background:${trendBg};color:${trendColor};font-weight:600`;
-
-      // Price tags
-      const prices = data.prices||{};
-      const priceEntries = Object.entries(prices).filter(([k,v])=>v);
-      const priceLabels = {feederSteers:"Feeder Steers",feederHeifers:"Feeder Heifers",restockerSteers:"Restocker Steers",cows:"Cows",heavySteers:"Heavy Steers",bullocksBulls:"Bullocks/Bulls"};
-
-      content.innerHTML = `
-        <!-- Date, sale type and trend row -->
-        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
-          ${data.date?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#1e40af">📅 ${data.date}</div>`:""}
-          ${data.saleType?`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#4a5568">🏷 ${data.saleType}</div>`:""}
-          ${data.trend?`<div style="background:${trendBg};border:1px solid ${trendColor}33;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:${trendColor};text-transform:capitalize">${data.trend==="dearer"?"▲":data.trend==="cheaper"?"▼":"→"} ${data.trend}</div>`:""}
-        </div>
-
-        <!-- Yarding -->
-        <div style="display:flex;gap:10px;margin-bottom:12px">
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-align:center;min-width:90px">
-            <div style="font-size:18px;font-weight:700;color:#1a2332">${data.yarding?.toLocaleString()||"—"}</div>
-            <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Head Yarded</div>
-          </div>
-        </div>
-
-        <!-- Price ranges -->
-        ${priceEntries.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
-          ${priceEntries.map(([k,v])=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px">
-            <div style="font-size:9px;color:#8898aa;font-weight:600;text-transform:uppercase">${priceLabels[k]||k}</div>
-            <div style="font-size:11px;font-weight:700;color:#1a2332;margin-top:2px">${v}</div>
-          </div>`).join("")}
-        </div>`:""}
-
-        <!-- Commentary -->
-        ${data.commentary?`<div style="background:#fffef0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#4a5568;line-height:1.6;max-height:100px;overflow-y:auto">
-          ${data.commentary}
-        </div>`:""}
-
-        ${data.reporter?`<div style="font-size:10px;color:#a0aec0;margin-top:8px">Source: ${data.reporter} · MLA Statistics API</div>`:""}
-      `;
-    }
+    const data = await fetchSaleyardReport(sy, saleType);
+    if(!saleyardData[saleyardId]) saleyardData[saleyardId] = {};
+    saleyardData[saleyardId][saleType] = data;
+    renderSaleyardCard(sy, data);
   } catch(e) {
-    content.innerHTML=`<div style="padding:12px;color:#e53e3e;font-size:12px">Error: ${e.message}. <a href="${sy.url}" target="_blank" style="color:#3b82f6">View directly →</a></div>`;
+    content.innerHTML=`<div style="padding:12px;color:#e53e3e;font-size:12px">Error: ${e.message}</div>`;
     badge.textContent="Error"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#fef2f2;color:#dc2626";
   }
   btn.disabled=false; btn.textContent="Refresh";
@@ -2814,7 +2889,7 @@ async function refreshAllSaleyards() {
   });
   for(const sy of visible) {
     await fetchSingleSaleyard(sy.id);
-    await new Promise(r=>setTimeout(r,300)); // small stagger for parallel requests
+    await new Promise(r=>setTimeout(r,500));
   }
   btn.disabled=false; btn.textContent="↻ Refresh All Reports";
 }
@@ -2823,16 +2898,13 @@ async function refreshAllSaleyards() {
 async function refreshAllIndicators() {
   const btn = document.getElementById("indicators-refresh-btn");
   if(btn){ btn.disabled=true; btn.textContent="Fetching…"; }
-
   const updated = document.getElementById("indicators-updated");
   try {
     const data = await fetchAllIndicators();
-    console.log("Indicator data returned:", data);
-
     if(data) {
       const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
-      const dateStr = new Date().toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
-      if(updated) updated.textContent = `Last updated: ${dateStr} at ${t}`;
+      const dataDate = data.date ? new Date(data.date+"T00:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"}) : "";
+      if(updated) updated.textContent = `MLA data to ${dataDate} · Fetched ${t}`;
 
       const map = {
         eyci:      {key:"eyci",          elId:"eyci"},
@@ -2849,23 +2921,36 @@ async function refreshAllIndicators() {
         if(!d) return;
         const valEl = document.getElementById(`ind-val-${elId}`);
         const chgEl = document.getElementById(`ind-chg-${elId}`);
-        if(valEl && d.value != null) {
-          valEl.textContent = d.value.toFixed(2);
-          anyUpdated = true;
-        }
-        if(chgEl && d.change != null) {
-          const pos = d.change > 0, neu = d.change === 0;
-          chgEl.innerHTML = `<span style="color:${neu?"#8898aa":pos?"#16a34a":"#dc2626"};font-weight:600">${neu?"→":pos?"▲":"▼"} ${Math.abs(d.change).toFixed(2)}¢</span>`;
+        if(valEl && d.value != null) { valEl.textContent = d.value.toFixed(2); anyUpdated = true; }
+
+        if(chgEl) {
+          const fmt = (chg, pct) => {
+            if(chg == null) return `<div style="font-size:9px;color:#a0aec0">—</div>`;
+            const pos = chg > 0, col = chg===0?"#8898aa":pos?"#16a34a":"#dc2626";
+            return `<div style="font-size:9px;font-weight:700;color:${col}">${pos?"+":""}${chg.toFixed(1)}¢</div>`;
+          };
+          // Rebuild the 1W/1M/1Y grid
+          chgEl.innerHTML = `
+            <div style="background:${d.change1W==null?"#f0f2f5":d.change1W>0?"#f0fdf4":d.change1W<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
+              ${fmt(d.change1W, d.pct1W)}
+            </div>
+            <div style="background:${d.change1M==null?"#f0f2f5":d.change1M>0?"#f0fdf4":d.change1M<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1M</div>
+              ${fmt(d.change1M, d.pct1M)}
+            </div>
+            <div style="background:${d.change1Y==null?"#f0f2f5":d.change1Y>0?"#f0fdf4":d.change1Y<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1Y</div>
+              ${fmt(d.change1Y, d.pct1Y)}
+            </div>`;
         }
       });
 
-      // Update EYCI chart display
+      // Update EYCI display
       const eyciEl = document.getElementById("eyci-val");
       if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value.toFixed(2)} ¢/kg cwt`;
 
-      if(!anyUpdated) {
-        if(updated) updated.textContent = "⚠ Fetched but no values found — MLA may be offline";
-      }
+      if(!anyUpdated && updated) updated.textContent = "⚠ Fetched but no values found — MLA may be offline";
     } else {
       if(updated) updated.textContent = "⚠ Could not fetch — try again";
     }
@@ -2873,10 +2958,7 @@ async function refreshAllIndicators() {
     console.error("refreshAllIndicators error:", e);
     if(updated) updated.textContent = "⚠ Error: " + e.message;
   }
-  if(btn){
-    btn.disabled=false;
-    btn.innerHTML = `<span style="font-size:15px">↻</span> Refresh Price Indicators`;
-  }
+  if(btn){ btn.disabled=false; btn.innerHTML = `<span style="font-size:15px">↻</span> Refresh Price Indicators`; }
 }
 
 // ── Filter saleyards ──────────────────────────────────────────
