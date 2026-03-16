@@ -2349,59 +2349,81 @@ async function fetchAllIndicators() {
   }
 }
 
-// ── Fetch full MLA sale report (Physical or Store) via AI web search ──────────
+// ── Fetch saleyard data from MLA Statistics API (report/6) ──────────────────
+// report/6 returns confirmed real MLA indicator data per saleyard per sale date
+// Physical/Store distinction not available in the API — shows all cattle sales
 async function fetchSaleyardReport(saleyard, saleType) {
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        action:       "mla_sale_report",
-        saleyardCode: saleyard.nlrs,
-        saleyardName: saleyard.name,
-        saleType:     saleType   // "physical" or "store"
-      })
+      body: JSON.stringify({ action:"mla_saleyard", saleyardId: saleyard.mlaId })
     });
     const d = await res.json();
-    if(d.error) throw new Error(d.error.message || JSON.stringify(d.error));
+    if(d.error) throw new Error(d.error);
 
-    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
-    if(!text.trim()) throw new Error("Empty response");
+    const rows = (d.data || []).filter(r => r.species_id === "Cattle");
+    if(!rows.length) return { error:"no_data_found" };
 
-    const get = (label) => {
-      const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
-      const v = m ? m[1].trim() : null;
-      return (v && v !== "N/A" && v !== "n/a") ? v : null;
-    };
-    const yardingRaw = get("YARDING");
-    const yarding = yardingRaw ? parseInt(yardingRaw.replace(/[^0-9]/g,"")) : null;
+    // Get all unique sale dates, sorted descending
+    const allDates = [...new Set(rows.map(r => r.calendar_date))].sort((a,b) => b.localeCompare(a));
 
-    // Parse ROW lines into price table
-    const rows = [];
-    const rowMatches = [...text.matchAll(/^ROW:\s*(.+)$/gmi)];
-    for(const m of rowMatches) {
-      const parts = m[1].split("|").map(s=>s.trim());
-      if(parts.length >= 4) rows.push({
-        category:   parts[0],
-        weightRange:parts[1],
-        headCount:  parts[2],
-        avgLwt:     parts[3],
-        minHead:    parts[4]||null,
-        avgHead:    parts[5]||null,
-        maxHead:    parts[6]||null,
-      });
+    // For Physical — use most recent date
+    // For Store — use second most recent date (if available), otherwise most recent
+    // This is an approximation since the API doesn't distinguish sale types
+    let targetDate;
+    if(saleType === "store" && allDates.length > 1) {
+      targetDate = allDates[1];
+    } else {
+      targetDate = allDates[0];
     }
 
+    const saleRows = rows.filter(r => r.calendar_date === targetDate);
+
+    // Build indicator price table
+    const INDICATOR_NAMES = {
+      0:  { name:"EYCI",              unit:"¢/kg cwt" },
+      2:  { name:"Restocker Steers",  unit:"¢/kg lwt" },
+      3:  { name:"Feeder Steers",     unit:"¢/kg lwt" },
+      4:  { name:"Heavy Steers",      unit:"¢/kg lwt" },
+      12: { name:"Restocker Heifers", unit:"¢/kg lwt" },
+      13: { name:"Processor Cows",    unit:"¢/kg lwt" },
+      14: { name:"Young Cattle",      unit:"¢/kg lwt" },
+      17: { name:"Feeder Heifers",    unit:"¢/kg lwt" },
+    };
+
+    const priceRows = saleRows
+      .filter(r => INDICATOR_NAMES[r.indicator_id])
+      .sort((a,b) => a.indicator_id - b.indicator_id)
+      .map(r => ({
+        category:   INDICATOR_NAMES[r.indicator_id].name,
+        unit:       INDICATOR_NAMES[r.indicator_id].unit,
+        headCount:  parseInt(r.head_count) || 0,
+        avgPrice:   parseFloat(r.indicator_value).toFixed(2),
+      }));
+
+    // Total yarding = max head count row (proxy for total cattle sold)
+    const totalHead = Math.max(...saleRows.map(r => parseInt(r.head_count)||0));
+
+    // Date formatting
+    const dateObj = new Date(targetDate + "T00:00:00");
+    const dateStr = dateObj.toLocaleDateString("en-AU", {day:"numeric", month:"long", year:"numeric"});
+
+    // Check if more dates available to show "X sales in last 60 days"
+    const salesCount = allDates.length;
+
     return {
-      date:       get("REPORT_DATE"),
-      yarding:    isNaN(yarding) ? null : yarding,
-      change:     get("CHANGE"),
-      trend:      get("TREND")?.toLowerCase(),
-      commentary: get("COMMENTARY"),
-      saleType:   saleType,
-      priceRows:  rows,
+      date:      dateStr,
+      rawDate:   targetDate,
+      yarding:   totalHead,
+      saleType:  saleType,
+      priceRows: priceRows,
+      allDates:  allDates,
+      salesCount: salesCount,
+      trend:     null,
+      commentary:null,
     };
   } catch(e) {
-    console.error(`${saleyard.name} ${saleType} fetch error:`, e.message);
+    console.error(`${saleyard.name} fetch error:`, e.message);
     return { error:"unavailable", message: e.message };
   }
 }
@@ -2839,28 +2861,13 @@ function renderSaleyardCard(sy, data) {
 
   // Build price rows table if available
   const rowsHtml = data.priceRows?.length ? `
-    <div style="margin-bottom:12px;overflow-x:auto">
-      <table style="width:100%;border-collapse:collapse;font-size:10px">
-        <thead>
-          <tr style="background:#f0f2f5">
-            <th style="text-align:left;padding:4px 6px;color:#4a5568;font-weight:600">Category</th>
-            <th style="text-align:left;padding:4px 6px;color:#4a5568;font-weight:600">Wt</th>
-            <th style="text-align:right;padding:4px 6px;color:#4a5568;font-weight:600">Hd</th>
-            <th style="text-align:right;padding:4px 6px;color:#4a5568;font-weight:600">Avg c/kg</th>
-            <th style="text-align:right;padding:4px 6px;color:#4a5568;font-weight:600">Avg $/hd</th>
-          </tr>
-        </thead>
-        <tbody>
-          ${data.priceRows.map((r,i)=>`
-            <tr style="border-top:1px solid #f0f2f5;background:${i%2===0?"#fff":"#fafafa"}">
-              <td style="padding:4px 6px;color:#1a2332;font-weight:500">${r.category}</td>
-              <td style="padding:4px 6px;color:#4a5568">${r.weightRange||"—"}</td>
-              <td style="padding:4px 6px;color:#4a5568;text-align:right">${r.headCount||"—"}</td>
-              <td style="padding:4px 6px;color:#1a4a2e;font-weight:600;text-align:right">${r.avgLwt||"—"}</td>
-              <td style="padding:4px 6px;color:#1a2332;font-weight:600;text-align:right">${r.avgHead||"—"}</td>
-            </tr>`).join("")}
-        </tbody>
-      </table>
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:12px">
+      ${data.priceRows.map(r=>`
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:8px 10px">
+          <div style="font-size:9px;color:#8898aa;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${r.category}</div>
+          <div style="font-size:15px;font-weight:700;color:#1a4a2e">${r.avgPrice}¢</div>
+          <div style="font-size:9px;color:#a0aec0">${r.unit} · ${(r.headCount||0).toLocaleString()} hd</div>
+        </div>`).join("")}
     </div>` : "";
 
   content.innerHTML = `
@@ -2878,7 +2885,10 @@ function renderSaleyardCard(sy, data) {
     </div>
     ${rowsHtml}
     ${data.commentary?`<div style="background:#fffef0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#4a5568;line-height:1.6;max-height:120px;overflow-y:auto">${data.commentary}</div>`:""}
-    <div style="font-size:9px;color:#a0aec0;margin-top:8px">Source: MLA/NLRS · ${saleLabel}</div>
+    <div style="font-size:9px;color:#a0aec0;margin-top:8px">
+      Source: MLA Statistics API · ${data.salesCount||"?"} sale${data.salesCount!==1?"s":""} in past 60 days
+      ${data.allDates?.length > 1 ? `· Other dates: ${data.allDates.slice(1,3).join(", ")}` : ""}
+    </div>
   `;
 }
 
