@@ -2541,52 +2541,37 @@ async function fetchSaleyardReport(saleyard, saleType) {
   }
  
   // ── Parse report/6 for price trend boxes ─────────────
+  // EYCI excluded — shown in national indicators above
+  // 6 key saleyard categories matching the request
   const IND = {
-    0: {name:"EYCI",           unit:"¢/kg cwt", color:"#1a4a2e"},
-    2: {name:"Restocker Steers",unit:"¢/kg lwt", color:"#8b5cf6"},
-    3: {name:"Feeder Steers",  unit:"¢/kg lwt", color:"#3b82f6"},
-    4: {name:"Heavy Steers",   unit:"¢/kg lwt", color:"#dc2626"},
-    12:{name:"Restocker Heifers",unit:"¢/kg lwt",color:"#a855f7"},
-    13:{name:"Processor Cows", unit:"¢/kg lwt", color:"#d97706"},
-    17:{name:"Feeder Heifers", unit:"¢/kg lwt", color:"#0ea5e9"},
+    3: {name:"Feeder Steers",    unit:"¢/kg lwt", color:"#3b82f6"},
+    17:{name:"Feeder Heifers",   unit:"¢/kg lwt", color:"#0ea5e9"},
+    2: {name:"Restocker Steers", unit:"¢/kg lwt", color:"#8b5cf6"},
+    12:{name:"Restocker Heifers",unit:"¢/kg lwt", color:"#a855f7"},
+    13:{name:"Processor Cows",   unit:"¢/kg lwt", color:"#d97706"},
+    4: {name:"Heavy Steers",     unit:"¢/kg lwt", color:"#dc2626"},
   };
  
   let priceRows = [];
   if(r6Result.status === "fulfilled" && r6Result.value?.data) {
     const cattleRows = r6Result.value.data.filter(r => r.species_id === "Cattle");
-    const allDates   = [...new Set(cattleRows.map(r=>r.calendar_date))].sort((a,b)=>b.localeCompare(a));
- 
-    // Use most recent date for Physical, second most recent for Store
-    const d1 = allDates[0];
-    const d2 = allDates[1] || null;  // previous sale date for change calc
- 
-    const sale1 = cattleRows.filter(r=>r.calendar_date===d1);
-    const sale2 = d2 ? cattleRows.filter(r=>r.calendar_date===d2) : [];
- 
-    const getVal = (rows, indId) => {
-      const r = rows.find(r=>r.indicator_id===indId);
-      return r ? Math.round(parseFloat(r.indicator_value)*100)/100 : null;
-    };
-    const getHead = (rows, indId) => {
-      const r = rows.find(r=>r.indicator_id===indId);
-      return r ? parseInt(r.head_count)||0 : 0;
-    };
- 
-    priceRows = Object.entries(IND).map(([id, meta]) => {
-      const v1 = getVal(sale1, parseInt(id));
-      const v2 = getVal(sale2, parseInt(id));
-      if(!v1) return null;
-      const chg = (v2 != null) ? Math.round((v1-v2)*100)/100 : null;
-      return {
-        category:  meta.name,
-        unit:      meta.unit,
-        color:     meta.color,
-        headCount: getHead(sale1, parseInt(id)),
-        avgPrice:  v1.toFixed(2),
-        change:    chg,
-        fromSearch:false,
-      };
-    }).filter(Boolean);
+    // For each indicator, find the most recent 2 dates that have data
+    // Use array to preserve display order: Feeder Steers, Feeder Heifers, Restocker Steers, Restocker Heifers, Processor Cows, Heavy Steers
+    priceRows = [[3,"Feeder Steers","¢/kg lwt","#3b82f6"],[17,"Feeder Heifers","¢/kg lwt","#0ea5e9"],
+                 [2,"Restocker Steers","¢/kg lwt","#8b5cf6"],[12,"Restocker Heifers","¢/kg lwt","#a855f7"],
+                 [13,"Processor Cows","¢/kg lwt","#d97706"],[4,"Heavy Steers","¢/kg lwt","#dc2626"]]
+      .map(([id, name, unit, color]) => {
+        // Find the most recent 2 entries for this indicator across all dates
+        const matches = cattleRows
+          .filter(r => r.indicator_id === id)
+          .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
+        if(!matches.length) return null;
+        const v1  = Math.round(parseFloat(matches[0].indicator_value)*100)/100;
+        const v2  = matches[1] ? Math.round(parseFloat(matches[1].indicator_value)*100)/100 : null;
+        const chg = (v2 != null) ? Math.round((v1-v2)*100)/100 : null;
+        return { category:name, unit, color, headCount:parseInt(matches[0].head_count)||0,
+                 avgPrice:v1.toFixed(2), change:chg, fromSearch:false };
+      }).filter(Boolean);
   }
  
   // ── Merge: prefer Agora for date/yarding/commentary, report/6 for prices ──
@@ -3339,4 +3324,4 @@ function switchWeatherModel(model) {
 init();
 </script>
 </body>
-</html> 
+</html>
