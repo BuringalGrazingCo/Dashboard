@@ -965,18 +965,19 @@ function setTab(tab){
 }
 document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",()=>setTab(btn.dataset.tab));});
 
-// LIVE EYCI
+// LIVE EYCI — direct MLA Statistics API
 async function fetchEYCI(){
   const btn=document.getElementById("eyci-btn");
   btn.disabled=true;btn.textContent="Fetching…";
   try{
-    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"What is the current EYCI Eastern Young Cattle Indicator price in cents per kg carcase weight from MLA? Reply ONLY with a string like '888.33 ¢/kg cwt'."}]})});
+    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"mla_indicators",indicatorId:0})});
     const d=await res.json();
-    const text=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ");
-    const m=text.match(/(\d{2,4}(?:\.\d+)?)\s*[¢c]?\s*\/?\s*kg/i);
-    if(m){
-      document.getElementById("eyci-val").textContent=`${m[1]} ¢/kg cwt`;
-      document.getElementById("eyci-sub").textContent=`Live MLA · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
+    const rows=d.data||[];
+    const result = getMostRecentIndicatorValue(rows, 0);
+    if(result && result.value){
+      document.getElementById("eyci-val").textContent=`${result.value.toFixed(2)} ¢/kg cwt`;
+      document.getElementById("eyci-sub").textContent=`MLA Statistics API · Data to ${result.date} · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
     }
   }catch(e){document.getElementById("eyci-sub").textContent="Update failed — check connection";}
   btn.disabled=false;btn.textContent="↻ Refresh Live Price";
@@ -2212,178 +2213,150 @@ Use the actual historical data provided. Be specific and direct.`;
 
 // ══════════════════════════════════════════════════════════════
 // LIVESTOCK MARKETS MODULE — Buringal Grazing Co
-// Sources: MLA/NLRS via Agora Livestock + AI-powered fetching
+// Sources: MLA Statistics API — direct, reliable, no AI web search
 // ══════════════════════════════════════════════════════════════
 
 const SALEYARDS = [
-  { id:"tamworth",  name:"Tamworth",        short:"TRLX",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-trlx-tamworth-cattle/",   region:"New England" },
-  { id:"armidale",  name:"Armidale",        short:"NELSF", state:"NSW", url:"https://agoralivestock.com.au/saleyard-armidale-cattle/",          region:"New England" },
-  { id:"inverell",  name:"Inverell",        short:"IRLX",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-irlx-inverell-cattle/",     region:"New England" },
-  { id:"dubbo",     name:"Dubbo",           short:"DLCO",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-dubbo-cattle/",             region:"Central West" },
-  { id:"wagga",     name:"Wagga Wagga",     short:"WWLX",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-wagga-cattle/",             region:"Riverina" },
-  { id:"wvlx",      name:"WVLX Wodonga",   short:"WVLX",  state:"VIC", url:"https://agoralivestock.com.au/saleyard-wvlx-wodonga-cattle/",      region:"North East VIC" },
-  { id:"nvlx",      name:"NVLX Wodonga",   short:"NVLX",  state:"VIC", url:"https://agoralivestock.com.au/saleyard-nvlx-wodonga-cattle/",      region:"North East VIC" },
-  { id:"dalby",     name:"Dalby",           short:"DALB",  state:"QLD", url:"https://agoralivestock.com.au/saleyard-dalby-cattle/",             region:"Darling Downs" },
-  { id:"roma",      name:"Roma",            short:"ROMA",  state:"QLD", url:"https://agoralivestock.com.au/saleyard-roma-cattle/",              region:"Maranoa" },
+  { id:"tamworth",  name:"Tamworth",       short:"TAM",  mlaId:"TAM", state:"NSW", region:"New England" },
+  { id:"armidale",  name:"Armidale",       short:"ARM",  mlaId:"ARM", state:"NSW", region:"New England" },
+  { id:"inverell",  name:"Inverell",       short:"INV",  mlaId:"INV", state:"NSW", region:"New England" },
+  { id:"ctlx",      name:"CTLX Carcoar",   short:"CTL",  mlaId:"CTL", state:"NSW", region:"Central Tablelands" },
+  { id:"dubbo",     name:"Dubbo",          short:"DUB",  mlaId:"DUB", state:"NSW", region:"Central West" },
+  { id:"wagga",     name:"Wagga Wagga",    short:"WAG",  mlaId:"WAG", state:"NSW", region:"Riverina" },
+  { id:"barnawartha",name:"NVLX Barnawartha",short:"BAN",mlaId:"BAN", state:"VIC", region:"North East VIC" },
+  { id:"dalby",     name:"Dalby",          short:"DAL",  mlaId:"DAL", state:"QLD", region:"Darling Downs" },
+  { id:"roma",      name:"Roma",           short:"ROM",  mlaId:"ROM", state:"QLD", region:"Maranoa" },
 ];
 
+// MLA indicator IDs confirmed from /indicator endpoint
+// 0=EYCI(cwt), 2=Restocker Steer(lwt), 3=Feeder Steer(lwt), 4=Heavy Steer(lwt), 13=Processor Cow(lwt), 14=National Young(lwt)
 const MLA_INDICATORS = [
-  { id:"eyci",    name:"EYCI",                     desc:"Eastern Young Cattle Indicator",  unit:"¢/kg cwt", color:"#1a4a2e" },
-  { id:"nychc",   name:"National Young Cattle",    desc:"National Young Cattle Indicator", unit:"¢/kg cwt", color:"#2d7a4f" },
-  { id:"feeder",  name:"Feeder Steer",             desc:"250–330kg",                       unit:"¢/kg lwt", color:"#3b82f6" },
-  { id:"restocker",name:"Restocker Steer",         desc:"Yearling restocker",              unit:"¢/kg lwt", color:"#8b5cf6" },
-  { id:"heavy",   name:"Heavy Steer",              desc:"Processor heavy steer",           unit:"¢/kg cwt", color:"#dc2626" },
-  { id:"cow",     name:"Processor Cow",            desc:"Manufacturing cow",               unit:"¢/kg cwt", color:"#d97706" },
+  { id:"eyci",       name:"EYCI",                  desc:"Eastern Young Cattle Indicator",      unit:"¢/kg cwt", color:"#1a4a2e", mlaId:0  },
+  { id:"nychc",      name:"National Young Cattle",  desc:"National Young Cattle Indicator",     unit:"¢/kg lwt", color:"#2d7a4f", mlaId:14 },
+  { id:"feeder",     name:"Feeder Steer",           desc:"250–330kg",                           unit:"¢/kg lwt", color:"#3b82f6", mlaId:3  },
+  { id:"restocker",  name:"Restocker Steer",        desc:"Yearling restocker",                  unit:"¢/kg lwt", color:"#8b5cf6", mlaId:2  },
+  { id:"heavy",      name:"Heavy Steer",            desc:"Processor heavy steer",               unit:"¢/kg lwt", color:"#dc2626", mlaId:4  },
+  { id:"cow",        name:"Processor Cow",          desc:"Manufacturing cow",                   unit:"¢/kg lwt", color:"#d97706", mlaId:13 },
 ];
 
 let saleyardData = {};
 let indicatorData = {};
 let activeSaleyardFilter = "all";
 
-// ── Fetch saleyard report via AI web search ───────────────────
-async function fetchSaleyardReport(saleyard) {
-  // Use AI with web search — ask it to search AND summarise in plain text first,
-  // then we extract structured data from that plain text response
-  try {
-    const res = await fetch(CONFIG.WORKER_URL, {
-      method:"POST", headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1500,
-        tools:[{type:"web_search_20250305",name:"web_search"}],
-        messages:[{role:"user",content:`Search for the latest MLA NLRS cattle saleyard report for ${saleyard.name} ${saleyard.short} ${saleyard.state} Australia. 
-Try: ${saleyard.url}
-Also search: "${saleyard.name} cattle sale MLA NLRS 2026"
-
-After searching, provide a structured summary in this EXACT format with these EXACT labels on separate lines:
-DATE: [report date]
-SALE_TYPE: [type of sale e.g. Physical Store Sale]
-YARDING: [total head count as number only]
-TREND: [dearer OR firm OR cheaper OR mixed]
-REPORTER: [reporter name]
-FEEDER_STEERS: [price range e.g. 450-514c/kg]
-FEEDER_HEIFERS: [price range]
-RESTOCKER_STEERS: [price range]
-COWS: [price range]
-HEAVY_STEERS: [price range]
-BULLS: [price range]
-COMMENTARY: [one paragraph summary of the market]
-
-If a field is not available write N/A. Do not add any other text before or after this block.`}]
-      })
-    });
-    const d = await res.json();
-    if(d.error) throw new Error(d.error.message||"API error");
-
-    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
-    if(!text.trim()) throw new Error("Empty response");
-
-    // Parse the labelled format
-    const get = (label) => {
-      const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
-      return m ? m[1].trim() : null;
-    };
-    const yardingRaw = get("YARDING");
-    const yarding = yardingRaw ? parseInt(yardingRaw.replace(/[^0-9]/g,"")) : null;
-
-    const result = {
-      date:        get("DATE"),
-      saleType:    get("SALE_TYPE"),
-      yarding:     isNaN(yarding) ? null : yarding,
-      trend:       get("TREND")?.toLowerCase(),
-      reporter:    get("REPORTER"),
-      commentary:  get("COMMENTARY"),
-      prices: {
-        feederSteers:    get("FEEDER_STEERS"),
-        feederHeifers:   get("FEEDER_HEIFERS"),
-        restockerSteers: get("RESTOCKER_STEERS"),
-        cows:            get("COWS"),
-        heavySteers:     get("HEAVY_STEERS"),
-        bullocksBulls:   get("BULLS"),
-      }
-    };
-
-    // Clean up N/A values
-    Object.keys(result.prices).forEach(k => {
-      if(!result.prices[k]||result.prices[k]==="N/A") result.prices[k]=null;
-    });
-    if(result.date==="N/A") result.date=null;
-    if(result.saleType==="N/A") result.saleType=null;
-    if(result.reporter==="N/A") result.reporter=null;
-    if(result.commentary==="N/A") result.commentary=null;
-
-    // Sanity check — if we got at least a date or yarding it worked
-    if(result.date||result.yarding||result.commentary) return result;
-    return {error:"no_data_found"};
-
-  } catch(e) {
-    console.error("fetchSaleyardReport error:", e.message);
-    return {error:"unavailable"};
-  }
+// ── Helper: get most recent value from MLA report/5 or report/6 data array ──
+function getMostRecentIndicatorValue(dataArr, indicatorId) {
+  if(!Array.isArray(dataArr)) return null;
+  const filtered = dataArr
+    .filter(r => r.species_id === "Cattle" && r.indicator_id === indicatorId)
+    .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
+  if(!filtered.length) return null;
+  const latest = filtered[0];
+  const prev   = filtered[1] || null;
+  const value  = parseFloat(latest.indicator_value);
+  const prevV  = prev ? parseFloat(prev.indicator_value) : null;
+  return {
+    value:  isNaN(value) ? null : Math.round(value * 100) / 100,
+    change: (prevV != null && !isNaN(prevV)) ? Math.round((value - prevV) * 100) / 100 : null,
+    date:   latest.calendar_date,
+    headCount: latest.head_count,
+  };
 }
 
-// ── Fetch all MLA indicators at once ─────────────────────────
+// ── Fetch all MLA national indicators via report/5 (parallel) ────────────────
 async function fetchAllIndicators() {
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
       method:"POST", headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
-        model:"claude-sonnet-4-20250514",
-        max_tokens:1000,
-        tools:[{type:"web_search_20250305",name:"web_search"}],
-        messages:[{role:"user",content:`Search the MLA website for today's cattle price indicators. 
-Try: https://www.mla.com.au/prices-markets/cattle-prices/
-Also try: https://www.mla.com.au/prices-markets/cattle-prices/eycireport/
-
-After searching, provide the values in this EXACT format with these EXACT labels on separate lines:
-DATE: [today's date]
-EYCI: [value in c/kg cwt e.g. 888.33]
-EYCI_CHANGE: [day change e.g. -8.83]
-NATIONAL_YOUNG: [value]
-NATIONAL_YOUNG_CHANGE: [day change]
-FEEDER_STEER: [value in c/kg lwt]
-FEEDER_STEER_CHANGE: [day change]
-RESTOCKER_STEER: [value in c/kg lwt]
-RESTOCKER_STEER_CHANGE: [day change]
-HEAVY_STEER: [value in c/kg cwt]
-HEAVY_STEER_CHANGE: [day change]
-PROCESSOR_COW: [value in c/kg cwt]
-PROCESSOR_COW_CHANGE: [day change]
-
-Write N/A if not found. No other text.`}]
-      })
+      body: JSON.stringify({ action:"mla_all_indicators" })
     });
     const d = await res.json();
-    if(d.error) return null;
+    if(d.error) throw new Error(d.error);
 
-    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
-    if(!text.trim()) return null;
-
-    const getNum = (label) => {
-      const m = text.match(new RegExp(`^${label}:\\s*([\\-0-9.]+)`,"mi"));
-      if(!m||m[1]==="N/A") return null;
-      const v = parseFloat(m[1]);
-      return isNaN(v)?null:v;
-    };
-    const getStr = (label) => {
-      const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
-      return m&&m[1]!=="N/A"?m[1].trim():null;
-    };
-
-    return {
-      date:           getStr("DATE"),
-      eyci:           {value:getNum("EYCI"),           change:getNum("EYCI_CHANGE")},
-      nationalYoung:  {value:getNum("NATIONAL_YOUNG"), change:getNum("NATIONAL_YOUNG_CHANGE")},
-      feederSteer:    {value:getNum("FEEDER_STEER"),   change:getNum("FEEDER_STEER_CHANGE")},
-      restockerSteer: {value:getNum("RESTOCKER_STEER"),change:getNum("RESTOCKER_STEER_CHANGE")},
-      heavySteer:     {value:getNum("HEAVY_STEER"),    change:getNum("HEAVY_STEER_CHANGE")},
-      processorCow:   {value:getNum("PROCESSOR_COW"),  change:getNum("PROCESSOR_COW_CHANGE")},
-    };
+    // d.results = [{indicatorId:0, data:{message,data:[...]}}, ...]
+    const out = { date: null };
+    for(const r of (d.results||[])) {
+      const rows = r.data?.data || [];
+      const result = getMostRecentIndicatorValue(rows, r.indicatorId);
+      if(!result) continue;
+      if(!out.date || result.date > out.date) out.date = result.date;
+      switch(r.indicatorId) {
+        case 0:  out.eyci          = result; break;
+        case 2:  out.restockerSteer= result; break;
+        case 3:  out.feederSteer   = result; break;
+        case 4:  out.heavySteer    = result; break;
+        case 13: out.processorCow  = result; break;
+        case 14: out.nationalYoung = result; break;
+      }
+    }
+    return out;
   } catch(e) {
     console.error("fetchAllIndicators error:", e);
     return null;
   }
 }
+
+// ── Fetch single saleyard data via report/6 ──────────────────────────────────
+async function fetchSaleyardReport(saleyard) {
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"mla_saleyard", saleyardId: saleyard.mlaId })
+    });
+    const d = await res.json();
+    if(d.error) throw new Error(d.error);
+
+    const rows = d.data || [];
+    if(!rows.length) return { error:"no_data_found" };
+
+    // Get most recent sale date for cattle
+    const cattleRows = rows.filter(r => r.species_id === "Cattle");
+    if(!cattleRows.length) return { error:"no_data_found" };
+
+    const latestDate = cattleRows
+      .map(r => r.calendar_date)
+      .sort((a,b) => b.localeCompare(a))[0];
+
+    const saleRows = cattleRows.filter(r => r.calendar_date === latestDate);
+
+    // Sum head count across all indicators on that date for total yarding
+    const totalHead = saleRows.reduce((sum, r) => sum + (parseInt(r.head_count)||0), 0);
+    // Use the max head_count row as the best yarding proxy (avoid double counting)
+    const maxHeadRow = saleRows.reduce((best, r) => (!best || parseInt(r.head_count) > parseInt(best.head_count)) ? r : best, null);
+    const yarding = maxHeadRow ? parseInt(maxHeadRow.head_count) : null;
+
+    const getVal = (indicatorId) => {
+      const row = saleRows.find(r => r.indicator_id === indicatorId);
+      return row ? Math.round(parseFloat(row.indicator_value) * 100) / 100 : null;
+    };
+
+    // Format date nicely
+    const dateObj = new Date(latestDate + "T00:00:00");
+    const dateStr = dateObj.toLocaleDateString("en-AU", {day:"numeric", month:"long", year:"numeric"});
+
+    return {
+      date:     dateStr,
+      rawDate:  latestDate,
+      saleType: "MLA Indicator Report",
+      yarding:  yarding,
+      trend:    null,   // MLA API does not provide trend
+      reporter: "MLA/NLRS",
+      commentary: null,
+      prices: {
+        feederSteers:    getVal(3)  ? `${getVal(3)}¢/kg lwt`  : null,
+        feederHeifers:   getVal(17) ? `${getVal(17)}¢/kg lwt` : null,
+        restockerSteers: getVal(2)  ? `${getVal(2)}¢/kg lwt`  : null,
+        cows:            getVal(13) ? `${getVal(13)}¢/kg lwt` : null,
+        heavySteers:     getVal(4)  ? `${getVal(4)}¢/kg lwt`  : null,
+        eyci:            getVal(0)  ? `${getVal(0)}¢/kg cwt`  : null,
+      },
+      mlaRows: saleRows, // keep raw rows for AI analysis
+    };
+  } catch(e) {
+    console.error(`${saleyard.name} MLA fetch error:`, e.message);
+    return { error:"unavailable", message: e.message };
+  }
+}
+
 
 // ── Render the full Livestock Markets section ─────────────────
 function renderLivestockMarketsTab() {
@@ -2395,7 +2368,7 @@ function renderLivestockMarketsTab() {
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
       <div>
         <div style="font-size:15px;font-weight:700;color:#1a2332">Livestock Markets</div>
-        <div style="font-size:11px;color:#8898aa;margin-top:2px">MLA/NLRS Saleyard Reports · National Indicators · AI-powered live fetch</div>
+        <div style="font-size:11px;color:#8898aa;margin-top:2px">MLA/NLRS Saleyard Reports · National Indicators · Direct MLA Statistics API</div>
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="refreshAllIndicators()" id="indicators-refresh-btn"
@@ -2776,9 +2749,9 @@ async function fetchSingleSaleyard(saleyardId) {
     saleyardData[saleyardId] = data;
 
     if(data.error) {
-      content.innerHTML=`<div style="padding:12px;color:#8898aa;font-size:12px;font-style:italic">Report unavailable — ${data.error}. <a href="${sy.url}" target="_blank" style="color:#3b82f6">View on Agora →</a></div>`;
-      badge.textContent="Unavailable"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#f1f5f9;color:#64748b";
-      card.style.borderTopColor="#e2e8f0";
+      content.innerHTML=`<div style="padding:12px;color:#8898aa;font-size:12px">No recent MLA data found for this saleyard. It may not have traded in the past 30 days.</div>`;
+      badge.textContent="No data"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa;font-weight:600";
+      card.style.borderTopColor="#3b82f6";
     } else {
       const trendColor = data.trend?.toLowerCase().includes("dear")?"#16a34a":data.trend?.toLowerCase().includes("cheap")?"#dc2626":"#d97706";
       const trendBg = data.trend?.toLowerCase().includes("dear")?"#f0fdf4":data.trend?.toLowerCase().includes("cheap")?"#fef2f2":"#fffbeb";
@@ -2821,7 +2794,7 @@ async function fetchSingleSaleyard(saleyardId) {
           ${data.commentary}
         </div>`:""}
 
-        ${data.reporter?`<div style="font-size:10px;color:#a0aec0;margin-top:8px">Reporter: ${data.reporter} · <a href="${sy.url}" target="_blank" style="color:#3b82f6">Full report →</a></div>`:`<div style="margin-top:6px"><a href="${sy.url}" target="_blank" style="font-size:10px;color:#3b82f6">View full report on Agora →</a></div>`}
+        ${data.reporter?`<div style="font-size:10px;color:#a0aec0;margin-top:8px">Source: ${data.reporter} · MLA Statistics API</div>`:""}
       `;
     }
   } catch(e) {
@@ -2841,7 +2814,7 @@ async function refreshAllSaleyards() {
   });
   for(const sy of visible) {
     await fetchSingleSaleyard(sy.id);
-    await new Promise(r=>setTimeout(r,1500)); // stagger to avoid rate limits
+    await new Promise(r=>setTimeout(r,300)); // small stagger for parallel requests
   }
   btn.disabled=false; btn.textContent="↻ Refresh All Reports";
 }
@@ -2851,46 +2824,59 @@ async function refreshAllIndicators() {
   const btn = document.getElementById("indicators-refresh-btn");
   if(btn){ btn.disabled=true; btn.textContent="Fetching…"; }
 
-  const data = await fetchAllIndicators();
   const updated = document.getElementById("indicators-updated");
+  try {
+    const data = await fetchAllIndicators();
+    console.log("Indicator data returned:", data);
 
-  if(data && !data.error) {
-    const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
-    const dateStr = new Date().toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
-    if(updated) updated.textContent = `Last updated: ${dateStr} at ${t}`;
+    if(data) {
+      const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
+      const dateStr = new Date().toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+      if(updated) updated.textContent = `Last updated: ${dateStr} at ${t}`;
 
-    const map = {
-      eyci:         {key:"eyci",         elId:"eyci"},
-      nychc:        {key:"nationalYoung",elId:"nychc"},
-      feeder:       {key:"feederSteer",  elId:"feeder"},
-      restocker:    {key:"restockerSteer",elId:"restocker"},
-      heavy:        {key:"heavySteer",   elId:"heavy"},
-      cow:          {key:"processorCow", elId:"cow"},
-    };
+      const map = {
+        eyci:      {key:"eyci",          elId:"eyci"},
+        nychc:     {key:"nationalYoung", elId:"nychc"},
+        feeder:    {key:"feederSteer",   elId:"feeder"},
+        restocker: {key:"restockerSteer",elId:"restocker"},
+        heavy:     {key:"heavySteer",    elId:"heavy"},
+        cow:       {key:"processorCow",  elId:"cow"},
+      };
 
-    Object.entries(map).forEach(([indId, {key, elId}]) => {
-      const d = data[key];
-      if(!d) return;
-      const valEl = document.getElementById(`ind-val-${elId}`);
-      const chgEl = document.getElementById(`ind-chg-${elId}`);
-      if(valEl && d.value) valEl.textContent = `${d.value}`;
-      if(chgEl && d.change !== null && d.change !== undefined) {
-        const positive = d.change > 0;
-        const neutral = d.change === 0;
-        chgEl.innerHTML = `<span style="color:${neutral?"#8898aa":positive?"#16a34a":"#dc2626"};font-weight:600">
-          ${neutral?"→":positive?"▲":"▼"} ${Math.abs(d.change).toFixed(1)}¢
-        </span>`;
+      let anyUpdated = false;
+      Object.entries(map).forEach(([, {key, elId}]) => {
+        const d = data[key];
+        if(!d) return;
+        const valEl = document.getElementById(`ind-val-${elId}`);
+        const chgEl = document.getElementById(`ind-chg-${elId}`);
+        if(valEl && d.value != null) {
+          valEl.textContent = d.value.toFixed(2);
+          anyUpdated = true;
+        }
+        if(chgEl && d.change != null) {
+          const pos = d.change > 0, neu = d.change === 0;
+          chgEl.innerHTML = `<span style="color:${neu?"#8898aa":pos?"#16a34a":"#dc2626"};font-weight:600">${neu?"→":pos?"▲":"▼"} ${Math.abs(d.change).toFixed(2)}¢</span>`;
+        }
+      });
+
+      // Update EYCI chart display
+      const eyciEl = document.getElementById("eyci-val");
+      if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value.toFixed(2)} ¢/kg cwt`;
+
+      if(!anyUpdated) {
+        if(updated) updated.textContent = "⚠ Fetched but no values found — MLA may be offline";
       }
-    });
-
-    // Update EYCI display
-    const eyciEl = document.getElementById("eyci-val");
-    if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value} ¢/kg cwt`;
-
-  } else {
-    if(updated) updated.textContent = "⚠ Could not fetch — try again";
+    } else {
+      if(updated) updated.textContent = "⚠ Could not fetch — try again";
+    }
+  } catch(e) {
+    console.error("refreshAllIndicators error:", e);
+    if(updated) updated.textContent = "⚠ Error: " + e.message;
   }
-  if(btn){ btn.disabled=false; btn.textContent="↻ Refresh Indicators"; }
+  if(btn){
+    btn.disabled=false;
+    btn.innerHTML = `<span style="font-size:15px">↻</span> Refresh Price Indicators`;
+  }
 }
 
 // ── Filter saleyards ──────────────────────────────────────────
@@ -2930,7 +2916,8 @@ async function generateMarketInsights() {
     .filter(([_,d])=>d&&!d.error)
     .map(([id,d])=>{
       const sy = SALEYARDS.find(s=>s.id===id);
-      return `${sy?.name} (${d.date||"latest"}): ${d.yarding?.toLocaleString()||"?"}hd yarded, trend: ${d.trend||"unknown"}${d.prices?.restockerSteers?`, restocker steers ${d.prices.restockerSteers}`:""}${d.prices?.feederSteers?`, feeder steers ${d.prices.feederSteers}`:""}${d.prices?.cows?`, cows ${d.prices.cows}`:""}`;
+      const prices = Object.entries(d.prices||{}).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join(", ");
+      return `${sy?.name} (${d.date||"latest"}): ${d.yarding?.toLocaleString()||"?"}hd yarded${prices?` — ${prices}`:""}`;
     }).join("\n");
 
   const eyciVal = document.getElementById("eyci-val")?.textContent || "888.33 ¢/kg cwt";
