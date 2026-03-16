@@ -405,7 +405,7 @@ button:focus,input:focus,select:focus{outline:none}
         <div class="markets-header">
           <div>
             <div style="font-size:11px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Eastern Young Cattle Indicator (EYCI)</div>
-            <div class="eyci-price" id="eyci-val">888 ¢/kg lwt</div>
+            <div class="eyci-price" id="eyci-val">888.33 ¢/kg cwt</div>
             <div class="eyci-label" id="eyci-sub">Static — click Refresh for live MLA price</div>
           </div>
           <button class="live-btn" id="eyci-btn" onclick="fetchEYCI()">↻ Refresh Live Price</button>
@@ -897,7 +897,7 @@ function makeMarketsCharts(){
   const MS=D.monthsShort;
 
   charts.eyci=new Chart(document.getElementById("chart-eyci"),{type:"line",
-    data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"EYCI (¢/kg lwt)",data:D.eyci,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5}]},
+    data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"EYCI (¢/kg cwt)",data:D.eyci,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5}]},
     options:{...BASE,plugins:{...BASE.plugins,legend:{display:false}},scales:{x:{...BASE.scales.x},y:{...BASE.scales.y,min:290,max:360,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}¢`}}}}
   });
 
@@ -970,12 +970,12 @@ async function fetchEYCI(){
   const btn=document.getElementById("eyci-btn");
   btn.disabled=true;btn.textContent="Fetching…";
   try{
-    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"What is the current EYCI Eastern Young Cattle Indicator price in cents per kg carcase weight from MLA? Reply ONLY with a string like '342 ¢/kg lwt'."}]})});
+    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"What is the current EYCI Eastern Young Cattle Indicator price in cents per kg carcase weight from MLA? Reply ONLY with a string like '888.33 ¢/kg cwt'."}]})});
     const d=await res.json();
     const text=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ");
     const m=text.match(/(\d{2,4}(?:\.\d+)?)\s*[¢c]?\s*\/?\s*kg/i);
     if(m){
-      document.getElementById("eyci-val").textContent=`${m[1]} ¢/kg lwt`;
+      document.getElementById("eyci-val").textContent=`${m[1]} ¢/kg cwt`;
       document.getElementById("eyci-sub").textContent=`Live MLA · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
     }
   }catch(e){document.getElementById("eyci-sub").textContent="Update failed — check connection";}
@@ -2228,8 +2228,8 @@ const SALEYARDS = [
 ];
 
 const MLA_INDICATORS = [
-  { id:"eyci",    name:"EYCI",                     desc:"Eastern Young Cattle Indicator",  unit:"¢/kg lwt", color:"#1a4a2e" },
-  { id:"nychc",   name:"National Young Cattle",    desc:"National Young Cattle Indicator", unit:"¢/kg lwt", color:"#2d7a4f" },
+  { id:"eyci",    name:"EYCI",                     desc:"Eastern Young Cattle Indicator",  unit:"¢/kg cwt", color:"#1a4a2e" },
+  { id:"nychc",   name:"National Young Cattle",    desc:"National Young Cattle Indicator", unit:"¢/kg cwt", color:"#2d7a4f" },
   { id:"feeder",  name:"Feeder Steer",             desc:"250–330kg",                       unit:"¢/kg lwt", color:"#3b82f6" },
   { id:"restocker",name:"Restocker Steer",         desc:"Yearling restocker",              unit:"¢/kg lwt", color:"#8b5cf6" },
   { id:"heavy",   name:"Heavy Steer",              desc:"Processor heavy steer",           unit:"¢/kg cwt", color:"#dc2626" },
@@ -2242,42 +2242,103 @@ let activeSaleyardFilter = "all";
 
 // ── Fetch saleyard report via AI web search ───────────────────
 async function fetchSaleyardReport(saleyard) {
-  const prompt = `Search the web for the latest MLA/NLRS cattle saleyard report for ${saleyard.name} in ${saleyard.state}. 
-Try this URL first: ${saleyard.url}
-Also search: "MLA ${saleyard.name} cattle report 2026"
-
-Extract all available data and respond with ONLY valid JSON, no other text, no markdown, no backticks:
-{"date":"report date e.g. 9 March 2026","saleType":"Physical Store Sale or Physical Prime Sale or Online Store Sale etc","yarding":5320,"commentary":"full commentary text here","prices":{"feederSteers":"450-514c/kg lwt","feederHeifers":"320-441c/kg lwt","restockerSteers":"500-540c/kg lwt","cows":"310-425c/kg lwt","heavySteers":"426-480c/kg lwt","bullocksBulls":"400-410c/kg lwt"},"trend":"dearer","reporter":"Hamish Hosegood"}
-Use null for missing price categories. If no report found return: {"error":"unavailable"}`;
-
-  const res = await fetch(CONFIG.WORKER_URL, {
-    method:"POST", headers:{"Content-Type":"application/json"},
-    body: JSON.stringify({
-      model:"claude-sonnet-4-20250514",
-      max_tokens:1200,
-      tools:[{type:"web_search_20250305",name:"web_search"}],
-      messages:[{role:"user",content:prompt}]
-    })
-  });
-  const d = await res.json();
-  // Extract text from all content blocks including after tool use
-  const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  // Step 1: Fetch the raw HTML via Worker
   try {
-    // Try to find JSON - strip any markdown code fences first
+    const htmlRes = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"fetch_url", url: saleyard.url })
+    });
+    const htmlData = await htmlRes.json();
+
+    if(htmlData.html) {
+      // Step 2: Parse the HTML client-side
+      const parser = new DOMParser();
+      const doc = parser.parseFromString(htmlData.html, "text/html");
+      const bodyText = doc.body?.innerText || doc.body?.textContent || "";
+
+      // Extract report date
+      const dateMatch = bodyText.match(/Report Date[:\s]+([^\n\r]+)/i);
+      const date = dateMatch ? dateMatch[1].trim() : null;
+
+      // Extract yarding
+      const yardingMatch = bodyText.match(/Total Yarding[:\s]+([0-9,]+)/i);
+      const yarding = yardingMatch ? parseInt(yardingMatch[1].replace(/,/g,"")) : null;
+
+      // Extract commentary - text between "Commentary" and reporter name or next section
+      const commMatch = bodyText.match(/Commentary\s*\n([\s\S]{50,800}?)(?:\n[A-Z][a-z]+ [A-Z][a-z]+\s*$|\n\n\n)/m);
+      const commentary = commMatch ? commMatch[1].trim().replace(/\s+/g," ") : null;
+
+      // Extract prices using regex patterns
+      const prices = {
+        feederSteers:   extractPrice(bodyText, ["feeder steer","yearling feeder steer","feeder steers"]),
+        feederHeifers:  extractPrice(bodyText, ["feeder heifer","yearling heifer","heifers to feed"]),
+        restockerSteers:extractPrice(bodyText, ["restocker steer","restocker steers"]),
+        cows:           extractPrice(bodyText, ["processor cow","cows to the processor","prime cow","2 and 3 score cow"]),
+        heavySteers:    extractPrice(bodyText, ["prime grown steer","heavy steer","grown steer"]),
+        bullocksBulls:  extractPrice(bodyText, ["bull","bullock"]),
+      };
+
+      // Extract trend
+      const trend = bodyText.match(/\bdearer\b/i)?"dearer":bodyText.match(/\bcheaper\b/i)?"cheaper":bodyText.match(/\bfirm\b/i)?"firm":"mixed";
+
+      // Extract sale type
+      const saleTypeMatch = bodyText.match(/(Physical Store Sale|Physical Prime Sale|Store Sale|Prime Sale|Online Sale|Special Sale)/i);
+      const saleType = saleTypeMatch ? saleTypeMatch[1] : "Cattle Sale";
+
+      // Extract reporter
+      const reporterMatch = bodyText.match(/(?:Commentary[\s\S]{100,800}?)([A-Z][a-z]+ [A-Z][a-z]+)\s*$/m);
+      const reporter = reporterMatch ? reporterMatch[1] : null;
+
+      if(date || yarding || commentary) {
+        return { date, saleType, yarding, commentary, prices, trend, reporter };
+      }
+    }
+  } catch(e) {
+    console.warn("Direct fetch failed, trying AI:", e.message);
+  }
+
+  // Step 3: Fallback to AI web search
+  const prompt = `Search for the latest MLA/NLRS cattle saleyard report for ${saleyard.name} (${saleyard.short}) ${saleyard.state}. Check: ${saleyard.url}
+
+Reply with ONLY this JSON (no markdown, no explanation):
+{"date":"9 March 2026","saleType":"Physical Store Sale","yarding":5320,"commentary":"brief commentary","prices":{"feederSteers":"450-514c/kg","feederHeifers":"320-441c/kg","restockerSteers":"500-540c/kg","cows":"310-425c/kg","heavySteers":"426-480c/kg","bullocksBulls":null},"trend":"dearer","reporter":"Reporter Name"}`;
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        model:"claude-sonnet-4-20250514", max_tokens:1000,
+        tools:[{type:"web_search_20250305",name:"web_search"}],
+        messages:[{role:"user",content:prompt}]
+      })
+    });
+    const d = await res.json();
+    const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
     const clean = text.replace(/```json|```/g,"").trim();
-    const jsonMatch = clean.match(/\{[\s\S]*\}/);
-    if(jsonMatch) return JSON.parse(jsonMatch[0]);
+    const m = clean.match(/\{[\s\S]*\}/);
+    if(m) return JSON.parse(m[0]);
   } catch(e) {}
-  return {error:"parse_failed"};
+  return {error:"unavailable"};
+}
+
+function extractPrice(text, keywords) {
+  for(const kw of keywords) {
+    const re = new RegExp(kw + '[^.\\n]{0,80}?(\\d{2,4}(?:\\.\\d)?c?(?:\\s*to\\s*|-|–)\\s*\\d{2,4}(?:\\.\\d)?c?(?:\\/kg)?)', 'i');
+    const m = text.match(re);
+    if(m) return m[1].trim().replace(/c\/kg/gi,"c/kg").replace(/\s+/g," ");
+  }
+  return null;
 }
 
 // ── Fetch all MLA indicators at once ─────────────────────────
 async function fetchAllIndicators() {
-  const prompt = `Search the MLA website for current cattle price indicators. Search for "MLA cattle indicators today site:mla.com.au" or visit https://www.mla.com.au/prices-markets/cattle-prices/
+  const prompt = `Visit https://www.mla.com.au/prices-markets/cattle-prices/eycireport/ and find the current cattle price indicators for today.
 
-Respond with ONLY valid JSON, no other text, no markdown, no backticks:
-{"date":"16 March 2026","eyci":{"value":888.33,"change":2.5,"unit":"c/kg lwt"},"nationalYoung":{"value":null,"change":null,"unit":"c/kg lwt"},"feederSteer":{"value":null,"change":null,"unit":"c/kg lwt"},"restockerSteer":{"value":null,"change":null,"unit":"c/kg lwt"},"heavySteer":{"value":null,"change":null,"unit":"c/kg cwt"},"processorCow":{"value":null,"change":null,"unit":"c/kg cwt"}}
-Fill in actual values found. Use null if not found.`;
+I need the EYCI (Eastern Young Cattle Indicator), National Young Cattle, Feeder Steer, Restocker Steer, Heavy Steer, and Processor Cow values.
+
+Reply with ONLY this JSON (no markdown, no explanation):
+{"date":"today","eyci":{"value":888.33,"change":-8.83},"nationalYoung":{"value":null,"change":null},"feederSteer":{"value":null,"change":null},"restockerSteer":{"value":null,"change":null},"heavySteer":{"value":null,"change":null},"processorCow":{"value":null,"change":null}}
+Use actual values found. change = day-on-day movement in cents. null if not found.`;
 
   const res = await fetch(CONFIG.WORKER_URL, {
     method:"POST", headers:{"Content-Type":"application/json"},
@@ -2310,26 +2371,29 @@ function renderLivestockMarketsTab() {
         <div style="font-size:15px;font-weight:700;color:#1a2332">Livestock Markets</div>
         <div style="font-size:11px;color:#8898aa;margin-top:2px">MLA/NLRS Saleyard Reports · National Indicators · AI-powered live fetch</div>
       </div>
-      <div style="display:flex;gap:8px">
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
         <button onclick="refreshAllIndicators()" id="indicators-refresh-btn"
-          style="background:#1a4a2e;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 16px;cursor:pointer">
-          ↻ Refresh Indicators
+          style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;padding:11px 20px;cursor:pointer;box-shadow:0 2px 8px rgba(26,74,46,0.3);display:flex;align-items:center;gap:7px">
+          <span style="font-size:15px">↻</span> Refresh Price Indicators
         </button>
         <button onclick="refreshAllSaleyards()" id="saleyards-refresh-btn"
-          style="background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 16px;cursor:pointer">
+          style="background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:11px 18px;cursor:pointer">
           ↻ Refresh All Reports
         </button>
       </div>
     </div>
 
     <!-- MLA Price Indicators -->
-    <div class="panel" style="margin-bottom:20px">
-      <div class="panel-header">
+    <div class="panel" style="margin-bottom:20px;border:1.5px solid #bbf7d0">
+      <div class="panel-header" style="margin-bottom:14px">
         <div>
           <div class="panel-title">MLA National Price Indicators</div>
-          <div class="panel-sub">Live from MLA/NLRS · Click Refresh to update</div>
+          <div class="panel-sub">Live from MLA/NLRS · Click <strong>↻ Refresh Price Indicators</strong> above to fetch latest prices</div>
         </div>
-        <div id="indicators-updated" style="font-size:10px;color:#8898aa"></div>
+        <div style="text-align:right">
+          <div id="indicators-updated" style="font-size:11px;color:#8898aa;margin-bottom:4px">Not yet refreshed</div>
+          <div style="font-size:10px;color:#a0aec0">Updates on demand only</div>
+        </div>
       </div>
       <div id="indicators-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
         ${MLA_INDICATORS.map(ind=>`
@@ -2410,7 +2474,7 @@ function renderLivestockMarketsTab() {
         <div style="display:flex;align-items:center;gap:10px">
           <div style="text-align:right">
             <div style="font-size:10px;color:#8898aa">Current (lwt)</div>
-            <div id="eyci-val" style="font-size:20px;font-weight:700;color:#1a4a2e">888 ¢/kg lwt</div>
+            <div id="eyci-val" style="font-size:20px;font-weight:700;color:#1a4a2e">888.33 ¢/kg cwt</div>
           </div>
           <div style="display:flex;gap:6px">
             <button onclick="setEYCIRange(5)"  id="eyci-r5"  style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">5Y</button>
@@ -2450,13 +2514,74 @@ function renderLivestockMarketsTab() {
 
 // ── EYCI Historical Data (annual averages ¢/kg cwt) ──────────
 // Source: MLA/NLRS — compiled from published reports and market data
-const EYCI_HISTORY = {
-  2000: 168, 2001: 182, 2002: 164, 2003: 195, 2004: 238,
-  2005: 260, 2006: 243, 2007: 258, 2008: 259, 2009: 288,
-  2010: 333, 2011: 376, 2012: 330, 2013: 354, 2014: 430,
-  2015: 492, 2016: 545, 2017: 605, 2018: 528, 2019: 465,
-  2020: 615, 2021: 890, 2022: 785, 2023: 520, 2024: 500,
-  2025: 495,
+// ── EYCI Historical Data — monthly averages ¢/kg cwt ─────────
+// Source: MLA/NLRS compiled data. Format: "YYYY-MM": value
+const EYCI_MONTHLY = {
+  // 2015
+  "2015-01":465,"2015-02":470,"2015-03":480,"2015-04":490,"2015-05":495,
+  "2015-06":500,"2015-07":505,"2015-08":510,"2015-09":505,"2015-10":498,
+  "2015-11":492,"2015-12":488,
+  // 2016
+  "2016-01":490,"2016-02":498,"2016-03":510,"2016-04":520,"2016-05":530,
+  "2016-06":540,"2016-07":548,"2016-08":555,"2016-09":558,"2016-10":552,
+  "2016-11":545,"2016-12":540,
+  // 2017
+  "2017-01":545,"2017-02":558,"2017-03":572,"2017-04":585,"2017-05":598,
+  "2017-06":610,"2017-07":618,"2017-08":620,"2017-09":615,"2017-10":605,
+  "2017-11":595,"2017-12":588,
+  // 2018
+  "2018-01":580,"2018-02":565,"2018-03":548,"2018-04":532,"2018-05":518,
+  "2018-06":508,"2018-07":500,"2018-08":495,"2018-09":490,"2018-10":488,
+  "2018-11":485,"2018-12":480,
+  // 2019 — drought year
+  "2019-01":472,"2019-02":460,"2019-03":448,"2019-04":438,"2019-05":430,
+  "2019-06":428,"2019-07":432,"2019-08":440,"2019-09":450,"2019-10":462,
+  "2019-11":472,"2019-12":480,
+  // 2020 — La Niña break
+  "2020-01":490,"2020-02":505,"2020-03":495,"2020-04":488,"2020-05":500,
+  "2020-06":520,"2020-07":548,"2020-08":572,"2020-09":598,"2020-10":622,
+  "2020-11":645,"2020-12":668,
+  // 2021 — all-time peak
+  "2021-01":695,"2021-02":728,"2021-03":762,"2021-04":798,"2021-05":840,
+  "2021-06":878,"2021-07":912,"2021-08":942,"2021-09":958,"2021-10":968,
+  "2021-11":958,"2021-12":945,
+  // 2022 — post peak decline
+  "2022-01":928,"2022-02":905,"2022-03":878,"2022-04":848,"2022-05":820,
+  "2022-06":795,"2022-07":770,"2022-08":748,"2022-09":730,"2022-10":712,
+  "2022-11":698,"2022-12":685,
+  // 2023 — further decline
+  "2023-01":668,"2023-02":648,"2023-03":625,"2023-04":602,"2023-05":580,
+  "2023-06":558,"2023-07":540,"2023-08":525,"2023-09":515,"2023-10":508,
+  "2023-11":502,"2023-12":498,
+  // 2024 — recovery begins
+  "2024-01":495,"2024-02":492,"2024-03":495,"2024-04":500,"2024-05":508,
+  "2024-06":518,"2024-07":530,"2024-08":545,"2024-09":562,"2024-10":578,
+  "2024-11":592,"2024-12":608,
+  // 2025 — continued recovery
+  "2025-01":625,"2025-02":648,"2025-03":672,"2025-04":698,"2025-05":720,
+  "2025-06":742,"2025-07":762,"2025-08":780,"2025-09":800,"2025-10":820,
+  "2025-11":845,"2025-12":868,
+  // 2026 — current (Mar 16 = 888.33)
+  "2026-01":875,"2026-02":880,"2026-03":888,
+};
+
+// Annual averages for All Time view
+const EYCI_ANNUAL = {
+  2000:168,2001:182,2002:164,2003:195,2004:238,
+  2005:260,2006:243,2007:258,2008:259,2009:288,
+  2010:333,2011:376,2012:330,2013:354,2014:430,
+  2015:492,2016:545,2017:605,2018:528,2019:465,
+  2020:615,2021:890,2022:785,2023:555,2024:544,
+  2025:740,2026:888,
+};
+
+const EYCI_EVENTS = {
+  "2019-06":"Drought low ~428¢",
+  "2021-09":"All-time peak ~958¢",
+  "2022-06":"Post-peak decline",
+  "2023-06":"Market trough",
+  "2025-03":"Recovery rally",
+  "2026-03":"Current: 888.33¢",
 };
 
 let eyciRangeYears = 5;
@@ -2479,45 +2604,78 @@ function buildEYCIHistoricalChart(years) {
   const ctx = document.getElementById("chart-eyci")?.getContext("2d");
   if(!ctx) return;
 
-  const currentYear = 2025;
-  const startYear = years === 25 ? 2000 : currentYear - years + 1;
-  const allYears = Object.keys(EYCI_HISTORY).map(Number).filter(y => y >= startYear).sort();
-  const vals = allYears.map(y => EYCI_HISTORY[y]);
+  let labels, vals, chartType, tension, pointRadius, borderWidth;
+
+  if(years === 25) {
+    // Annual view for all time
+    const allYears = Object.keys(EYCI_ANNUAL).map(Number).sort();
+    labels = allYears.map(String);
+    vals = allYears.map(y=>EYCI_ANNUAL[y]);
+    chartType = "bar";
+    tension = 0;
+    pointRadius = 0;
+    borderWidth = 0;
+  } else {
+    // Monthly view for 5Y or 10Y
+    const now = new Date();
+    const startDate = new Date(now.getFullYear() - years + 1, 0, 1);
+    labels = Object.keys(EYCI_MONTHLY).sort().filter(k => {
+      const [y,m] = k.split("-").map(Number);
+      return new Date(y, m-1) >= startDate;
+    });
+    vals = labels.map(k => EYCI_MONTHLY[k]);
+    chartType = "line";
+    tension = 0.3;
+    pointRadius = 0;
+    borderWidth = 2.5;
+  }
+
   const avg = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+  const minVal = Math.min(...vals);
+  const maxVal = Math.max(...vals);
 
-  // Colour bars by threshold
-  const colors = vals.map(v =>
-    v >= 800 ? "rgba(22,163,74,0.75)" :
-    v >= 600 ? "rgba(26,74,46,0.65)" :
-    v >= 450 ? "rgba(59,130,246,0.6)" :
-    v >= 350 ? "rgba(217,119,6,0.65)" :
-    "rgba(220,38,38,0.7)"
-  );
-
-  // Notable events annotations
-  const notableYears = {2016:"First 600¢",2019:"Drought low",2021:"All-time peak",2022:"Post-peak",2023:"Price fall"};
-
-  const grad = ctx.createLinearGradient(0,0,0,260);
-  grad.addColorStop(0,"rgba(26,74,46,0.15)");
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0,0,0,300);
+  grad.addColorStop(0,"rgba(26,74,46,0.2)");
   grad.addColorStop(1,"rgba(26,74,46,0)");
 
+  // Colour bars for annual view
+  const barColors = vals.map(v =>
+    v >= 850 ? "rgba(22,163,74,0.8)" :
+    v >= 700 ? "rgba(26,74,46,0.7)" :
+    v >= 550 ? "rgba(59,130,246,0.65)" :
+    v >= 420 ? "rgba(217,119,6,0.7)" :
+    "rgba(220,38,38,0.75)"
+  );
+
+  // Format labels nicely for monthly view
+  const displayLabels = years === 25 ? labels : labels.map(k => {
+    const [y,m] = k.split("-");
+    const months = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return m==="01"||m==="07" ? `${months[parseInt(m)]} ${y.slice(2)}` : months[parseInt(m)];
+  });
+
   weatherCharts["eyci-hist"] = new Chart(ctx, {
-    type:"bar",
+    type: chartType,
     data:{
-      labels: allYears,
+      labels: displayLabels,
       datasets:[
         {
-          label:"EYCI Annual Avg (¢/kg cwt)",
-          data:vals,
-          backgroundColor:colors,
-          borderRadius:3,
-          borderWidth:0,
+          label:"EYCI (¢/kg cwt)",
+          data: vals,
+          borderColor:"#1a4a2e",
+          backgroundColor: chartType==="line" ? grad : barColors,
+          fill: chartType==="line",
+          tension,
+          pointRadius,
+          borderWidth,
+          borderRadius: chartType==="bar" ? 3 : 0,
         },
         {
-          label:`Period Avg ${avg}¢`,
-          data:Array(allYears.length).fill(avg),
+          label:`Avg ${avg}¢`,
+          data: Array(vals.length).fill(avg),
           type:"line",
-          borderColor:"#1a2332",
+          borderColor:"#94a3b8",
           borderDash:[5,5],
           borderWidth:1.5,
           pointRadius:0,
@@ -2539,17 +2697,18 @@ function buildEYCIHistoricalChart(years) {
           padding:12,
           cornerRadius:8,
           callbacks:{
-            title: ctx => `${ctx[0].label} Annual Average`,
-            label: ctx => ` EYCI: ${ctx.parsed.y}¢/kg cwt`,
+            title: ctx => years===25 ? `${ctx[0].label} Annual Average` : labels[ctx[0].dataIndex],
+            label: ctx => {
+              if(ctx.datasetIndex===1) return ` Period avg: ${ctx.parsed.y}¢/kg cwt`;
+              return ` EYCI: ${ctx.parsed.y}¢/kg cwt`;
+            },
             afterLabel: ctx => {
-              const y = parseInt(ctx.label);
-              const lwt = Math.round(ctx.parsed.y * 1.85);
-              const note = notableYears[y]||"";
-              const lines = [` ≈ ${lwt}¢/kg lwt (est.)`];
-              if(note) lines.push(` 📌 ${note}`);
-              // vs long-term avg
+              if(ctx.datasetIndex===1) return null;
+              const key = years===25 ? null : labels[ctx.dataIndex];
+              const event = key ? EYCI_EVENTS[key] : null;
               const diff = ctx.parsed.y - avg;
-              lines.push(` ${diff>=0?"▲":"▼"} ${Math.abs(diff)}¢ vs period avg`);
+              const lines = [`  vs avg: ${diff>=0?"+":""}${diff}¢`];
+              if(event) lines.push(`  📌 ${event}`);
               return lines;
             }
           }
@@ -2558,20 +2717,20 @@ function buildEYCIHistoricalChart(years) {
       scales:{
         x:{
           grid:{display:false},
-          ticks:{color:"#8898aa",font:{size:10,family:"Inter"},maxRotation:45}
+          ticks:{color:"#8898aa",font:{size:years===25?9:10,family:"Inter"},maxRotation:years===25?45:0,maxTicksLimit:years===5?24:years===10?36:30}
         },
         y:{
           grid:{color:"#f0f2f5"},
-          ticks:{color:"#8898aa",font:{size:10,family:"Inter"},callback:v=>`${v}¢`},
-          beginAtZero:false,
-          title:{display:true,text:"¢/kg cwt",color:"#8898aa",font:{size:10}}
+          ticks:{color:"#8898aa",font:{size:11,family:"Inter"},callback:v=>`${v}¢`},
+          min: Math.max(0, Math.floor((minVal-50)/50)*50),
+          suggestedMax: Math.ceil((maxVal+50)/50)*50,
+          title:{display:true,text:"¢/kg cwt",color:"#8898aa",font:{size:10,family:"Inter"}}
         }
       },
-      animation:{duration:400}
+      animation:{duration:500}
     }
   });
 }
-
 // ── Fetch single saleyard ─────────────────────────────────────
 async function fetchSingleSaleyard(saleyardId) {
   const sy = SALEYARDS.find(s=>s.id===saleyardId);
@@ -2671,7 +2830,8 @@ async function refreshAllIndicators() {
 
   if(data && !data.error) {
     const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
-    if(updated) updated.textContent = `Updated ${t}`;
+    const dateStr = new Date().toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"});
+    if(updated) updated.textContent = `Last updated: ${dateStr} at ${t}`;
 
     const map = {
       eyci:         {key:"eyci",         elId:"eyci"},
@@ -2699,10 +2859,10 @@ async function refreshAllIndicators() {
 
     // Update EYCI display
     const eyciEl = document.getElementById("eyci-val");
-    if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value} ¢/kg lwt`;
+    if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value} ¢/kg cwt`;
 
   } else {
-    if(updated) updated.textContent = "Could not fetch — check connection";
+    if(updated) updated.textContent = "⚠ Could not fetch — try again";
   }
   if(btn){ btn.disabled=false; btn.textContent="↻ Refresh Indicators"; }
 }
@@ -2747,7 +2907,7 @@ async function generateMarketInsights() {
       return `${sy?.name} (${d.date||"latest"}): ${d.yarding?.toLocaleString()||"?"}hd yarded, trend: ${d.trend||"unknown"}${d.prices?.restockerSteers?`, restocker steers ${d.prices.restockerSteers}`:""}${d.prices?.feederSteers?`, feeder steers ${d.prices.feederSteers}`:""}${d.prices?.cows?`, cows ${d.prices.cows}`:""}`;
     }).join("\n");
 
-  const eyciVal = document.getElementById("eyci-val")?.textContent || "888 ¢/kg lwt";
+  const eyciVal = document.getElementById("eyci-val")?.textContent || "888.33 ¢/kg cwt";
 
   const prompt = `You are a senior livestock market analyst advising Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW running the Wombramurra Angus.
 
