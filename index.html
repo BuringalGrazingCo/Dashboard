@@ -2376,7 +2376,7 @@ async function fetchAllIndicators() {
  
 // ── Parse Agora Livestock HTML for NLRS sale report data ─────────────────────
 function parseAgoraHTML(html, saleType) {
-  // Remove style/script/head blocks before any parsing to avoid CSS contamination
+  // Remove style/script/head blocks before parsing
   let clean = html
     .replace(/<style[\s\S]*?<\/style>/gi, "")
     .replace(/<script[\s\S]*?<\/script>/gi, "")
@@ -2390,14 +2390,47 @@ function parseAgoraHTML(html, saleType) {
   const MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December";
   const typeKeyword = saleType === "store" ? "store" : "physical";
  
-  // Date: look near the sale type keyword first, then anywhere in page
+  // Date extraction — try every possible format
   let date = null;
-  const nearRe = new RegExp(typeKeyword + "[\\s\\S]{0,300}?(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+\\d{4})", "gi");
+ 
+  // Format 1: "17 March 2026" near sale type keyword (within 600 chars)
+  const nearRe = new RegExp(typeKeyword + "[\s\S]{0,600}?(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+\\d{4})", "gi");
   const nm = nearRe.exec(clean);
   if(nm) date = nm[1];
+ 
+  // Format 2: "17 March 2026" anywhere in page
   if(!date) {
     const dm = clean.match(new RegExp("\\b(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+202\\d)\\b","i"));
     if(dm) date = dm[1];
+  }
+ 
+  // Format 3: ISO "2026-03-17" — convert to readable
+  if(!date) {
+    const im = clean.match(/\b(202\d)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/);
+    if(im) {
+      const mo = ["","January","February","March","April","May","June","July","August","September","October","November","December"];
+      date = parseInt(im[3]) + " " + mo[parseInt(im[2])] + " " + im[1];
+    }
+  }
+ 
+  // Format 4: DD/MM/YYYY
+  if(!date) {
+    const dm2 = clean.match(/\b(\d{1,2})\/(\d{1,2})\/(202\d)\b/);
+    if(dm2) {
+      const mo = ["","January","February","March","April","May","June","July","August","September","October","November","December"];
+      date = parseInt(dm2[1]) + " " + mo[parseInt(dm2[2])] + " " + dm2[3];
+    }
+  }
+ 
+  // Format 5: look in h1/h2/h3/title tags specifically
+  if(!date) {
+    for(const tagM of clean.matchAll(/<(?:h[1-4]|title)[^>]*>([\s\S]*?)<\/(?:h[1-4]|title)>/gi)) {
+      const txt = stripTags(tagM[1]);
+      const dm3 = txt.match(new RegExp("\\b(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+202\\d)\\b","i"))
+               || txt.match(/\b(\d{1,2})\/(\d{1,2})\/(202\d)\b/)
+               || txt.match(/\b(202\d)-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])\b/);
+      if(dm3) { date = dm3[1] || (dm3[3]+" "+["","January","February","March","April","May","June","July","August","September","October","November","December"][parseInt(dm3[2])]+" "+dm3[4]); break; }
+    }
   }
  
   // Yarding
@@ -2411,23 +2444,25 @@ function parseAgoraHTML(html, saleType) {
   let change = null;
   const cm = clean.match(/([+-][\d,]+)\s*(?:head|on\s+prev|vs\s+prev)/i);
   if(cm) change = cm[1];
+  // Also try "increase/decrease of N"
+  if(!change) {
+    const im2 = clean.match(/(?:increase|decrease)\s+of\s+([\d,]+)\s*(?:head|cattle)/i);
+    if(im2) change = (clean.match(/increase/i) ? "+" : "-") + im2[1].replace(/,/g,"");
+  }
  
-  // Trend — from plain text only
+  // Trend from plain body text
   let trend = null;
   const bodyText = stripTags(clean);
   for(const tw of ["dearer","cheaper","firm","mixed"]) {
     if(new RegExp("\\b"+tw+"\\b","i").test(bodyText)) { trend = tw; break; }
   }
  
-  // Commentary — paragraphs from cleaned HTML, skip anything CSS-like
+  // Commentary — paragraphs only, skip CSS
   let commentary = null;
   const paras = [...clean.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
     .map(m => stripTags(m[1]))
-    .filter(t =>
-      t.length > 60 &&
-      !/[{};]/.test(t.slice(0,50)) &&
-      /cattle|steer|heifer|cow|bull|yarding|sale|price|market|quality|competition|buyer/i.test(t)
-    );
+    .filter(t => t.length > 60 && !/[{};]/.test(t.slice(0,50)) &&
+      /cattle|steer|heifer|cow|bull|yarding|sale|price|market|quality|competition|buyer/i.test(t));
   if(paras.length) commentary = paras.slice(0,5).join("\n\n");
  
   // Price rows from tables
@@ -2437,9 +2472,10 @@ function parseAgoraHTML(html, saleType) {
       const cells = [...tr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(c=>stripTags(c[1]));
       if(cells.length < 3) continue;
       const cat = cells[0];
-      if(!cat || cat.length < 2 || /category|weight|head|price|avg|description/i.test(cat)) continue;
-      const priceCell = cells.find(c => /\d+[.\d]*\s*c\/kg/i.test(c) || /\d{3,}c/.test(c));
-      const headCell  = cells.find((c,i) => i>0 && /^[\d,]+$/.test(c.trim()) && parseInt(c.replace(/,/g,""))<50000);
+      if(!cat || cat.length < 2 || /^[\s\-]+$/.test(cat)) continue;
+      if(/^(?:category|weight|head|price|avg|description|class|type)$/i.test(cat)) continue;
+      const priceCell = cells.find(c => /\d+[\d.]*\s*c\/kg/i.test(c) || /\d{3,}c\b/.test(c));
+      const headCell  = cells.find((c,i) => i>0 && /^[\d,]+$/.test(c.trim()) && parseInt(c.replace(/,/g,""))<50000 && parseInt(c.replace(/,/g,""))>0);
       if(priceCell || headCell) {
         rows.push({
           category:  cat,
@@ -2475,6 +2511,14 @@ async function fetchSaleyardReport(saleyard, saleType) {
  
     if(d.html) {
       console.log(`${saleyard.name} Agora HTML fetched: ${d.html.length} chars`);
+      // Debug: show text around the sale type keyword to find date format
+      const typeKw = saleType === "store" ? "store" : "physical";
+      const cleanDebug = d.html.replace(/<style[\s\S]*?<\/style>/gi,"").replace(/<script[\s\S]*?<\/script>/gi,"").replace(/<head[\s\S]*?<\/head>/gi,"");
+      const kwIdx = cleanDebug.toLowerCase().indexOf(typeKw);
+      if(kwIdx > 0) {
+        const nearby = cleanDebug.slice(Math.max(0,kwIdx-50), kwIdx+300).replace(/<[^>]+>/g," ").replace(/\s+/g," ");
+        console.log(`${saleyard.name} text near "${typeKw}":`, nearby);
+      }
       const parsed = parseAgoraHTML(d.html, saleType);
       console.log(`${saleyard.name} parsed:`, JSON.stringify(parsed).slice(0,300));
       if(parsed.date || parsed.yarding || parsed.commentary) {
@@ -3253,5 +3297,5 @@ function switchWeatherModel(model) {
  
 init();
 </script>
-</body> 
+</body>
 </html>
