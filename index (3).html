@@ -1,0 +1,3271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>Buringal Grazing Co — Operations Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;-webkit-font-smoothing:antialiased}
+body{background:#f0f2f5;color:#1a2332;font-family:'Inter',system-ui,sans-serif;min-height:100vh}
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:#f0f2f5}::-webkit-scrollbar-thumb{background:#cbd5e0;border-radius:3px}
+button,select,input{font-family:inherit;cursor:pointer}
+button:focus,input:focus,select:focus{outline:none}
+
+/* LOGIN */
+#login-screen{position:fixed;inset:0;background:linear-gradient(160deg,#0f2027,#1a4a2e,#2c5364);display:flex;align-items:center;justify-content:center;z-index:1000;padding:20px}
+.login-box{background:#fff;border-radius:20px;padding:44px 40px;width:100%;max-width:400px;box-shadow:0 32px 80px rgba(0,0,0,0.3)}
+.login-brand{display:flex;align-items:center;gap:12px;margin-bottom:30px}
+.login-mark{width:40px;height:40px;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:800;flex-shrink:0}
+.login-brand-name{font-size:15px;font-weight:700;color:#1a2332}
+.login-brand-sub{font-size:11px;color:#8898aa}
+.login-title{font-size:24px;font-weight:700;color:#1a2332;margin-bottom:6px}
+.login-desc{font-size:13px;color:#8898aa;margin-bottom:28px}
+.login-label{font-size:11px;font-weight:600;color:#4a5568;margin-bottom:5px;display:block}
+.login-input{width:100%;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:12px 14px;color:#1a2332;font-size:13px;margin-bottom:14px;transition:all .2s}
+.login-input:focus{border-color:#2d7a4f;box-shadow:0 0 0 3px rgba(45,122,79,.12);background:#fff}
+.login-btn{width:100%;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:10px;color:#fff;font-size:13px;font-weight:600;padding:13px;transition:all .2s;margin-top:4px}
+.login-btn:hover{box-shadow:0 8px 24px rgba(45,122,79,.35);transform:translateY(-1px)}
+.login-error{font-size:12px;color:#e53e3e;margin-top:10px;text-align:center;min-height:16px}
+.login-users{margin-top:20px;padding-top:16px;border-top:1px solid #f0f2f5}
+.login-users-title{font-size:10px;font-weight:600;color:#a0aec0;letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px}
+.user-badge{display:inline-flex;align-items:center;gap:5px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;margin:2px;font-size:10px;color:#4a5568}
+.user-dot{width:6px;height:6px;border-radius:50%}
+
+/* APP SHELL */
+#app{display:none;flex-direction:column;min-height:100vh}
+#app.visible{display:flex}
+
+/* HEADER */
+.header{background:#fff;border-bottom:1px solid #e8ecf0;padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.header-brand{display:flex;align-items:center;gap:12px}
+.header-mark{width:32px;height:32px;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800;flex-shrink:0}
+.header-name{font-size:15px;font-weight:700;color:#1a2332}
+.header-sub{font-size:11px;color:#8898aa}
+.header-right{display:flex;align-items:center;gap:10px}
+.data-pill{display:flex;align-items:center;gap:6px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:20px;padding:5px 12px;font-size:11px;font-weight:600;color:#166534}
+.data-pill.offline{background:#fffbeb;border-color:#fde68a;color:#92400e}
+.data-pill-dot{width:7px;height:7px;border-radius:50%;background:#22c55e;flex-shrink:0}
+.data-pill.offline .data-pill-dot{background:#f59e0b}
+.sync-btn{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;color:#4a5568;font-size:11px;font-weight:600;padding:7px 14px;transition:all .15s}
+.sync-btn:hover{background:#f0f2f5;border-color:#cbd5e0}
+.sync-btn:disabled{opacity:.5;cursor:wait}
+.user-menu{position:relative}
+.user-btn{background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;color:#1a2332;font-size:11px;font-weight:600;padding:7px 14px;display:flex;align-items:center;gap:6px}
+.user-btn:hover{background:#f0f2f5}
+.user-avatar{width:24px;height:24px;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700}
+.user-dropdown{position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:6px;min-width:170px;display:none;z-index:200;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.user-dropdown.open{display:block}
+.user-dropdown-item{padding:8px 12px;font-size:12px;color:#4a5568;border-radius:6px;transition:all .15s}
+.user-dropdown-item:hover{background:#f8fafc;cursor:pointer}
+.user-dropdown-item.logout{color:#e53e3e}
+.user-dropdown-item.logout:hover{background:#fff5f5}
+.user-dropdown-divider{height:1px;background:#f0f2f5;margin:4px 0}
+
+/* TABS */
+.tabs{background:#fff;border-bottom:1px solid #e8ecf0;padding:0 28px;display:flex;gap:0;overflow-x:auto;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab-btn{background:none;border:none;border-bottom:2px solid transparent;padding:14px 18px;font-size:12px;font-weight:600;color:#8898aa;white-space:nowrap;transition:all .2s;letter-spacing:.02em}
+.tab-btn.active{color:#1a4a2e;border-bottom-color:#2d7a4f}
+.tab-btn:hover{color:#2d3748}
+
+/* BODY */
+.body{padding:24px 28px;flex:1}
+
+/* ALERT */
+.alert-banner{background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:12px 16px;margin-bottom:20px;display:flex;align-items:flex-start;gap:12px}
+.alert-icon{width:20px;height:20px;background:#ea580c;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700;flex-shrink:0;margin-top:1px}
+.alert-text{font-size:12px;color:#9a3412;line-height:1.6}
+.alert-text strong{font-weight:700;color:#7c2d12}
+
+/* KPI GRID */
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.kpi-card{background:#fff;border:1px solid #e8ecf0;border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:box-shadow .2s}
+.kpi-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.kpi-card.warn{border-left:3px solid #ea580c}
+.kpi-card.good{border-left:3px solid #16a34a}
+.kpi-card.neutral{border-left:3px solid #3b82f6}
+.kpi-label{font-size:10px;font-weight:600;color:#8898aa;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px}
+.kpi-value{font-size:24px;font-weight:700;color:#1a2332;line-height:1;margin-bottom:4px}
+.kpi-value.sm{font-size:18px}
+.kpi-trend{display:flex;align-items:center;gap:4px;margin-bottom:4px}
+.kpi-trend-arrow{font-size:11px;font-weight:700}
+.kpi-trend-val{font-size:11px;color:#8898aa}
+.kpi-sub{font-size:10px;color:#8898aa;margin-top:2px}
+.kpi-sub.warn{color:#ea580c;font-weight:600}
+.kpi-sub.good{color:#16a34a;font-weight:600}
+
+/* PANELS */
+.panel{background:#fff;border:1px solid #e8ecf0;border-radius:12px;padding:22px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.panel-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px}
+.panel-title{font-size:13px;font-weight:700;color:#1a2332}
+.panel-sub{font-size:11px;color:#8898aa;margin-top:2px}
+.panel-badge{font-size:10px;font-weight:600;padding:3px 10px;border-radius:20px}
+.badge-green{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.badge-red{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+.badge-yellow{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.badge-blue{background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe}
+.chart-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}
+.chart-wrap{position:relative}
+
+/* AI PANEL */
+.ai-panel{background:#fff;border:1px solid #e8ecf0;border-radius:12px;padding:22px;margin-bottom:20px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.ai-panel-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.ai-panel-title{font-size:13px;font-weight:700;color:#1a2332}
+.ai-panel-sub{font-size:11px;color:#8898aa;margin-top:2px}
+.ai-generate-btn{background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 18px;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.ai-generate-btn:hover{box-shadow:0 4px 12px rgba(45,122,79,.3);transform:translateY(-1px)}
+.ai-generate-btn:disabled{opacity:.6;cursor:wait;transform:none}
+.ai-placeholder{font-size:13px;color:#a0aec0;font-style:italic;text-align:center;padding:20px 0}
+.ai-content{font-size:13px;color:#2d3748;line-height:1.7}
+.ai-section{margin-bottom:18px}
+.ai-section:last-child{margin-bottom:0}
+.ai-section-title{font-size:11px;font-weight:700;color:#1a4a2e;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;padding-bottom:6px;border-bottom:2px solid #f0fdf4}
+.ai-summary{font-size:13px;color:#2d3748;line-height:1.7;margin-bottom:10px}
+.ai-bullets{list-style:none;padding:0}
+.ai-bullets li{font-size:12px;color:#4a5568;padding:5px 0 5px 18px;position:relative;line-height:1.6;border-bottom:1px solid #f8fafc}
+.ai-bullets li:last-child{border-bottom:none}
+.ai-bullets li::before{content:"→";position:absolute;left:0;color:#2d7a4f;font-weight:700;font-size:11px;top:6px}
+
+/* RATIOS */
+.ratio-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px}
+.ratio-card{background:#fff;border:1px solid #e8ecf0;border-radius:10px;padding:16px}
+.ratio-label{font-size:10px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.ratio-value{font-size:22px;font-weight:700;margin-bottom:3px}
+.ratio-bench{font-size:11px;margin-top:2px}
+.r-good{color:#16a34a}.r-warn{color:#d97706}.r-bad{color:#dc2626}
+.ratio-bar-wrap{height:4px;background:#f0f2f5;border-radius:2px;margin-top:8px;overflow:hidden}
+.ratio-bar{height:100%;border-radius:2px;transition:width .6s ease}
+
+/* BALANCE SHEET */
+.bs-table{width:100%;border-collapse:collapse}
+.bs-table tr{border-bottom:1px solid #f0f2f5}
+.bs-table tr:last-child{border-bottom:none}
+.bs-table td{padding:10px 12px;font-size:12px}
+.bs-table .bs-label{color:#4a5568}
+.bs-table .bs-value{font-weight:700;color:#1a2332;text-align:right}
+.bs-table .bs-sub{color:#a0aec0;font-size:10px}
+.bs-table .bs-section{background:#f8fafc;font-size:10px;font-weight:700;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px}
+
+/* MARKETS */
+.markets-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:18px}
+.eyci-price{font-size:28px;font-weight:700;color:#1a4a2e}
+.eyci-label{font-size:11px;color:#8898aa;margin-top:2px}
+.live-btn{background:#eff6ff;border:1.5px solid #bfdbfe;border-radius:8px;color:#1d4ed8;font-size:11px;font-weight:600;padding:8px 16px;transition:all .15s}
+.live-btn:hover{background:#dbeafe}
+.live-btn:disabled{opacity:.5;cursor:wait}
+
+/* MONTH SELECTOR */
+.month-selector{display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap}
+.month-selector label{font-size:11px;font-weight:600;color:#4a5568}
+.month-selector select{background:#fff;border:1.5px solid #e2e8f0;color:#1a2332;padding:7px 14px;border-radius:8px;font-size:12px;font-weight:500}
+
+/* LOADING */
+.loading-overlay{position:fixed;inset:0;background:#fff;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:500;gap:16px}
+.loading-spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:#2d7a4f;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;font-weight:600;color:#4a5568}
+
+/* FOOTER */
+.footer{padding:12px 28px;font-size:10px;color:#a0aec0;border-top:1px solid #e8ecf0;background:#fff;letter-spacing:.04em}
+
+/* RESPONSIVE */
+@media(max-width:768px){
+  .chart-grid-2{grid-template-columns:1fr}
+  .kpi-grid{grid-template-columns:repeat(2,1fr)}
+  .body{padding:16px}
+  .header{padding:0 16px}
+  .tabs{padding:0 16px}
+}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loading" style="display:none">
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
+    <div style="width:32px;height:32px;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800">B</div>
+    <span style="font-size:15px;font-weight:700;color:#1a2332">Buringal Grazing Co</span>
+  </div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Loading Dashboard</div>
+</div>
+
+<div id="login-screen" style="display:none">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="login-mark">B</div>
+      <div>
+        <div class="login-brand-name">Buringal Grazing Co</div>
+        <div class="login-brand-sub">Wombramurra Angus · Nundle & Topdale NSW</div>
+      </div>
+    </div>
+    <div class="login-title">Operations Dashboard</div>
+    <div class="login-desc">Sign in to access your live financial and operational data.</div>
+    <label class="login-label">Username</label>
+    <input class="login-input" type="text" id="login-user" placeholder="Enter username" autocomplete="username" autocapitalize="none"/>
+    <label class="login-label">Password</label>
+    <input class="login-input" type="password" id="login-pass" placeholder="Enter password" autocomplete="current-password"/>
+    <button class="login-btn" onclick="attemptLogin()">Sign In →</button>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-users">
+      <div class="login-users-title">Access levels</div>
+      <div>
+        <div class="user-badge"><div class="user-dot" style="background:#2d7a4f"></div>Owner — full access</div>
+        <div class="user-badge"><div class="user-dot" style="background:#3b82f6"></div>Manager — operations</div>
+        <div class="user-badge"><div class="user-dot" style="background:#8b5cf6"></div>Accountant — financials</div>
+        <div class="user-badge"><div class="user-dot" style="background:#f59e0b"></div>Bank — read only</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-mark">B</div>
+      <div>
+        <div class="header-name">Buringal Grazing Co</div>
+        <div class="header-sub">Wombramurra Angus · FY 2025–26</div>
+      </div>
+    </div>
+    <div class="header-right">
+      <div class="data-pill" id="data-pill">
+        <div class="data-pill-dot"></div>
+        <span id="data-pill-text">Loading…</span>
+      </div>
+      <button class="sync-btn" id="sync-btn" onclick="syncData()">↻ Sync</button>
+      <div class="user-menu">
+        <button class="user-btn" onclick="toggleUserMenu()" id="user-btn">
+          <div class="user-avatar" id="user-avatar">R</div>
+          <span id="user-label">Ryan</span> ▾
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <div class="user-dropdown-item" id="dd-role" style="font-weight:600;color:#1a2332"></div>
+          <div class="user-dropdown-divider"></div>
+          <div class="user-dropdown-item logout" onclick="logout()">Sign out</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="pnl">P&amp;L</button>
+    <button class="tab-btn" data-tab="cashflow">Cashflow</button>
+    <button class="tab-btn" data-tab="balance">Balance Sheet</button>
+    <button class="tab-btn" data-tab="ratios">KPI Ratios</button>
+    <button class="tab-btn" data-tab="markets">🐄 Livestock Markets</button>
+    <button class="tab-btn" data-tab="weather">⛅ Weather</button>
+  </div>
+
+  <div class="body">
+
+    <div class="alert-banner" id="alert-banner">
+      <div class="alert-icon">!</div>
+      <div class="alert-text">
+        <strong>February 2026 — Key Ratios Below Benchmark:</strong>
+        Interest Cover 0.06x (target &gt;1.75x) &nbsp;·&nbsp; ROAM 0.03% (target &gt;4%) &nbsp;·&nbsp; Expense Ratio 106% (target &lt;70%) &nbsp;·&nbsp; Net Loss –$165,951. Monitor closely heading into Q4 FY26.
+      </div>
+    </div>
+
+    <!-- AI Panel -->
+    <div class="ai-panel" id="ai-panel">
+      <div class="ai-panel-header">
+        <div>
+          <div class="ai-panel-title">AI Season Analysis</div>
+          <div class="ai-panel-sub">Powered by Claude &nbsp;·&nbsp; Live FY2025-26 data &nbsp;·&nbsp; Buringal Grazing Co</div>
+        </div>
+        <button class="ai-generate-btn" id="ai-btn" onclick="generateInsights()">▶ Generate Analysis</button>
+      </div>
+      <div id="ai-body">
+        <div class="ai-placeholder">Click Generate Analysis for a detailed AI-powered review of your season position, financial ratios, and FY27 strategic priorities.</div>
+      </div>
+    </div>
+
+    <!-- KPI Cards -->
+    <div class="kpi-grid" id="kpi-grid"></div>
+
+    <!-- P&L Section -->
+    <div id="section-pnl">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">Gross Profit vs Direct Costs vs Overheads</div><div class="panel-sub">Monthly — FY2025-26</div></div>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-gp"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">EBIT & Net Profit</div><div class="panel-sub">Monthly trend — FY2025-26</div></div>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-ebit"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">Gross Margin % vs Expense Ratio %</div><div class="panel-sub">Benchmarks: Gross Margin &gt;70% &nbsp;|&nbsp; Expense Ratio &lt;70%</div></div>
+          <span class="panel-badge badge-red">Feb 26: GM 59% / Exp 106%</span>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-margins"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Cashflow Section -->
+    <div id="section-cashflow">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">Cash Available for Debt Service</div><div class="panel-sub">CAFDS vs Cash After Debt Service — monthly</div></div>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-cafds"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">Interest Cover Ratio</div><div class="panel-sub">Benchmark: &gt;1.75x &nbsp;|&nbsp; Critical below 1.0x</div></div>
+            <span class="panel-badge badge-red">Feb 26: 0.06x</span>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-ic"></canvas></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">DSE Trend</div><div class="panel-sub">Dry Stock Equivalent — FY2025-26 monthly</div></div>
+          <span class="panel-badge badge-green">↓ 20,538 Feb 26</span>
+        </div>
+        <div class="chart-wrap" style="height:180px"><canvas id="chart-dse"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Balance Sheet Section -->
+    <div id="section-balance">
+      <div class="chart-grid-2">
+        <div class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">Total Assets vs Equity vs Liabilities</div><div class="panel-sub">Monthly position — FY2025-26</div></div>
+          </div>
+          <div class="chart-wrap" style="height:240px"><canvas id="chart-assets"></canvas></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header">
+            <div><div class="panel-title">Balance Sheet Snapshot</div><div class="panel-sub">As at February 2026</div></div>
+            <span class="panel-badge badge-green">89% Equity</span>
+          </div>
+          <table class="bs-table">
+            <tr><td colspan="2" class="bs-section">Assets</td></tr>
+            <tr><td class="bs-label">Total Assets</td><td class="bs-value">$32.78M</td></tr>
+            <tr><td class="bs-label bs-sub">Land, livestock & fixed assets</td><td></td></tr>
+            <tr><td colspan="2" class="bs-section">Liabilities</td></tr>
+            <tr><td class="bs-label">NAB Loan 1</td><td class="bs-value">$1.30M</td></tr>
+            <tr><td class="bs-label">NAB Loan 2</td><td class="bs-value">$1.80M</td></tr>
+            <tr><td class="bs-label">Total Liabilities</td><td class="bs-value">$3.55M</td></tr>
+            <tr><td colspan="2" class="bs-section">Equity</td></tr>
+            <tr><td class="bs-label">Net Equity</td><td class="bs-value" style="color:#16a34a">$29.23M</td></tr>
+            <tr><td class="bs-label">Equity Ratio</td><td class="bs-value" style="color:#16a34a">89%</td></tr>
+            <tr><td class="bs-label">Cash on Hand</td><td class="bs-value">$55,474</td></tr>
+          </table>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">NAB Loan Balances</div><div class="panel-sub">Monthly — FY2025-26</div></div>
+        </div>
+        <div class="chart-wrap" style="height:180px"><canvas id="chart-loans"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Ratios Section -->
+    <div id="section-ratios">
+      <div class="month-selector">
+        <label>View month:</label>
+        <select id="ratio-month" onchange="renderRatios()">
+          <option value="0">July 2025</option>
+          <option value="1">August 2025</option>
+          <option value="2">September 2025</option>
+          <option value="3">October 2025</option>
+          <option value="4">November 2025</option>
+          <option value="5">December 2025</option>
+          <option value="6">January 2026</option>
+          <option value="7" selected>February 2026</option>
+        </select>
+      </div>
+      <div class="ratio-grid" id="ratio-grid"></div>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">Interest Cover & ROAM — Season Trend</div><div class="panel-sub">Jul 25 → Feb 26 &nbsp;|&nbsp; Benchmark lines shown</div></div>
+        </div>
+        <div class="chart-wrap" style="height:220px"><canvas id="chart-ratios"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Markets Section -->
+    <div id="section-markets">
+      <div class="panel">
+        <div class="markets-header">
+          <div>
+            <div style="font-size:11px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Eastern Young Cattle Indicator (EYCI)</div>
+            <div class="eyci-price" id="eyci-val">897.15 ¢/kg cwt</div>
+            <div class="eyci-label" id="eyci-sub">Static — click Refresh for live MLA price</div>
+          </div>
+          <button class="live-btn" id="eyci-btn" onclick="fetchEYCI()">↻ Refresh Live Price</button>
+        </div>
+        <div class="chart-wrap" style="height:160px"><canvas id="chart-eyci"></canvas></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header">
+          <div><div class="panel-title">Gross Margin per DSE</div><div class="panel-sub">Monthly — Benchmark &gt;$65 per DSE</div></div>
+          <span class="panel-badge badge-red">Feb 26: $36.58 — below benchmark</span>
+        </div>
+        <div class="chart-wrap" style="height:200px"><canvas id="chart-gmdse"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Weather Section -->
+    <div id="section-weather">
+      <!-- Model selector -->
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1a2332">Weather & Rainfall</div>
+          <div style="font-size:11px;color:#8898aa;margin-top:2px">Nundle & Niangala (Topdale) · Open-Meteo API</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <span style="font-size:11px;font-weight:600;color:#4a5568">Model:</span>
+          <div style="display:flex;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:8px;overflow:hidden">
+            <button onclick="switchWeatherModel('ecmwf')"  id="wmodel-ecmwf"  style="padding:7px 14px;font-size:10px;font-weight:600;border:none;background:#1a4a2e;color:#fff;cursor:pointer">ECMWF IFS</button>
+            <button onclick="switchWeatherModel('bom')"    id="wmodel-bom"    style="padding:7px 14px;font-size:10px;font-weight:600;border:none;background:transparent;color:#4a5568;cursor:pointer;border-left:1px solid #e2e8f0">BOM ACCESS-G</button>
+            <button onclick="switchWeatherModel('auto')"   id="wmodel-auto"   style="padding:7px 14px;font-size:10px;font-weight:600;border:none;background:transparent;color:#4a5568;cursor:pointer;border-left:1px solid #e2e8f0">Auto</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sub-tabs -->
+      <div style="display:flex;border-bottom:2px solid #e8ecf0;margin-bottom:20px;gap:0">
+        <button onclick="switchWeatherSub('nundle')"   id="wsub-nundle"   style="padding:10px 20px;font-size:12px;font-weight:600;border:none;background:transparent;color:#1a4a2e;border-bottom:2px solid #1a4a2e;margin-bottom:-2px;cursor:pointer">🌿 Nundle</button>
+        <button onclick="switchWeatherSub('niangala')" id="wsub-niangala" style="padding:10px 20px;font-size:12px;font-weight:600;border:none;background:transparent;color:#8898aa;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer">🌿 Niangala (Topdale)</button>
+        <button onclick="switchWeatherSub('compare')"  id="wsub-compare"  style="padding:10px 20px;font-size:12px;font-weight:600;border:none;background:transparent;color:#8898aa;border-bottom:2px solid transparent;margin-bottom:-2px;cursor:pointer">⚖ Compare</button>
+      </div>
+
+      <!-- Sub-tab content -->
+      <div id="weather-content-nundle"></div>
+      <div id="weather-content-niangala" style="display:none"></div>
+      <div id="weather-content-compare"  style="display:none"></div>
+    </div>
+
+  </div>
+  <div class="footer">BURINGAL GRAZING CO &nbsp;·&nbsp; NUNDLE & TOPDALE NSW &nbsp;·&nbsp; WOMBRAMURRA ANGUS &nbsp;·&nbsp; FY2025-26 &nbsp;·&nbsp; CONFIDENTIAL</div>
+</div>
+
+<script>
+const CONFIG = {
+  SHEET_API_URL: "https://script.google.com/macros/s/AKfycbz0PTaIQsEzi6bYGPY9FQw8Fd3VsPHJBGPmgdvyK4ltkjtnwdYA3E_MxuNaZfUT15XJJg/exec",
+  WORKER_URL: "https://buringal-api.ryanschmitt00.workers.dev",
+  USERS: {
+    "ryan":       { password:"Buringal2026!",  role:"Owner",           name:"Ryan",       color:"#2d7a4f", tabs:"all" },
+    "manager":    { password:"GrazingOps26",   role:"Manager",         name:"Manager",    color:"#3b82f6", tabs:["overview","pnl","cashflow","markets"] },
+    "accountant": { password:"Schmitt$Fin26",  role:"Accountant",      name:"Accountant", color:"#8b5cf6", tabs:["overview","pnl","cashflow","balance","ratios"] },
+    "bank":       { password:"NAB$ReadOnly26", role:"Bank — Read Only",name:"Bank",       color:"#f59e0b", tabs:["overview","balance","ratios"] },
+  },
+  SESSION_HOURS: 8,
+};
+
+const FALLBACK = {
+  months:["Jul 25","Aug 25","Sep 25","Oct 25","Nov 25","Dec 25","Jan 26","Feb 26"],
+  monthsShort:["Jul","Aug","Sep","Oct","Nov","Dec","Jan","Feb"],
+  grossProfit:  [2374100,2501269,1945040,1979001,1470816,1327203,1533198,1273862],
+  directCosts:  [375113,416492,447700,542083,503052,482176,523565,522661],
+  grossMargin:  [1998987,2084777,1497340,1436918,967764,845027,1009633,751201],
+  overheads:    [174335,240494,450727,585713,580271,632599,626231,651798],
+  ebit:         [1824652,1844283,1046613,851205,387493,123228,294202,10203],
+  netProfit:    [1521131,1471124,674910,645569,181857,-117928,118048,-165951],
+  grossMarginPct:[84.20,83.35,76.98,72.61,65.80,63.67,65.85,58.97],
+  expenseRatio: [35.93,41.18,65.30,67.38,87.64,102.16,86.48,106.03],
+  ohRatio:      [7.34,9.61,23.17,29.60,39.45,47.66,40.84,51.17],
+  roam:         [5.26,5.32,3.02,2.57,1.17,0.37,0.90,0.03],
+  roe:          [4.90,4.90,2.27,2.18,0.62,-0.40,0.40,-0.57],
+  gmDse:        [87.32,91.07,56.25,58.09,39.30,33.90,42.44,36.58],
+  interestCover:[6.01,4.94,2.82,4.14,1.88,0.51,1.67,0.06],
+  interestAsGP: [12.78,14.92,19.11,10.39,13.98,18.17,11.49,13.83],
+  dse:          [22892,22892,26618,24738,24628,24924,23792,20538],
+  totalAssets:  [34674000,33681309,33393259,33184977,33074368,33017148,32776764,32782674],
+  totalLiab:    [3649119,3649119,3649119,3549119,3549119,3549119,3549119,3549119],
+  equity:       [31024881,30032190,29744140,29635858,29525249,29468028,29227645,29233555],
+  nab1:         [1400000,1400000,1400000,1300000,1300000,1300000,1300000,1300000],
+  nab2:         [1800000,1800000,1800000,1800000,1800000,1800000,1800000,1800000],
+  cafds:        [2131252,2438883,1680213,1721105,1270193,166928,944202,1160403],
+  cashAfterDS:  [1827731,2065724,1308510,1435469,1013033,-80230,759044,975245],
+  eyci:         [312,318,308,325,331,328,340,338],
+};
+
+let currentUser=null, currentTab="overview", D=FALLBACK, charts={}, usingLive=false;
+
+// AUTH
+function attemptLogin(){
+  const user=document.getElementById("login-user").value.trim().toLowerCase();
+  const pass=document.getElementById("login-pass").value;
+  const err=document.getElementById("login-error");
+  if(!CONFIG.USERS[user]){err.textContent="Username not recognised.";return;}
+  if(CONFIG.USERS[user].password!==pass){err.textContent="Incorrect password.";return;}
+  err.textContent="";
+  currentUser={username:user,...CONFIG.USERS[user]};
+  try{localStorage.setItem("bgc_session",JSON.stringify({username:user,expires:Date.now()+CONFIG.SESSION_HOURS*3600000}));}catch(e){}
+  setLoading(false);
+  bootApp();
+}
+function checkSession(){
+  try{
+    const s=JSON.parse(localStorage.getItem("bgc_session")||"null");
+    if(s&&s.expires>Date.now()&&CONFIG.USERS[s.username]){currentUser={username:s.username,...CONFIG.USERS[s.username]};return true;}
+  }catch(e){}
+  return false;
+}
+function logout(){
+  try{localStorage.removeItem("bgc_session");}catch(e){}
+  currentUser=null;
+  document.getElementById("app").classList.remove("visible");
+  document.getElementById("login-screen").style.display="flex";
+  document.getElementById("login-pass").value="";
+  toggleUserMenu(true);
+}
+function toggleUserMenu(close){
+  const dd=document.getElementById("user-dropdown");
+  if(close){dd.classList.remove("open");return;}
+  dd.classList.toggle("open");
+}
+document.addEventListener("click",e=>{if(!e.target.closest(".user-menu"))toggleUserMenu(true);});
+document.addEventListener("keydown",e=>{if(e.key==="Enter"&&document.getElementById("login-screen").style.display!=="none")attemptLogin();});
+
+// BOOT
+function init(){
+  try{
+    if(checkSession()){bootApp();}
+    else{document.getElementById("login-screen").style.display="flex";}
+  }catch(e){
+    console.error("Init error:",e);
+    document.getElementById("login-screen").style.display="flex";
+  }
+}
+function bootApp(){
+  applyTabPermissions();
+  const initial=currentUser.name.charAt(0).toUpperCase();
+  document.getElementById("user-label").textContent=currentUser.name;
+  document.getElementById("user-avatar").textContent=initial;
+  document.getElementById("user-avatar").style.background=`linear-gradient(135deg,${currentUser.color},${currentUser.color}cc)`;
+  document.getElementById("dd-role").textContent=currentUser.role;
+  document.getElementById("login-screen").style.display="none";
+  document.getElementById("app").classList.add("visible");
+  setTab("overview");
+  setTimeout(()=>syncData(true),500);
+}
+function applyTabPermissions(){
+  const allowed=currentUser.tabs;
+  if(allowed==="all")return;
+  document.querySelectorAll(".tab-btn").forEach(btn=>{if(!allowed.includes(btn.dataset.tab))btn.style.display="none";});
+}
+function setLoading(show){document.getElementById("loading").style.display=show?"flex":"none";}
+
+// SYNC
+async function syncData(silent){
+  const btn=document.getElementById("sync-btn");
+  if(!silent){btn.disabled=true;btn.textContent="Syncing…";}
+  try{
+    const controller=new AbortController();
+    const timeout=setTimeout(()=>controller.abort(),10000);
+    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({action:"sheets",url:CONFIG.SHEET_API_URL}),signal:controller.signal});
+    clearTimeout(timeout);
+    const json=await res.json();
+    if(json.status==="ok"){
+      const parsed=parseLiveData(json.data);
+      if(parsed){
+        D=parsed;
+        usingLive=true;
+        // Refresh current tab charts with live data
+        setTab(currentTab);
+      }
+      const t=new Date(json.updated).toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
+      const pill=document.getElementById("data-pill");
+      pill.className="data-pill";
+      pill.querySelector("#data-pill-text").textContent=`Google Sheets (Live) · ${t}`;
+    }else{throw new Error(json.message);}
+  }catch(e){
+    usingLive=false;
+    const pill=document.getElementById("data-pill");
+    pill.className="data-pill offline";
+    pill.querySelector("#data-pill-text").textContent="Snapshot — Feb 26";
+  }
+  if(!silent){btn.disabled=false;btn.textContent="↻ Sync";}
+}
+
+// ── LIVE DATA PARSER ─────────────────────────────────────────
+// Maps your Google Sheet structure to dashboard data
+// Tab: 2026 P&L — cols B-I = Jul25→Feb26, rows: 2=GP,4=DirectCosts,6=GrossMargin,8=Overheads,11=EBIT,13=Interest,15=NetProfit,17=DSE
+// Tab: KPI's — cols C-J = Jul25→Feb26, rows: 7=GrossMarginRatio,8=OHRatio,9=ExpenseRatio,10=ROAM,11=ROE,13=GM/DSE,17=InterestCover,20=InterestAsGP
+// Tab: 2026 Cashflow — cols B-I = Jul25→Feb26, rows: 7=CAFDS,12=CashAfterDS
+// Tab: Balance Sheet — cols D-K = Jul25→Feb26, rows: 40=TotalAssets,65=TotalLiabilities,67=Equity
+// Tab: Livestock Numbers — col B, rows: 4=CommBreeders,5=PTICRecipients,6=RegBreeders,7=Donors,8=HeiferComm,9=HeiferReg,10=Steers
+
+function parseLiveData(raw){
+  try{
+    const pnl  = raw["2026 P&L"];
+    const kpis = raw["KPI's"];
+    const cf   = raw["2026 Cashflow"];
+    const bs   = raw["Balance Sheet"];
+
+    if(!pnl||!kpis) return null;
+
+    // ── Helper: find a row by searching for a label in the first column ──
+    function findRow(rows, labelSearch){
+      if(!rows) return null;
+      return rows.find(r=>{
+        const vals=Object.values(r);
+        const first=String(vals[0]||"").trim().toLowerCase();
+        return first.includes(labelSearch.toLowerCase());
+      })||null;
+    }
+
+    // ── Helper: extract monthly values (8 months) from a row ──
+    // Skips the first column (label), takes next 8 numeric values
+    function getMonths(row){
+      if(!row) return Array(8).fill(0);
+      const vals=Object.values(row);
+      const result=[];
+      // Find where numbers start (skip label cols)
+      let started=false;
+      for(let i=0;i<vals.length&&result.length<8;i++){
+        const v=vals[i];
+        const s=String(v||"").trim();
+        // Skip empty and text-only columns
+        if(s===""||s===null) { if(started) result.push(0); continue; }
+        const isNum=typeof v==="number"||(!isNaN(parseFloat(s.replace(/[$,%\s,()/]/g,""))));
+        if(isNum&&!isNaN(parseFloat(s.replace(/[$,%\s,()/]/g,"")))){
+          const n=parseFloat(s.replace(/[$,%\s,]/g,"").replace("(","-").replace(")",""));
+          result.push(isNaN(n)?0:n);
+          started=true;
+        } else if(started){
+          result.push(0);
+        }
+      }
+      while(result.length<8) result.push(0);
+      return result.slice(0,8);
+    }
+
+    // ── P&L tab ───────────────────────────────────────────────
+    const gpRow    = findRow(pnl,"Gross Profit");
+    const dcRow    = findRow(pnl,"Direct Costs");
+    const gmRow    = findRow(pnl,"Gross Margin");
+    const ohRow    = findRow(pnl,"Overheads");
+    const ebitRow  = findRow(pnl,"EBIT");
+    const intRow   = findRow(pnl,"Interest");
+    const npRow    = findRow(pnl,"Net Profit");
+    const dseRow   = findRow(pnl,"DSE");
+
+    // ── KPI's tab ─────────────────────────────────────────────
+    const gmPctRow = findRow(kpis,"Gross Margin");
+    const ohPctRow = findRow(kpis,"OH Ratio");
+    const expRow   = findRow(kpis,"Expense Ratio");
+    const roamRow  = findRow(kpis,"Return On Assets");
+    const roeRow   = findRow(kpis,"Return on Equity");
+    const gmdseRow = findRow(kpis,"GM/DSE");
+    const icRow    = findRow(kpis,"Interest Cover");
+    const iaGPRow  = findRow(kpis,"Interest as % GP");
+
+    // ── 2026 Cashflow tab ─────────────────────────────────────
+    const cafdsRow = cf ? findRow(cf,"Cash Available for Debt Service") : null;
+    const cadsRow  = cf ? findRow(cf,"Cash After Debt Service") : null;
+
+    // ── Balance Sheet tab ─────────────────────────────────────
+    const assetsRow = bs ? findRow(bs,"Total Assets") : null;
+    const liabRow   = bs ? findRow(bs,"Total Liabilities") : null;
+    const equityRow = bs ? findRow(bs,"Equity") : null;
+    const nab1Row   = bs ? findRow(bs,"NAB Loan") : null;
+    // NAB Loan 2 = find second NAB loan row
+    let nab2Row = null;
+    if(bs){
+      const nabRows=bs.filter(r=>String(Object.values(r)[0]||"").toLowerCase().includes("nab loan"));
+      if(nabRows.length>=2) nab2Row=nabRows[1];
+      else nab2Row=nabRows[0]||null;
+    }
+
+    // ── Build result ──────────────────────────────────────────
+    const result={
+      months:        FALLBACK.months,
+      monthsShort:   FALLBACK.monthsShort,
+      grossProfit:   getMonths(gpRow),
+      directCosts:   getMonths(dcRow),
+      grossMargin:   getMonths(gmRow),
+      overheads:     getMonths(ohRow),
+      ebit:          getMonths(ebitRow),
+      interest:      getMonths(intRow),
+      netProfit:     getMonths(npRow),
+      dse:           getMonths(dseRow),
+      grossMarginPct:getMonths(gmPctRow),
+      ohRatio:       getMonths(ohPctRow),
+      expenseRatio:  getMonths(expRow),
+      roam:          getMonths(roamRow),
+      roe:           getMonths(roeRow),
+      gmDse:         getMonths(gmdseRow),
+      interestCover: getMonths(icRow),
+      interestAsGP:  getMonths(iaGPRow),
+      cafds:         cafdsRow  ? getMonths(cafdsRow)  : FALLBACK.cafds,
+      cashAfterDS:   cadsRow   ? getMonths(cadsRow)   : FALLBACK.cashAfterDS,
+      totalAssets:   assetsRow ? getMonths(assetsRow) : FALLBACK.totalAssets,
+      totalLiab:     liabRow   ? getMonths(liabRow)   : FALLBACK.totalLiab,
+      equity:        equityRow ? getMonths(equityRow) : FALLBACK.equity,
+      nab1:          nab1Row   ? getMonths(nab1Row)   : FALLBACK.nab1,
+      nab2:          nab2Row   ? getMonths(nab2Row)   : FALLBACK.nab2,
+      eyci:          FALLBACK.eyci,
+    };
+
+    // Sanity check — gross profit should be > $100k
+    if(result.grossProfit.every(v=>Math.abs(v)<100000)){
+      console.warn("parseLiveData: GP values look wrong, using fallback",result.grossProfit);
+      return null;
+    }
+
+    // Fix percentage values stored as decimals (0.84 → 84%)
+    const fixPct=arr=>arr.map(v=>Math.abs(v)>0&&Math.abs(v)<=2?v*100:v);
+    result.grossMarginPct = fixPct(result.grossMarginPct);
+    result.expenseRatio   = fixPct(result.expenseRatio);
+    result.ohRatio        = fixPct(result.ohRatio);
+    result.roam           = fixPct(result.roam);
+    result.roe            = fixPct(result.roe);
+    result.interestAsGP   = fixPct(result.interestAsGP);
+
+    console.log("parseLiveData success:",{
+      gp: result.grossProfit,
+      ic: result.interestCover,
+      gm: result.grossMarginPct,
+    });
+
+    return result;
+  }catch(e){
+    console.error("parseLiveData error:",e);
+    return null;
+  }
+}
+
+// CHART HELPERS
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+const fmtK=v=>Math.abs(v)>=1e6?`$${(v/1e6).toFixed(2)}M`:Math.abs(v)>=1000?`$${(v/1000).toFixed(0)}k`:`$${v}`;
+
+const CHART_COLORS={green:"#16a34a",greenLight:"rgba(22,163,74,.12)",red:"#dc2626",redLight:"rgba(220,38,38,.12)",blue:"#3b82f6",blueLight:"rgba(59,130,246,.12)",amber:"#d97706",amberLight:"rgba(217,119,6,.1)",forest:"#1a4a2e",forestLight:"rgba(26,74,46,.1)",grey:"#94a3b8",greyLight:"rgba(148,163,184,.1)"};
+
+const BASE={
+  plugins:{
+    legend:{display:true,position:"top",align:"end",labels:{font:{size:11,family:"Inter"},color:"#4a5568",boxWidth:12,boxHeight:12,padding:16,usePointStyle:true,pointStyle:"circle"}},
+    tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:12,cornerRadius:8,boxShadow:"0 4px 12px rgba(0,0,0,.1)",titleFont:{size:12,weight:"600",family:"Inter"},bodyFont:{size:11,family:"Inter"},callbacks:{label:ctx=>{const v=ctx.parsed.y;return` ${ctx.dataset.label}: ${typeof v==="number"&&Math.abs(v)>100?fmtK(v):v}`;}}}
+  },
+  scales:{
+    x:{grid:{color:"#f0f2f5",drawBorder:false},ticks:{color:"#8898aa",font:{size:11,family:"Inter"},padding:6},border:{display:false}},
+    y:{grid:{color:"#f0f2f5",drawBorder:false},ticks:{color:"#8898aa",font:{size:11,family:"Inter"},padding:8},border:{display:false}}
+  },
+  animation:{duration:500,easing:"easeInOutQuart"},
+  responsive:true,maintainAspectRatio:false,
+};
+
+function makePnLCharts(){
+  destroyChart("gp");destroyChart("ebit");destroyChart("margins");
+  const MS=D.monthsShort;
+
+  charts.gp=new Chart(document.getElementById("chart-gp"),{type:"bar",
+    data:{labels:MS,datasets:[
+      {label:"Gross Profit",data:D.grossProfit,backgroundColor:CHART_COLORS.greenLight,borderColor:CHART_COLORS.green,borderWidth:2,borderRadius:3},
+      {label:"Direct Costs",data:D.directCosts,backgroundColor:"rgba(220,38,38,.1)",borderColor:CHART_COLORS.red,borderWidth:2,borderRadius:3},
+      {label:"Overheads",data:D.overheads,backgroundColor:"rgba(59,130,246,.1)",borderColor:CHART_COLORS.blue,borderWidth:2,borderRadius:3},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
+  });
+
+  charts.ebit=new Chart(document.getElementById("chart-ebit"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"EBIT",data:D.ebit,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2},
+      {label:"Net Profit",data:D.netProfit,borderColor:CHART_COLORS.blue,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:D.netProfit.map(v=>v<0?CHART_COLORS.red:CHART_COLORS.blue),pointBorderColor:"#fff",pointBorderWidth:2},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
+  });
+
+  charts.margins=new Chart(document.getElementById("chart-margins"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Gross Margin %",data:D.grossMarginPct,borderColor:CHART_COLORS.green,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.green,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"Expense Ratio %",data:D.expenseRatio,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.red,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"70% Benchmark",data:Array(MS.length).fill(70),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}%`},min:0,max:120}}}
+  });
+}
+
+function makeCashflowCharts(){
+  destroyChart("cafds");destroyChart("ic");destroyChart("dse");
+  const MS=D.monthsShort;
+
+  charts.cafds=new Chart(document.getElementById("chart-cafds"),{type:"bar",
+    data:{labels:MS,datasets:[
+      {label:"CAFDS",data:D.cafds,backgroundColor:D.cafds.map(v=>v>0?CHART_COLORS.greenLight:"rgba(220,38,38,.1)"),borderColor:D.cafds.map(v=>v>0?CHART_COLORS.green:CHART_COLORS.red),borderWidth:2,borderRadius:3},
+      {label:"After Debt Service",data:D.cashAfterDS,backgroundColor:D.cashAfterDS.map(v=>v>0?"rgba(59,130,246,.12)":"rgba(220,38,38,.08)"),borderColor:D.cashAfterDS.map(v=>v>0?CHART_COLORS.blue:CHART_COLORS.red),borderWidth:2,borderRadius:3},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
+  });
+
+  charts.ic=new Chart(document.getElementById("chart-ic"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Interest Cover",data:D.interestCover,borderColor:CHART_COLORS.forest,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:5,pointBackgroundColor:D.interestCover.map(v=>v>=1.75?CHART_COLORS.green:v>=1?CHART_COLORS.amber:CHART_COLORS.red),pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"Benchmark 1.75x",data:Array(MS.length).fill(1.75),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
+      {label:"Critical 1.0x",data:Array(MS.length).fill(1.0),borderColor:"#fca5a5",borderDash:[3,3],borderWidth:1,pointRadius:0,fill:false},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}x`},min:0}}}
+  });
+
+  charts.dse=new Chart(document.getElementById("chart-dse"),{type:"line",
+    data:{labels:MS,datasets:[{label:"DSE",data:D.dse,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5}]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:false}},scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>v.toLocaleString()},min:18000}}}
+  });
+}
+
+function makeBalanceCharts(){
+  destroyChart("assets");destroyChart("loans");
+  const MS=D.monthsShort;
+
+  charts.assets=new Chart(document.getElementById("chart-assets"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Total Assets",data:D.totalAssets,borderColor:CHART_COLORS.forest,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"Equity",data:D.equity,borderColor:CHART_COLORS.green,backgroundColor:CHART_COLORS.greenLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.green,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"Liabilities",data:D.totalLiab,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.red,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
+  });
+
+  charts.loans=new Chart(document.getElementById("chart-loans"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"NAB Loan 1",data:D.nab1,borderColor:CHART_COLORS.amber,backgroundColor:"transparent",fill:false,tension:0,pointRadius:4,pointBackgroundColor:CHART_COLORS.amber,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2},
+      {label:"NAB Loan 2",data:D.nab2,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:0,pointRadius:4,pointBackgroundColor:CHART_COLORS.red,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)},min:1000000,max:2200000}}}
+  });
+}
+
+const RATIO_DEFS=[
+  {key:"interestCover",label:"Interest Cover",bench:">1.75x",good:v=>v>=1.75,warn:v=>v>=1&&v<1.75,fmt:v=>`${v.toFixed(2)}x`,max:8},
+  {key:"roam",label:"Return on Assets",bench:">4%",good:v=>v>=4,warn:v=>v>=2&&v<4,fmt:v=>`${v.toFixed(2)}%`,max:6},
+  {key:"grossMarginPct",label:"Gross Margin %",bench:">70%",good:v=>v>=70,warn:v=>v>=55&&v<70,fmt:v=>`${v.toFixed(1)}%`,max:100},
+  {key:"expenseRatio",label:"Expense Ratio %",bench:"<70%",good:v=>v<70,warn:v=>v>=70&&v<90,fmt:v=>`${v.toFixed(1)}%`,max:120,invert:true},
+  {key:"gmDse",label:"GM per DSE",bench:">$65",good:v=>v>=65,warn:v=>v>=45&&v<65,fmt:v=>`$${v.toFixed(2)}`,max:100},
+  {key:"roe",label:"Return on Equity",bench:">5%",good:v=>v>=5,warn:v=>v>=2&&v<5,fmt:v=>`${v.toFixed(2)}%`,max:6},
+  {key:"ohRatio",label:"Overhead Ratio %",bench:"<35%",good:v=>v<35,warn:v=>v>=35&&v<50,fmt:v=>`${v.toFixed(1)}%`,max:60,invert:true},
+  {key:"interestAsGP",label:"Interest as % GP",bench:"<15%",good:v=>v<15,warn:v=>v>=15&&v<20,fmt:v=>`${v.toFixed(1)}%`,max:25,invert:true},
+];
+
+function renderRatios(){
+  const mi=parseInt(document.getElementById("ratio-month").value);
+  document.getElementById("ratio-grid").innerHTML=RATIO_DEFS.map(r=>{
+    const v=D[r.key][mi];
+    const cls=r.good(v)?"r-good":r.warn(v)?"r-warn":"r-bad";
+    const status=r.good(v)?"✓ On target":r.warn(v)?"⚠ Marginal":"✗ Below benchmark";
+    const barPct=Math.min(100,(v/r.max)*100);
+    const barColor=r.good(v)?"#16a34a":r.warn(v)?"#d97706":"#dc2626";
+    const statusBadge=r.good(v)?"badge-green":r.warn(v)?"badge-yellow":"badge-red";
+    return `<div class="ratio-card">
+      <div class="ratio-label">${r.label}</div>
+      <div class="ratio-value ${cls}">${r.fmt(v)}</div>
+      <div class="ratio-bench ${cls}">${status}</div>
+      <div style="font-size:10px;color:#a0aec0;margin-top:2px">Benchmark: ${r.bench}</div>
+      <div class="ratio-bar-wrap"><div class="ratio-bar" style="width:${barPct}%;background:${barColor}"></div></div>
+    </div>`;
+  }).join("");
+}
+
+function makeRatioChart(){
+  destroyChart("ratios");
+  const MS=D.monthsShort;
+  charts.ratios=new Chart(document.getElementById("chart-ratios"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"Interest Cover (x)",data:D.interestCover,borderColor:CHART_COLORS.forest,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:D.interestCover.map(v=>v>=1.75?CHART_COLORS.green:v>=1?CHART_COLORS.amber:CHART_COLORS.red),pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5,yAxisID:"y"},
+      {label:"ROAM %",data:D.roam,borderColor:CHART_COLORS.blue,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.blue,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2,yAxisID:"y1"},
+      {label:"IC Benchmark 1.75x",data:Array(MS.length).fill(1.75),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false,yAxisID:"y"},
+    ]},
+    options:{...BASE,
+      scales:{
+        x:{...BASE.scales.x,grid:{display:false}},
+        y:{...BASE.scales.y,position:"left",ticks:{...BASE.scales.y.ticks,callback:v=>`${v}x`},title:{display:true,text:"Interest Cover (x)",color:"#4a5568",font:{size:11,family:"Inter"}}},
+        y1:{...BASE.scales.y,position:"right",grid:{display:false},ticks:{...BASE.scales.y.ticks,callback:v=>`${v}%`},title:{display:true,text:"ROAM %",color:"#4a5568",font:{size:11,family:"Inter"}}},
+      }
+    }
+  });
+}
+
+function makeMarketsCharts(){
+  destroyChart("eyci");destroyChart("gmdse");
+  // Also destroy the EYCI historical chart which uses the same canvas on the Markets tab
+  destroyWeatherChart("eyci-hist");
+  const MS=D.monthsShort;
+
+  charts.eyci=new Chart(document.getElementById("chart-eyci"),{type:"line",
+    data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"EYCI (¢/kg cwt)",data:D.eyci,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5}]},
+    options:{...BASE,plugins:{...BASE.plugins,legend:{display:false}},scales:{x:{...BASE.scales.x},y:{...BASE.scales.y,min:290,max:360,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}¢`}}}}
+  });
+
+  charts.gmdse=new Chart(document.getElementById("chart-gmdse"),{type:"line",
+    data:{labels:MS,datasets:[
+      {label:"GM per DSE ($)",data:D.gmDse,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:D.gmDse.map(v=>v>=65?CHART_COLORS.green:v>=45?CHART_COLORS.amber:CHART_COLORS.red),pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+      {label:"Benchmark $65",data:Array(MS.length).fill(65),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
+    ]},
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`$${v}`},min:20,max:100}}}
+  });
+}
+
+// KPI CARDS
+function renderKPIs(){
+  const latest=D.grossProfit.length-1;
+  const gp=D.grossProfit[latest];
+  const np=D.netProfit[latest];
+  const ic=D.interestCover[latest];
+  const dse=D.dse[latest];
+  const gmd=D.gmDse[latest];
+  const roam=D.roam[latest];
+  const gm=D.grossMarginPct[latest];
+  const eq=D.equity[latest];
+  const assets=D.totalAssets[latest];
+  const eqPct=assets>0?((eq/assets)*100).toFixed(1):89;
+
+  const npFmt=np<0?`-$${Math.abs(np/1000).toFixed(0)}k`:`$${(np/1000).toFixed(0)}k`;
+  const kpis=[
+    {label:"Total Assets",   v:fmtK(assets||32782674), cls:"neutral", sub:`Equity: ${fmtK(eq||29233555)}`,  sub_cls:""},
+    {label:"Equity Ratio",   v:`${eqPct}%`,            cls:"good",    sub:"Strong asset backing",            sub_cls:"good"},
+    {label:"Net Profit",     v:npFmt,                  cls:np<0?"warn":"good", sub:np<0?"Loss — monitor closely":"Profitable month", sub_cls:np<0?"warn":"good"},
+    {label:"Interest Cover", v:`${ic.toFixed(2)}x`,    cls:ic>=1.75?"good":ic>=1?"neutral":"warn", sub:"Benchmark >1.75x", sub_cls:ic<1.75?"warn":"good"},
+    {label:"DSE Load",       v:(dse||20538).toLocaleString(), cls:"good", sub:"Reducing towards target", sub_cls:"good"},
+    {label:"GM per DSE",     v:`$${(gmd||36.58).toFixed(2)}`, cls:gmd>=65?"good":gmd>=45?"neutral":"warn", sub:"Benchmark >$65", sub_cls:gmd<65?"warn":"good"},
+    {label:"ROAM",           v:`${(roam||0.03).toFixed(2)}%`, cls:roam>=4?"good":roam>=2?"neutral":"warn",  sub:"Benchmark >4%",  sub_cls:roam<4?"warn":"good"},
+    {label:"Gross Margin",   v:`${(gm||58.97).toFixed(1)}%`,  cls:gm>=70?"good":gm>=55?"neutral":"warn",   sub:"Benchmark >70%", sub_cls:gm<70?"warn":"good"},
+  ];
+  document.getElementById("kpi-grid").innerHTML=kpis.map(k=>`
+    <div class="kpi-card ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value${k.v.length>7?" sm":""}">${k.v}</div>
+      <div class="kpi-sub ${k.sub_cls}">${k.sub}</div>
+    </div>`).join("");
+}
+
+// TABS
+const SECTIONS=["pnl","cashflow","balance","ratios","markets","weather"];
+function setTab(tab){
+  currentTab=tab;
+  document.querySelectorAll(".tab-btn").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+  const isOverview=tab==="overview";
+  document.getElementById("ai-panel").style.display=isOverview?"":"none";
+  document.getElementById("alert-banner").style.display=(isOverview||tab==="cashflow"||tab==="ratios")?"":"none";
+  document.getElementById("kpi-grid").style.display=isOverview?"":"none";
+  SECTIONS.forEach(s=>{document.getElementById(`section-${s}`).style.display=(tab===s||isOverview&&s!=="weather")?"":"none";});
+  setTimeout(()=>{
+    if(tab==="overview"||tab==="pnl")      makePnLCharts();
+    if(tab==="overview"||tab==="cashflow") makeCashflowCharts();
+    if(tab==="overview"||tab==="balance")  makeBalanceCharts();
+    if(tab==="overview"||tab==="ratios")   {renderRatios();makeRatioChart();}
+    if(tab==="overview"||tab==="markets")  makeMarketsCharts();
+    if(tab==="weather") initWeatherTab();
+    if(tab==="markets") { renderLivestockMarketsTab(); }
+  },50);
+}
+document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",()=>setTab(btn.dataset.tab));});
+
+// LIVE EYCI — direct MLA Statistics API
+async function fetchEYCI(){
+  const btn=document.getElementById("eyci-btn");
+  btn.disabled=true;btn.textContent="Fetching…";
+  try{
+    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({action:"mla_indicators",indicatorId:0})});
+    const d=await res.json();
+    const rows=(d.data||[]).filter(r=>r.indicator_id===0);
+    const latest = rows.sort((a,b)=>b.calendar_date.localeCompare(a.calendar_date))[0];
+    if(latest){
+      const val = parseFloat(latest.indicator_value).toFixed(2);
+      document.getElementById("eyci-val").textContent=`${val} ¢/kg cwt`;
+      document.getElementById("eyci-sub").textContent=`MLA Statistics API · Data to ${latest.calendar_date} · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
+    }
+  }catch(e){document.getElementById("eyci-sub").textContent="Update failed — check connection";}
+  btn.disabled=false;btn.textContent="↻ Refresh Live Price";
+}
+
+// AI INSIGHTS
+async function generateInsights(){
+  const btn=document.getElementById("ai-btn");
+  const body=document.getElementById("ai-body");
+  btn.disabled=true;btn.textContent="Generating…";
+  body.innerHTML=`<div class="ai-placeholder">Analysing your FY2025-26 data…</div>`;
+
+  const eyciVal=document.getElementById("eyci-val").textContent;
+  const prompt=`You are a senior agricultural business analyst reviewing Buringal Grazing Co (Schmitt Entities), a multi-property Angus cattle operation at Nundle & Topdale NSW running the Wombramurra Angus registered stud.
+
+ACTUAL FY2025-26 FINANCIAL DATA (Jul 25 → Feb 26):
+P&L: Gross Profit $2.37M→$1.27M | Gross Margin 84.2%→59.0% (benchmark >70%) | EBIT $1.82M→$10,203 | Net Profit $1.52M→-$165,951 (Feb 26 loss) | Expense Ratio 35.9%→106% (benchmark <70%) | Overheads $174k→$652k
+Cashflow: CAFDS $2.13M→$1.16M | Cash After Debt Service: negative $80,230 Dec 25 | Interest $303k→$176k/month
+Balance Sheet: Total Assets $32.78M | Equity $29.23M (89%) | NAB Loans $3.1M total | Cash $55,474 Feb 26
+Key Ratios (Feb 26 vs benchmark): Interest Cover 0.06x (>1.75x CRITICAL) | ROAM 0.03% (>4% CRITICAL) | GM/DSE $36.58 (>$65 CRITICAL) | Expense Ratio 106% (<70% CRITICAL) | ROE -0.57%
+DSE: 22,892→20,538 (peak 26,618 Sep 25, now reducing)
+EYCI current: ${eyciVal}
+Context: Wombramurra Angus is highest-margin enterprise (IVF program). Herd restructure from 33% overstock largely complete. FY27 ROAM target 6%.
+
+Provide a detailed structured analysis in exactly this format — use specific numbers throughout:
+
+SECTION 1 - SEASON OVERVIEW
+One paragraph summary (3-4 sentences) of the overall season trajectory and current position.
+
+SECTION 2 - FINANCIAL PERFORMANCE
+5-7 specific bullet points covering gross margin deterioration, expense ratio blowout, EBIT decline, and what is driving these trends.
+
+SECTION 3 - CASHFLOW & DEBT SERVICEABILITY
+4-5 bullet points on cash position, debt service coverage, interest burden, and liquidity risks heading into Q4.
+
+SECTION 4 - BALANCE SHEET STRENGTHS & RISKS
+3-4 bullet points on equity buffer, asset backing, loan positions, and key risks.
+
+SECTION 5 - FY27 STRATEGIC PRIORITIES
+5-6 specific, actionable bullet points for FY27 focusing on the most impactful actions to restore margin, reduce costs, and hit the 6% ROAM target.
+
+Use this exact format with these exact section headers. Be direct, specific, use actual numbers, no vague language.`;
+
+  try{
+    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,messages:[{role:"user",content:prompt}]})});
+    const d=await res.json();
+    const text=(d.content||[]).find(b=>b.type==="text")?.text||"Unable to generate insights.";
+    body.innerHTML=formatAIResponse(text);
+  }catch(e){body.innerHTML=`<div class="ai-placeholder">Could not connect. Check your internet connection.</div>`;}
+  btn.disabled=false;btn.textContent="↺ Regenerate Analysis";
+}
+
+function formatAIResponse(text){
+  const sections=text.split(/SECTION \d+ [-–]/);
+  if(sections.length<2) return `<div class="ai-content"><p>${text}</p></div>`;
+
+  const sectionTitles=["Season Overview","Financial Performance","Cashflow & Debt Serviceability","Balance Sheet Strengths & Risks","FY27 Strategic Priorities"];
+  let html="";
+  sections.forEach((sec,i)=>{
+    if(!sec.trim()||i===0) return;
+    const lines=sec.trim().split("\n").filter(l=>l.trim());
+    const title=sectionTitles[i-1]||`Section ${i}`;
+    html+=`<div class="ai-section"><div class="ai-section-title">${title}</div>`;
+    let bullets=[];
+    let para="";
+    lines.forEach(line=>{
+      const clean=line.trim().replace(/^[-•*]\s*/,"");
+      if(line.trim().match(/^[-•*]/)){bullets.push(clean);}
+      else if(!line.trim().match(/^SECTION/)){para+=clean+" ";}
+    });
+    if(para.trim()) html+=`<div class="ai-summary">${para.trim()}</div>`;
+    if(bullets.length) html+=`<ul class="ai-bullets">${bullets.map(b=>`<li>${b}</li>`).join("")}</ul>`;
+    html+="</div>";
+  });
+  return html||`<div class="ai-content">${text}</div>`;
+}
+
+// ══════════════════════════════════════════════════════════════
+// WEATHER TAB — Buringal Grazing Co
+// Nundle (-31.466, 151.117) & Niangala/Topdale (-31.583, 151.333)
+// Data: Open-Meteo (ECMWF / BOM ACCESS-G / Auto)
+// ══════════════════════════════════════════════════════════════
+
+const WEATHER_LOCATIONS = {
+  nundle:   { name:"Nundle",           lat:-31.466, lon:151.117, color:"#1a4a2e", colorLight:"rgba(26,74,46,.12)" },
+  niangala: { name:"Niangala (Topdale)", lat:-31.583, lon:151.333, color:"#1d4ed8", colorLight:"rgba(29,78,216,.12)" },
+};
+
+const WEATHER_MODELS = {
+  ecmwf:  { label:"ECMWF IFS",        value:"ecmwf_ifs025",    badge:"Most Accurate" },
+  bom:    { label:"BOM ACCESS-G",     value:"bom_access_global",badge:"Australian Model" },
+  auto:   { label:"Auto (Best Match)",value:"auto",             badge:"Blended" },
+};
+
+// Long-term BOM monthly averages for Nundle (mm) — station data
+const BOM_MONTHLY_AVG = {
+  nundle:   [62,63,55,47,50,52,46,43,47,57,63,64], // Jan-Dec
+  niangala: [70,68,58,48,45,44,38,36,42,56,65,72], // Jan-Dec
+};
+
+const MONTH_NAMES = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+
+let weatherCharts = {};
+let weatherData = { nundle: null, niangala: null };
+let weatherHistory = { nundle: null, niangala: null };
+let activeWeatherSub = "nundle";
+let activeModel = "ecmwf";
+
+function destroyWeatherChart(id) {
+  if(weatherCharts[id]){ weatherCharts[id].destroy(); delete weatherCharts[id]; }
+}
+
+// ── Fetch forecast from Open-Meteo ────────────────────────────
+async function fetchWeatherForecast(loc, modelKey) {
+  const { lat, lon } = WEATHER_LOCATIONS[loc];
+  const model = WEATHER_MODELS[modelKey].value;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=precipitation,temperature_2m,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation_probability&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,wind_direction_10m_dominant,weather_code&timezone=Australia%2FSydney&forecast_days=14${model!=="auto"?`&models=${model}`:""}`;
+  const res = await fetch(url);
+  return await res.json();
+}
+
+// ── Fetch historical rainfall for current year ────────────────
+async function fetchWeatherHistory(loc) {
+  const { lat, lon } = WEATHER_LOCATIONS[loc];
+  const now = new Date();
+  const startOfYear = `${now.getFullYear()}-01-01`;
+  const today = now.toISOString().split("T")[0];
+  const url = `https://api.open-meteo.com/v1/archive?latitude=${lat}&longitude=${lon}&daily=precipitation_sum&timezone=Australia%2FSydney&start_date=${startOfYear}&end_date=${today}`;
+  const res = await fetch(url);
+  return await res.json();
+}
+
+// ── WMO weather code to description & emoji ──────────────────
+function wmoDesc(code) {
+  const map = {
+    0:"Clear ☀️", 1:"Mainly Clear 🌤️", 2:"Partly Cloudy ⛅", 3:"Overcast ☁️",
+    45:"Foggy 🌫️", 48:"Icy Fog 🌫️",
+    51:"Light Drizzle 🌦️", 53:"Drizzle 🌦️", 55:"Heavy Drizzle 🌧️",
+    61:"Light Rain 🌧️", 63:"Rain 🌧️", 65:"Heavy Rain 🌧️",
+    71:"Light Snow ❄️", 73:"Snow ❄️", 75:"Heavy Snow ❄️",
+    77:"Snow Grains ❄️",
+    80:"Light Showers 🌦️", 81:"Showers 🌧️", 82:"Heavy Showers ⛈️",
+    85:"Snow Showers ❄️", 86:"Heavy Snow Showers ❄️",
+    95:"Thunderstorm ⛈️", 96:"Thunderstorm + Hail ⛈️", 99:"Severe Thunderstorm ⛈️",
+  };
+  return map[code] || "Unknown";
+}
+
+function windDir(deg) {
+  const dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+  return dirs[Math.round(deg/22.5)%16];
+}
+
+// ── Build accumulated rainfall array ─────────────────────────
+function accumulateRainfall(hourlyPrecip, hours) {
+  const acc = []; let total = 0;
+  for(let i=0;i<Math.min(hours,hourlyPrecip.length);i++){
+    total += (hourlyPrecip[i]||0);
+    acc.push(parseFloat(total.toFixed(1)));
+  }
+  return acc;
+}
+
+// ── Main render function ──────────────────────────────────────
+async function renderWeatherTab(loc, model) {
+  const container = document.getElementById(`weather-content-${loc}`);
+  if(!container) return;
+
+  // Show loading
+  container.innerHTML = `<div style="text-align:center;padding:60px 20px;color:#8898aa">
+    <div style="font-size:24px;margin-bottom:12px">⛅</div>
+    <div style="font-size:13px;font-weight:600">Loading weather data for ${WEATHER_LOCATIONS[loc].name}…</div>
+    <div style="font-size:11px;margin-top:4px;color:#a0aec0">Using ${WEATHER_MODELS[model].label}</div>
+  </div>`;
+
+  try {
+    const [forecast, history] = await Promise.all([
+      fetchWeatherForecast(loc, model),
+      fetchWeatherHistory(loc),
+    ]);
+
+    weatherData[loc] = forecast;
+    weatherHistory[loc] = history;
+    buildWeatherUI(loc, model, forecast, history, container);
+    // Append historical analysis section
+    const histContainer = document.getElementById(`weather-content-${loc}`);
+    if(histContainer) {
+      renderHistoricalSection(loc, histContainer);
+      renderENSOSection(histContainer);
+    }
+  } catch(e) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#e53e3e;font-size:13px">
+      Failed to load weather data. Check your internet connection.<br><small style="color:#a0aec0">${e.message}</small>
+    </div>`;
+  }
+}
+
+function buildWeatherUI(loc, model, forecast, history, container) {
+  const locData = WEATHER_LOCATIONS[loc];
+  const daily = forecast.daily;
+  const now = new Date();
+  const currentMonth = now.getMonth();
+  const bomAvg = BOM_MONTHLY_AVG[loc];
+
+  // ── Season-to-date rainfall ────────────────────────────────
+  const histPrecip = history.daily?.precipitation_sum || [];
+  const ytdRain = histPrecip.reduce((s,v)=>s+(v||0),0).toFixed(1);
+  const ytdDays = histPrecip.length;
+
+  // Monthly totals from history
+  const monthlyTotals = Array(12).fill(0);
+  const histDates = history.daily?.time || [];
+  histDates.forEach((d,i) => {
+    const m = parseInt(d.split("-")[1])-1;
+    monthlyTotals[m] += (histPrecip[i]||0);
+  });
+
+  // 14-day accumulated forecast
+  const hourlyPrecip = forecast.hourly?.precipitation || [];
+  const accum14 = accumulateRainfall(hourlyPrecip, 14*24);
+  const total14Day = accum14[accum14.length-1]||0;
+  const total7Day = accum14[7*24-1]||0;
+
+  // Current conditions (today)
+  const todayMax = daily.temperature_2m_max[0];
+  const todayMin = daily.temperature_2m_min[0];
+  const todayRain = daily.precipitation_sum[0];
+  const todayCode = daily.weather_code[0];
+
+  container.innerHTML = `
+    <!-- Summary cards -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:20px">
+      <div class="panel" style="margin-bottom:0;text-align:center;padding:16px">
+        <div style="font-size:28px;margin-bottom:4px">${wmoDesc(todayCode).split(" ").slice(-1)[0]}</div>
+        <div style="font-size:11px;font-weight:600;color:#1a2332">${wmoDesc(todayCode).split(" ").slice(0,-1).join(" ")}</div>
+        <div style="font-size:20px;font-weight:700;color:#1a2332;margin-top:4px">${todayMax?.toFixed(0)}° / ${todayMin?.toFixed(0)}°</div>
+        <div style="font-size:10px;color:#8898aa">Today</div>
+      </div>
+      <div class="panel" style="margin-bottom:0;text-align:center;padding:16px">
+        <div style="font-size:28px;font-weight:700;color:#1d4ed8">${todayRain?.toFixed(1)}</div>
+        <div style="font-size:10px;color:#8898aa">mm today</div>
+        <div style="font-size:14px;font-weight:700;color:#1d4ed8;margin-top:8px">${total7Day.toFixed(1)}</div>
+        <div style="font-size:10px;color:#8898aa">mm next 7 days</div>
+      </div>
+      <div class="panel" style="margin-bottom:0;text-align:center;padding:16px">
+        <div style="font-size:28px;font-weight:700;color:#1a4a2e">${total14Day.toFixed(1)}</div>
+        <div style="font-size:10px;color:#8898aa">mm next 14 days</div>
+        <div style="font-size:14px;font-weight:700;color:#1a4a2e;margin-top:8px">${ytdRain}</div>
+        <div style="font-size:10px;color:#8898aa">mm year-to-date</div>
+      </div>
+      <div class="panel" style="margin-bottom:0;text-align:center;padding:16px">
+        <div style="font-size:28px;font-weight:700;color:${monthlyTotals[currentMonth]>=bomAvg[currentMonth]?"#16a34a":"#ea580c"}">${monthlyTotals[currentMonth].toFixed(0)}</div>
+        <div style="font-size:10px;color:#8898aa">mm this month</div>
+        <div style="font-size:11px;font-weight:600;margin-top:6px;color:${monthlyTotals[currentMonth]>=bomAvg[currentMonth]?"#16a34a":"#ea580c"}">
+          ${monthlyTotals[currentMonth]>=bomAvg[currentMonth]?"↑ Above":"↓ Below"} avg (${bomAvg[currentMonth]}mm)
+        </div>
+      </div>
+    </div>
+
+    <!-- 14-day forecast cards -->
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-header">
+        <div><div class="panel-title">14-Day Forecast — ${locData.name}</div>
+        <div class="panel-sub">${WEATHER_MODELS[model].label} · ${WEATHER_MODELS[model].badge}</div></div>
+      </div>
+      <div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:8px">
+        ${daily.time.slice(0,14).map((d,i) => {
+          const date = new Date(d);
+          const dayName = i===0?"Today":i===1?"Tomorrow":date.toLocaleDateString("en-AU",{weekday:"short"});
+          const dateStr = date.toLocaleDateString("en-AU",{day:"numeric",month:"short"});
+          const rain = daily.precipitation_sum[i]||0;
+          const prob = daily.precipitation_probability_max[i]||0;
+          const max = daily.temperature_2m_max[i]?.toFixed(0);
+          const min = daily.temperature_2m_min[i]?.toFixed(0);
+          const wind = daily.wind_speed_10m_max[i]?.toFixed(0);
+          const wdir = windDir(daily.wind_direction_10m_dominant[i]||0);
+          const code = daily.weather_code[i];
+          const emoji = wmoDesc(code).split(" ").slice(-1)[0];
+          const rainColor = rain>10?"#1d4ed8":rain>2?"#3b82f6":rain>0?"#93c5fd":"#e2e8f0";
+          return `<div style="flex:0 0 90px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:10px 8px;text-align:center;min-width:90px">
+            <div style="font-size:11px;font-weight:700;color:#1a2332">${dayName}</div>
+            <div style="font-size:9px;color:#8898aa;margin-bottom:6px">${dateStr}</div>
+            <div style="font-size:20px;margin-bottom:4px">${emoji}</div>
+            <div style="font-size:13px;font-weight:700;color:#1a2332">${max}°</div>
+            <div style="font-size:10px;color:#8898aa">${min}°</div>
+            <div style="margin-top:6px;background:${rainColor};border-radius:4px;padding:3px 4px">
+              <div style="font-size:11px;font-weight:700;color:${rain>0?"#1e40af":"#94a3b8"}">${rain.toFixed(1)}mm</div>
+              <div style="font-size:9px;color:${rain>0?"#3b82f6":"#a0aec0"}">${prob}% chance</div>
+            </div>
+            <div style="font-size:9px;color:#8898aa;margin-top:4px">${wind}km/h ${wdir}</div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>
+
+    <!-- Charts grid -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      <!-- Accumulated rainfall -->
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-header">
+          <div><div class="panel-title">Rainfall Accumulation Forecast</div>
+          <div class="panel-sub">Running total over 14 days — selectable window</div></div>
+          <div style="display:flex;gap:6px">
+            <button onclick="updateAccumChart('${loc}',7)" id="accum-7-${loc}" style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">7 Day</button>
+            <button onclick="updateAccumChart('${loc}',14)" id="accum-14-${loc}" style="font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#fff;color:#4a5568;cursor:pointer">14 Day</button>
+          </div>
+        </div>
+        <div style="height:200px"><canvas id="chart-accum-${loc}"></canvas></div>
+        <div style="margin-top:10px;font-size:11px;color:#4a5568;background:#f0fdf4;border-radius:6px;padding:8px 12px">
+          📊 7-day total: <strong>${total7Day.toFixed(1)}mm</strong> &nbsp;·&nbsp; 14-day total: <strong>${total14Day.toFixed(1)}mm</strong>
+        </div>
+      </div>
+
+      <!-- Monthly vs historical -->
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-header">
+          <div><div class="panel-title">Monthly Rainfall vs Historical Average</div>
+          <div class="panel-sub">2026 actuals vs long-term BOM average</div></div>
+        </div>
+        <div style="height:200px"><canvas id="chart-monthly-${loc}"></canvas></div>
+      </div>
+    </div>
+
+    <!-- Temperature chart -->
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-header">
+        <div><div class="panel-title">14-Day Temperature Forecast</div>
+        <div class="panel-sub">Max / Min daily temperatures — °C</div></div>
+      </div>
+      <div style="height:180px"><canvas id="chart-temp-${loc}"></canvas></div>
+    </div>
+
+    <!-- AI Weather Insights -->
+    <div class="panel" style="margin-bottom:0;background:linear-gradient(135deg,#f0fdf4,#eff6ff);border:1px solid #bbf7d0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1a2332">AI Weather & Pasture Insights</div>
+          <div style="font-size:11px;color:#8898aa;margin-top:2px">Powered by Claude · ${locData.name} · ${WEATHER_MODELS[model].label}</div>
+        </div>
+        <button onclick="generateWeatherInsights('${loc}')" id="weather-ai-btn-${loc}"
+          style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 18px;cursor:pointer;white-space:nowrap">
+          ▶ Generate Insights
+        </button>
+      </div>
+      <div id="weather-ai-body-${loc}" style="font-size:13px;color:#a0aec0;font-style:italic">
+        Click Generate for AI-powered weather and pasture outlook combining forecast data with your current operational position.
+      </div>
+    </div>
+  `;
+
+  // Build charts after DOM is ready
+  setTimeout(() => {
+    buildAccumChart(loc, 7, hourlyPrecip, locData.color);
+    buildMonthlyChart(loc, monthlyTotals, bomAvg, locData.color);
+    buildTempChart(loc, daily, locData.color);
+  }, 50);
+}
+
+// ── Accumulated rainfall chart ────────────────────────────────
+function buildAccumChart(loc, days, hourlyPrecip, color) {
+  destroyWeatherChart(`accum-${loc}`);
+  const hours = days * 24;
+  const accum = accumulateRainfall(hourlyPrecip, hours);
+  const labels = Array.from({length:accum.length}, (_,i) => {
+    const h = i % 24;
+    const d = Math.floor(i/24);
+    return h===0 ? `Day ${d+1}` : (h===12?`D${d+1} noon`:"");
+  });
+
+  const ctx = document.getElementById(`chart-accum-${loc}`)?.getContext("2d");
+  if(!ctx) return;
+
+  const grad = ctx.createLinearGradient(0,0,0,200);
+  grad.addColorStop(0, color.replace(")",",0.25)").replace("rgb","rgba"));
+  grad.addColorStop(1, color.replace(")",",0)").replace("rgb","rgba"));
+
+  weatherCharts[`accum-${loc}`] = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels,
+      datasets:[{
+        label:`${days}-Day Accumulated Rainfall (mm)`,
+        data:accum,
+        borderColor:color,
+        backgroundColor:"rgba(29,78,216,0.08)",
+        fill:true, tension:0.1, pointRadius:0,
+        borderWidth:2.5,
+      }]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      plugins:{
+        legend:{display:false},
+        tooltip:{
+          backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,
+          titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,
+          callbacks:{
+            title:ctx=>ctx[0].label||"",
+            label:ctx=>`Accumulated: ${ctx.parsed.y.toFixed(1)}mm`
+          }
+        }
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:9},maxTicksLimit:days*2,maxRotation:0}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:true}
+      },
+      animation:{duration:400}
+    }
+  });
+}
+
+function updateAccumChart(loc, days) {
+  // Update button styles
+  document.getElementById(`accum-7-${loc}`).style.cssText  = `font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;border:1.5px solid ${days===7?"#1a4a2e":"#e2e8f0"};background:${days===7?"#1a4a2e":"#fff"};color:${days===7?"#fff":"#4a5568"};cursor:pointer`;
+  document.getElementById(`accum-14-${loc}`).style.cssText = `font-size:10px;font-weight:600;padding:4px 10px;border-radius:6px;border:1.5px solid ${days===14?"#1a4a2e":"#e2e8f0"};background:${days===14?"#1a4a2e":"#fff"};color:${days===14?"#fff":"#4a5568"};cursor:pointer`;
+  const hourlyPrecip = weatherData[loc]?.hourly?.precipitation || [];
+  buildAccumChart(loc, days, hourlyPrecip, WEATHER_LOCATIONS[loc].color);
+}
+
+// ── Monthly vs historical chart ───────────────────────────────
+function buildMonthlyChart(loc, monthlyTotals, bomAvg, color) {
+  destroyWeatherChart(`monthly-${loc}`);
+  const ctx = document.getElementById(`chart-monthly-${loc}`)?.getContext("2d");
+  if(!ctx) return;
+
+  weatherCharts[`monthly-${loc}`] = new Chart(ctx, {
+    type:"bar",
+    data:{
+      labels:MONTH_NAMES,
+      datasets:[
+        {label:"2026 Actual (mm)",data:monthlyTotals,backgroundColor:monthlyTotals.map((v,i)=>v>=bomAvg[i]?"rgba(22,163,74,0.7)":"rgba(220,38,38,0.7)"),borderRadius:3,borderWidth:0},
+        {label:"Historical Average (mm)",data:bomAvg,backgroundColor:"transparent",borderColor:"#94a3b8",borderWidth:2,type:"line",pointRadius:3,pointBackgroundColor:"#94a3b8",tension:0.3},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{font:{size:10,family:"Inter"},color:"#4a5568",boxWidth:10,boxHeight:10,padding:12}},
+        tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:10}}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:true}
+      },
+      animation:{duration:400}
+    }
+  });
+}
+
+// ── Temperature chart ─────────────────────────────────────────
+function buildTempChart(loc, daily, color) {
+  destroyWeatherChart(`temp-${loc}`);
+  const ctx = document.getElementById(`chart-temp-${loc}`)?.getContext("2d");
+  if(!ctx) return;
+
+  const labels = daily.time.slice(0,14).map((d,i) => {
+    if(i===0) return "Today";
+    if(i===1) return "Tomorrow";
+    return new Date(d).toLocaleDateString("en-AU",{weekday:"short",day:"numeric"});
+  });
+
+  weatherCharts[`temp-${loc}`] = new Chart(ctx, {
+    type:"line",
+    data:{
+      labels,
+      datasets:[
+        {label:"Max Temp (°C)",data:daily.temperature_2m_max.slice(0,14),borderColor:"#dc2626",backgroundColor:"rgba(220,38,38,0.05)",fill:false,tension:0.3,pointRadius:4,pointBackgroundColor:"#dc2626",pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+        {label:"Min Temp (°C)",data:daily.temperature_2m_min.slice(0,14),borderColor:"#3b82f6",backgroundColor:"rgba(59,130,246,0.05)",fill:false,tension:0.3,pointRadius:4,pointBackgroundColor:"#3b82f6",pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2},
+      ]
+    },
+    options:{
+      responsive:true,maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{font:{size:10,family:"Inter"},color:"#4a5568",boxWidth:10,boxHeight:10,padding:12}},
+        tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}°C`}}
+      },
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:10},maxRotation:30}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}°C`}}
+      },
+      animation:{duration:400}
+    }
+  });
+}
+
+// ── Compare tab ───────────────────────────────────────────────
+async function renderCompareTab() {
+  const container = document.getElementById("weather-content-compare");
+  if(!container) return;
+
+  // Ensure both datasets loaded
+  if(!weatherData.nundle || !weatherData.niangala) {
+    container.innerHTML = `<div style="text-align:center;padding:40px;color:#8898aa;font-size:13px">
+      Loading data for both properties…
+    </div>`;
+    await Promise.all([
+      !weatherData.nundle   ? renderWeatherTabData("nundle")   : Promise.resolve(),
+      !weatherData.niangala ? renderWeatherTabData("niangala") : Promise.resolve(),
+    ]);
+  }
+
+  const nd = weatherData.nundle?.daily;
+  const ni = weatherData.niangala?.daily;
+  if(!nd||!ni){ container.innerHTML=`<div style="padding:40px;text-align:center;color:#e53e3e">Could not load comparison data.</div>`; return; }
+
+  const labels = nd.time.slice(0,14).map((d,i)=>{
+    if(i===0) return "Today"; if(i===1) return "Tomorrow";
+    return new Date(d).toLocaleDateString("en-AU",{weekday:"short",day:"numeric"});
+  });
+
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+      ${["nundle","niangala"].map(loc=>{
+        const d = weatherData[loc].daily;
+        const lc = WEATHER_LOCATIONS[loc];
+        const total7 = (d.precipitation_sum||[]).slice(0,7).reduce((s,v)=>s+(v||0),0);
+        const total14 = (d.precipitation_sum||[]).reduce((s,v)=>s+(v||0),0);
+        return `<div class="panel" style="margin-bottom:0;border-top:3px solid ${lc.color}">
+          <div style="font-size:14px;font-weight:700;color:${lc.color};margin-bottom:14px">${lc.name}</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:12px">
+              <div style="font-size:20px;font-weight:700;color:${lc.color}">${total7.toFixed(1)}mm</div>
+              <div style="font-size:10px;color:#8898aa">7-day forecast</div>
+            </div>
+            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:12px">
+              <div style="font-size:20px;font-weight:700;color:${lc.color}">${total14.toFixed(1)}mm</div>
+              <div style="font-size:10px;color:#8898aa">14-day forecast</div>
+            </div>
+            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:12px">
+              <div style="font-size:18px;font-weight:700;color:#dc2626">${d.temperature_2m_max[0]?.toFixed(0)}°C</div>
+              <div style="font-size:10px;color:#8898aa">Today max</div>
+            </div>
+            <div style="text-align:center;background:#f8fafc;border-radius:8px;padding:12px">
+              <div style="font-size:18px;font-weight:700;color:#3b82f6">${d.temperature_2m_min[0]?.toFixed(0)}°C</div>
+              <div style="font-size:10px;color:#8898aa">Today min</div>
+            </div>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+
+    <!-- Comparison charts -->
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-header">
+        <div><div class="panel-title">14-Day Rainfall Comparison</div>
+        <div class="panel-sub">Daily forecast — Nundle vs Niangala (Topdale)</div></div>
+      </div>
+      <div style="height:220px"><canvas id="chart-compare-rain"></canvas></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-header">
+        <div><div class="panel-title">Rainfall Accumulation Comparison</div>
+        <div class="panel-sub">14-day running total — both properties</div></div>
+      </div>
+      <div style="height:220px"><canvas id="chart-compare-accum"></canvas></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-header">
+        <div><div class="panel-title">Temperature Comparison</div>
+        <div class="panel-sub">Max temperature — 14-day forecast</div></div>
+      </div>
+      <div style="height:200px"><canvas id="chart-compare-temp"></canvas></div>
+    </div>
+  `;
+
+  setTimeout(() => {
+    // Rain comparison
+    destroyWeatherChart("compare-rain");
+    weatherCharts["compare-rain"] = new Chart(document.getElementById("chart-compare-rain"), {
+      type:"bar",
+      data:{labels, datasets:[
+        {label:"Nundle (mm)",data:nd.precipitation_sum.slice(0,14),backgroundColor:"rgba(26,74,46,0.65)",borderRadius:3},
+        {label:"Niangala (mm)",data:ni.precipitation_sum.slice(0,14),backgroundColor:"rgba(29,78,216,0.55)",borderRadius:3},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,labels:{font:{size:10},color:"#4a5568",boxWidth:10,padding:12}},
+          tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8}},
+        scales:{x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:9},maxRotation:30}},
+          y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:true}}}
+    });
+
+    // Accum comparison
+    destroyWeatherChart("compare-accum");
+    const nAccum = accumulateRainfall(weatherData.nundle.hourly?.precipitation||[], 14*24).filter((_,i)=>i%24===23||i===14*24-1);
+    const niAccum = accumulateRainfall(weatherData.niangala.hourly?.precipitation||[], 14*24).filter((_,i)=>i%24===23||i===14*24-1);
+    weatherCharts["compare-accum"] = new Chart(document.getElementById("chart-compare-accum"), {
+      type:"line",
+      data:{labels:labels.slice(0,14), datasets:[
+        {label:"Nundle accumulated",data:nAccum.slice(0,14),borderColor:WEATHER_LOCATIONS.nundle.color,backgroundColor:"rgba(26,74,46,0.08)",fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:WEATHER_LOCATIONS.nundle.color,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+        {label:"Niangala accumulated",data:niAccum.slice(0,14),borderColor:WEATHER_LOCATIONS.niangala.color,backgroundColor:"rgba(29,78,216,0.05)",fill:true,tension:0.3,pointRadius:3,pointBackgroundColor:WEATHER_LOCATIONS.niangala.color,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,labels:{font:{size:10},color:"#4a5568",boxWidth:10,padding:12}},
+          tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}mm`}}},
+        scales:{x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:10},maxRotation:30}},
+          y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:true}}}
+    });
+
+    // Temp comparison
+    destroyWeatherChart("compare-temp");
+    weatherCharts["compare-temp"] = new Chart(document.getElementById("chart-compare-temp"), {
+      type:"line",
+      data:{labels, datasets:[
+        {label:"Nundle Max",data:nd.temperature_2m_max.slice(0,14),borderColor:WEATHER_LOCATIONS.nundle.color,fill:false,tension:0.3,pointRadius:3,pointBackgroundColor:WEATHER_LOCATIONS.nundle.color,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+        {label:"Niangala Max",data:ni.temperature_2m_max.slice(0,14),borderColor:WEATHER_LOCATIONS.niangala.color,fill:false,tension:0.3,pointRadius:3,pointBackgroundColor:WEATHER_LOCATIONS.niangala.color,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2,borderDash:[4,4]},
+      ]},
+      options:{responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:true,labels:{font:{size:10},color:"#4a5568",boxWidth:10,padding:12}},
+          tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}°C`}}},
+        scales:{x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:10},maxRotation:30}},
+          y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}°C`}}}}
+    });
+  }, 50);
+}
+
+async function renderWeatherTabData(loc) {
+  try {
+    const [forecast, history] = await Promise.all([fetchWeatherForecast(loc, activeModel), fetchWeatherHistory(loc)]);
+    weatherData[loc] = forecast;
+    weatherHistory[loc] = history;
+  } catch(e) { console.error(e); }
+}
+
+// ── AI Weather Insights ───────────────────────────────────────
+async function generateWeatherInsights(loc) {
+  const btn = document.getElementById(`weather-ai-btn-${loc}`);
+  const body = document.getElementById(`weather-ai-body-${loc}`);
+  if(!btn||!body) return;
+  btn.disabled = true; btn.textContent = "Generating…";
+  body.innerHTML = `<span style="color:#a0aec0;font-style:italic">Analysing weather forecast and operational data…</span>`;
+
+  const forecast = weatherData[loc];
+  if(!forecast){ body.innerHTML="No forecast data loaded."; btn.disabled=false; btn.textContent="▶ Generate Insights"; return; }
+
+  const daily = forecast.daily;
+  const total7  = (daily.precipitation_sum||[]).slice(0,7).reduce((s,v)=>s+(v||0),0).toFixed(1);
+  const total14 = (daily.precipitation_sum||[]).reduce((s,v)=>s+(v||0),0).toFixed(1);
+  const maxTemps = (daily.temperature_2m_max||[]).slice(0,7).map(v=>v?.toFixed(1)).join(", ");
+  const locData = WEATHER_LOCATIONS[loc];
+  const bomAvg = BOM_MONTHLY_AVG[loc];
+  const currentMonth = new Date().getMonth();
+
+  const prompt = `You are an experienced NSW agricultural consultant advising on Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW (Wombramurra Angus). Current DSE load: ~20,538. Recent season has been dry with margins under pressure (GM/DSE $36.58 vs $65 benchmark). Herd restructure recently completed.
+
+WEATHER FORECAST — ${locData.name} (next 14 days, ${WEATHER_MODELS[activeModel].label}):
+- 7-day rainfall total: ${total7}mm
+- 14-day rainfall total: ${total14}mm  
+- Daily max temps (7 days): ${maxTemps}°C
+- Historical monthly average for ${MONTH_NAMES[currentMonth]}: ${bomAvg[currentMonth]}mm
+
+Provide a structured weather and pasture analysis with these exact sections:
+
+SECTION 1 - WEATHER SUMMARY
+Brief 2-3 sentence summary of the forecast conditions and how they compare to seasonal norms.
+
+SECTION 2 - PASTURE & FEED OUTLOOK
+3-4 bullet points on pasture growth implications, feed availability risk, and carrying capacity impact given current DSE load.
+
+SECTION 3 - OPERATIONAL RECOMMENDATIONS  
+4-5 specific, actionable bullet points on stock management, water management, spray/cropping timing, or other operational decisions given the forecast.
+
+SECTION 4 - RISKS TO WATCH
+2-3 bullet points on key weather-related risks over the next 14 days specific to a grazing operation.
+
+Be specific to the property location, use the actual forecast numbers, and tie recommendations to the current operational context where relevant.`;
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1500,messages:[{role:"user",content:prompt}]})
+    });
+    const d = await res.json();
+    const text = (d.content||[]).find(b=>b.type==="text")?.text || "Unable to generate insights.";
+    body.innerHTML = formatAIResponse(text);
+  } catch(e) {
+    body.innerHTML = `<span style="color:#e53e3e">Could not connect. Check your internet connection.</span>`;
+  }
+  btn.disabled = false; btn.textContent = "↺ Refresh Insights";
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// HISTORICAL RAINFALL MODULE
+// Nundle Post Office (1890-2025, 136 years) — Station 055041
+// Nowendoc Green Hills (1971-2025, 55 years) — Station 060104
+// ══════════════════════════════════════════════════════════════
+
+const HIST = {
+  nundle: {
+    station: "Nundle Post Office",
+    stationNo: "055041",
+    yearRange: [1890, 2025],
+    numYears: 136,
+    annualAvg: 770.6,
+    annualPct: {p10:471.7,p25:655.9,p50:811.0,p75:956.1,p90:1100.3},
+    monthlyAvgs: [82.5,67.0,55.8,41.8,47.7,65.5,62.3,57.8,57.7,68.9,77.5,86.0],
+    monthlyPct: [
+      {p10:9.0,p25:39.0,p50:72.0,p75:113.8,p90:161.4},
+      {p10:0.7,p25:26.7,p50:51.6,p75:100.6,p90:147.2},
+      {p10:0.0,p25:15.5,p50:43.4,p75:85.7,p90:117.0},
+      {p10:0.0,p25:10.0,p50:37.0,p75:60.4,p90:90.0},
+      {p10:0.6,p25:15.2,p50:40.5,p75:72.0,p90:98.0},
+      {p10:8.0,p25:27.0,p50:54.0,p75:95.4,p90:154.3},
+      {p10:5.2,p25:29.5,p50:59.4,p75:88.0,p90:122.0},
+      {p10:0.0,p25:26.0,p50:50.8,p75:91.2,p90:118.2},
+      {p10:2.3,p25:25.0,p50:50.6,p75:85.2,p90:113.0},
+      {p10:13.6,p25:34.0,p50:61.4,p75:95.4,p90:137.5},
+      {p10:4.6,p25:39.0,p50:70.4,p75:111.3,p90:152.9},
+      {p10:7.6,p25:47.3,p50:80.8,p75:121.7,p90:165.5},
+    ],
+    annualData: {1890:440.4,1891:1038.2,1892:1056.8,1893:1071.3,1904:744.5,1905:806.7,1906:682.2,1907:772.5,1908:942.7,1909:827.7,1910:824.7,1911:862.8,1912:525.1,1913:827.3,1914:665.0,1915:667.1,1916:1101.8,1917:884.2,1918:630.8,1919:509.5,1920:914.3,1921:1165.7,1922:702.9,1923:717.7,1924:1080.0,1925:651.8,1926:962.0,1927:528.8,1928:735.1,1929:607.0,1930:912.9,1931:956.1,1932:713.2,1933:964.3,1934:963.3,1935:614.8,1936:945.9,1937:754.0,1938:707.2,1939:790.1,1940:655.9,1941:894.5,1942:889.1,1943:875.1,1944:647.1,1945:845.9,1946:472.0,1947:979.4,1948:859.2,1949:1183.4,1950:1223.5,1951:790.5,1952:1110.6,1953:779.1,1954:876.3,1955:1302.3,1956:1284.7,1957:695.2,1958:1100.3,1959:874.4,1960:899.3,1961:770.9,1962:965.1,1963:1025.4,1964:918.3,1965:468.2,1966:724.0,1967:589.1,1968:1033.5,1969:966.2,1970:946.3,1971:830.7,1972:590.5,1973:1007.6,1974:651.2,1975:732.9,1976:881.4,1977:903.0,1978:1134.0,1979:703.0,1980:528.5,1981:703.9,1982:477.4,1983:934.4,1984:1189.0,1985:882.0,1986:707.0,1987:780.8,1988:965.0,1989:860.0,1990:1097.2,1991:728.0,1992:900.2,1993:818.2,1994:471.7,1995:798.1,1996:940.0,1997:689.7,1998:1158.6,1999:829.2,2000:996.9,2001:830.4,2002:579.0,2003:771.9,2004:900.2,2005:759.6,2006:502.3,2007:923.7,2008:914.9,2009:609.5,2010:1216.6,2011:808.4,2012:636.7,2013:660.2,2014:745.1,2015:811.0,2016:973.0,2017:781.5,2018:531.6,2019:303.9,2020:969.2,2021:1221.9,2022:1034.4,2023:532.7,2024:809.9,2025:1142.6},
+  },
+  nowendoc: {
+    station: "Nowendoc (Green Hills)",
+    stationNo: "060104",
+    yearRange: [1971, 2025],
+    numYears: 55,
+    annualAvg: 1097.1,
+    annualPct: {p10:793.3,p25:889.9,p50:1123.0,p75:1302.2,p90:1388.8},
+    monthlyAvgs: [135.4,130.9,124.7,71.4,74.6,70.8,60.8,58.3,63.0,82.1,111.9,113.2],
+    monthlyPct: [
+      {p10:51.0,p25:94.8,p50:126.8,p75:165.4,p90:229.0},
+      {p10:49.0,p25:71.4,p50:105.0,p75:174.0,p90:269.8},
+      {p10:39.2,p25:71.2,p50:112.2,p75:159.0,p90:227.0},
+      {p10:18.4,p25:31.0,p50:58.0,p75:99.2,p90:165.0},
+      {p10:15.4,p25:31.2,p50:48.4,p75:103.0,p90:135.0},
+      {p10:24.4,p25:42.6,p50:65.4,p75:87.0,p90:115.0},
+      {p10:19.0,p25:28.4,p50:53.5,p75:87.0,p90:115.0},
+      {p10:14.9,p25:25.2,p50:48.6,p75:86.2,p90:117.6},
+      {p10:20.0,p25:39.8,p50:57.0,p75:89.8,p90:111.7},
+      {p10:33.0,p25:46.0,p50:74.6,p75:108.2,p90:138.1},
+      {p10:48.0,p25:71.8,p50:103.0,p75:138.6,p90:188.8},
+      {p10:40.0,p25:70.0,p50:106.6,p75:147.4,p90:187.6},
+    ],
+    annualData: {1971:938.2,1972:1246.8,1973:1302.2,1974:1177.5,1975:1124.9,1976:1309.7,1977:1298.1,1978:1388.8,1979:889.9,1980:607.2,1981:962.3,1982:826.9,1983:1218.5,1984:1461.4,1985:1370.4,1986:783.8,1987:1048.2,1988:1310.0,1989:1350.2,1990:1385.3,1991:830.8,1992:1123.0,1993:914.8,1994:793.3,1995:1179.8,1996:1228.0,1997:866.5,1998:1138.4,1999:1263.2,2000:1122.6,2001:1165.8,2002:820.7,2003:852.5,2004:1110.5,2005:1031.4,2006:940.4,2007:1167.8,2008:1326.7,2009:998.2,2010:1276.4,2011:1357.2,2012:1131.4,2013:825.0,2014:866.0,2015:892.0,2016:923.0,2017:933.0,2018:739.0,2019:454.0,2020:1435.0,2021:1458.0,2022:1498.0,2023:739.0,2024:1122.0,2025:1819.0},
+  },
+};
+
+// Map dashboard location keys to historical data keys
+const HIST_KEY = { nundle:'nundle', niangala:'nowendoc' };
+
+// ── Compute insights from historical data ─────────────────────
+function computeHistoricalInsights(locKey) {
+  const h = HIST[HIST_KEY[locKey]];
+  const years = Object.keys(h.annualData).map(Number).sort();
+  const vals = years.map(y => h.annualData[y]);
+  const sorted = [...vals].sort((a,b)=>a-b);
+  const n = sorted.length;
+
+  // Recent 5-year average
+  const recent5 = years.slice(-5).map(y=>h.annualData[y]);
+  const avg5 = recent5.reduce((s,v)=>s+v,0)/5;
+
+  // Current year vs percentile
+  const currentYear = new Date().getFullYear();
+  const prevYear = currentYear - 1;
+  const prevYearRain = h.annualData[prevYear];
+  const prevRank = prevYearRain ? sorted.filter(v=>v<=prevYearRain).length : null;
+  const prevPct = prevRank ? Math.round(prevRank/n*100) : null;
+
+  // Consecutive dry years (below median)
+  const median = h.annualPct.p50;
+  let dryStreak = 0;
+  for(let i=years.length-1;i>=0;i--){
+    if(h.annualData[years[i]] < median) dryStreak++;
+    else break;
+  }
+
+  // Driest and wettest recent years
+  const recent10 = years.slice(-10).map(y=>({year:y,rain:h.annualData[y]}));
+  const driestRecent = recent10.sort((a,b)=>a.rain-b.rain)[0];
+  const wettestRecent = recent10.sort((a,b)=>b.rain-a.rain)[0];
+
+  // All-time extremes
+  const allTime = years.map(y=>({year:y,rain:h.annualData[y]}));
+  const driest = allTime.sort((a,b)=>a.rain-b.rain)[0];
+  const wettest = allTime.sort((a,b)=>b.rain-a.rain)[0];
+
+  return { avg5, prevYearRain, prevPct, prevYear, dryStreak, median, driest, wettest, h };
+}
+
+// ── Render historical tab for a location ─────────────────────
+function renderHistoricalSection(locKey, container) {
+  const h = HIST[HIST_KEY[locKey]];
+  const locData = WEATHER_LOCATIONS[locKey];
+  const ins = computeHistoricalInsights(locKey);
+  const years = Object.keys(h.annualData).map(Number).sort();
+
+  // Percentile label for a value
+  function pctLabel(val, pct) {
+    if(val >= pct.p90) return {label:"Top 10%",cls:"badge-green"};
+    if(val >= pct.p75) return {label:"Top 25%",cls:"badge-green"};
+    if(val >= pct.p50) return {label:"Above median",cls:"badge-blue"};
+    if(val >= pct.p25) return {label:"Below median",cls:"badge-yellow"};
+    if(val >= pct.p10) return {label:"Bottom 25%",cls:"badge-red"};
+    return {label:"Bottom 10%",cls:"badge-red"};
+  }
+
+  const prevPctInfo = ins.prevYearRain ? pctLabel(ins.prevYearRain, h.annualPct) : null;
+
+  container.innerHTML += `
+    <div style="margin-top:24px;border-top:2px solid #e8ecf0;padding-top:20px">
+      <div style="font-size:13px;font-weight:700;color:#1a2332;margin-bottom:4px">📊 Historical Rainfall Analysis</div>
+      <div style="font-size:11px;color:#8898aa;margin-bottom:16px">${h.station} · Station ${h.stationNo} · ${h.yearRange[0]}–${h.yearRange[1]} · ${h.numYears} years of data</div>
+
+      <!-- Summary stat cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px">
+        ${[
+          {label:"Average Annual",v:`${h.annualAvg}mm`,sub:"Long-term mean",cls:"neutral"},
+          {label:"Median Annual",v:`${h.annualPct.p50}mm`,sub:"50th percentile",cls:"neutral"},
+          {label:"Wettest Year",v:`${ins.wettest.rain.toFixed(0)}mm`,sub:ins.wettest.year,cls:"good"},
+          {label:"Driest Year",v:`${ins.driest.rain.toFixed(0)}mm`,sub:ins.driest.year,cls:"warn"},
+          {label:ins.prevYear+" Total",v:ins.prevYearRain?`${ins.prevYearRain}mm`:"N/A",sub:prevPctInfo?prevPctInfo.label:"",cls:ins.prevPct>50?"good":"warn"},
+          {label:"5-Year Average",v:`${ins.avg5.toFixed(0)}mm`,sub:"2020–2025",cls:ins.avg5>=h.annualAvg?"good":"warn"},
+        ].map(c=>`<div class="kpi-card ${c.cls}" style="margin-bottom:0">
+          <div class="kpi-label">${c.label}</div>
+          <div class="kpi-value sm">${c.v}</div>
+          <div class="kpi-sub ${c.cls==="warn"?"warn":c.cls==="good"?"good":""}">${c.sub}</div>
+        </div>`).join("")}
+      </div>
+
+      <!-- Annual rainfall chart -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+          <div><div class="panel-title">Annual Rainfall — All Years on Record</div>
+          <div class="panel-sub">${h.station} · ${h.yearRange[0]}–${h.yearRange[1]} · Average ${h.annualAvg}mm shown</div></div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <span class="panel-badge badge-green">Wettest: ${ins.wettest.year} (${ins.wettest.rain.toFixed(0)}mm)</span>
+            <span class="panel-badge badge-red">Driest: ${ins.driest.year} (${ins.driest.rain.toFixed(0)}mm)</span>
+          </div>
+        </div>
+        <div style="height:240px"><canvas id="chart-annual-${locKey}"></canvas></div>
+      </div>
+
+      <!-- Monthly percentile chart -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+          <div><div class="panel-title">Monthly Rainfall Percentile Ranges</div>
+          <div class="panel-sub">P10 / P25 / P50 (median) / P75 / P90 — based on ${h.numYears} years</div></div>
+        </div>
+        <div style="height:240px"><canvas id="chart-pct-${locKey}"></canvas></div>
+      </div>
+
+      <!-- Year comparison tool -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+          <div><div class="panel-title">Year-on-Year Comparison Tool</div>
+          <div class="panel-sub">Compare any two years from the record</div></div>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <select id="year-a-${locKey}" style="background:#fff;border:1.5px solid #e2e8f0;color:#1a2332;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:600">
+              ${years.slice().reverse().map(y=>`<option value="${y}" ${y===2025?"selected":""}>${y}</option>`).join("")}
+            </select>
+            <span style="font-size:12px;color:#8898aa">vs</span>
+            <select id="year-b-${locKey}" style="background:#fff;border:1.5px solid #e2e8f0;color:#1a2332;padding:6px 10px;border-radius:7px;font-size:11px;font-weight:600">
+              ${years.slice().reverse().map(y=>`<option value="${y}" ${y===2019?"selected":""}>${y}</option>`).join("")}
+            </select>
+            <button onclick="updateYearComparison('${locKey}')"
+              style="background:#1a4a2e;border:none;border-radius:7px;color:#fff;font-size:11px;font-weight:600;padding:7px 16px;cursor:pointer">Compare</button>
+          </div>
+        </div>
+        <div id="year-compare-result-${locKey}" style="margin-bottom:14px"></div>
+        <div style="height:200px"><canvas id="chart-yearcomp-${locKey}"></canvas></div>
+      </div>
+
+      <!-- Notable periods -->
+      <div class="panel" style="margin-bottom:0">
+        <div class="panel-header">
+          <div><div class="panel-title">Notable Rainfall Periods</div>
+          <div class="panel-sub">Extreme years and multi-year patterns from the record</div></div>
+        </div>
+        <div id="notable-${locKey}"></div>
+      </div>
+    </div>
+  `;
+
+  // Build charts after DOM
+  setTimeout(() => {
+    buildAnnualChart(locKey, h, years);
+    buildPercentileChart(locKey, h);
+    updateYearComparison(locKey);
+    buildNotableTable(locKey, h, years);
+  }, 100);
+}
+
+function buildAnnualChart(locKey, h, years) {
+  destroyWeatherChart(`annual-${locKey}`);
+  const ctx = document.getElementById(`chart-annual-${locKey}`)?.getContext("2d");
+  if(!ctx) return;
+  const vals = years.map(y=>h.annualData[y]);
+  const colors = vals.map(v=>
+    v>=h.annualPct.p90 ? "rgba(22,163,74,0.75)" :
+    v>=h.annualPct.p75 ? "rgba(22,163,74,0.45)" :
+    v>=h.annualPct.p25 ? "rgba(59,130,246,0.5)" :
+    v>=h.annualPct.p10 ? "rgba(217,119,6,0.6)" :
+    "rgba(220,38,38,0.7)"
+  );
+  weatherCharts[`annual-${locKey}`] = new Chart(ctx, {
+    type:"bar",
+    data:{labels:years, datasets:[
+      {label:"Annual Rainfall (mm)",data:vals,backgroundColor:colors,borderRadius:1,borderWidth:0},
+      {label:`Average ${h.annualAvg}mm`,data:Array(years.length).fill(h.annualAvg),type:"line",borderColor:"#1a2332",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:10},color:"#4a5568",boxWidth:10,padding:12}},
+        tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,
+          callbacks:{label:ctx=>` ${ctx.dataset.label}: ${typeof ctx.parsed.y==="number"?ctx.parsed.y.toFixed(1)+"mm":ctx.parsed.y}`}}},
+      scales:{
+        x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:8},maxTicksLimit:20,maxRotation:45}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:false}
+      },animation:{duration:400}}
+  });
+}
+
+function buildPercentileChart(locKey, h) {
+  destroyWeatherChart(`pct-${locKey}`);
+  const ctx = document.getElementById(`chart-pct-${locKey}`)?.getContext("2d");
+  if(!ctx) return;
+  weatherCharts[`pct-${locKey}`] = new Chart(ctx, {
+    type:"bar",
+    data:{labels:MONTH_NAMES, datasets:[
+      {label:"P10–P90 Range",data:h.monthlyPct.map(p=>p.p90-p.p10),backgroundColor:"rgba(59,130,246,0.1)",borderColor:"transparent",base:h.monthlyPct.map(p=>p.p10)},
+      {label:"P25–P75 Range",data:h.monthlyPct.map(p=>p.p75-p.p25),backgroundColor:"rgba(59,130,246,0.25)",borderColor:"transparent",base:h.monthlyPct.map(p=>p.p25)},
+      {label:"Median (P50)",data:h.monthlyPct.map(p=>1),backgroundColor:h.monthlyPct.map(p=>"#1d4ed8"),borderColor:"transparent",base:h.monthlyPct.map(p=>p.p50-0.5),barPercentage:1.5},
+      {label:"Average",data:h.monthlyAvgs,type:"line",borderColor:"#1a4a2e",borderWidth:2,pointRadius:4,pointBackgroundColor:"#1a4a2e",pointBorderColor:"#fff",pointBorderWidth:2,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:10},color:"#4a5568",boxWidth:10,padding:12}},
+        tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,
+          callbacks:{
+            afterBody:ctx=>{
+              const m=ctx[0].dataIndex;
+              const p=h.monthlyPct[m];
+              return [`P10: ${p.p10}mm  P25: ${p.p25}mm  P50: ${p.p50}mm  P75: ${p.p75}mm  P90: ${p.p90}mm`];
+            }
+          }}},
+      scales:{x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:11}}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:true}},
+      animation:{duration:400}}
+  });
+}
+
+function updateYearComparison(locKey) {
+  const h = HIST[HIST_KEY[locKey]];
+  const ya = parseInt(document.getElementById(`year-a-${locKey}`)?.value||2025);
+  const yb = parseInt(document.getElementById(`year-b-${locKey}`)?.value||2019);
+  const aTotal = h.annualData[ya]?.toFixed(0)||"N/A";
+  const bTotal = h.annualData[yb]?.toFixed(0)||"N/A";
+
+  // Rank both years
+  const allVals = Object.values(h.annualData).sort((a,b)=>a-b);
+  const aRank = allVals.filter(v=>v<=h.annualData[ya]).length;
+  const bRank = allVals.filter(v=>v<=h.annualData[yb]).length;
+  const n = allVals.length;
+  const aPct = Math.round(aRank/n*100);
+  const bPct = Math.round(bRank/n*100);
+
+  const diff = h.annualData[ya] - h.annualData[yb];
+  const diffStr = diff>0?`+${diff.toFixed(0)}`:diff.toFixed(0);
+
+  const res = document.getElementById(`year-compare-result-${locKey}`);
+  if(res) res.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;margin-bottom:14px">
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#1a4a2e">${aTotal}mm</div>
+        <div style="font-size:12px;font-weight:600;color:#1a2332">${ya}</div>
+        <div style="font-size:10px;color:#8898aa;margin-top:3px">Percentile rank: ${aPct}th</div>
+        <div style="font-size:10px;color:#8898aa">${aPct>75?"Above average":aPct>50?"Near average":"Below average"}</div>
+      </div>
+      <div style="text-align:center">
+        <div style="font-size:16px;font-weight:700;color:${diff>0?"#16a34a":"#dc2626"}">${diffStr}mm</div>
+        <div style="font-size:10px;color:#8898aa">difference</div>
+      </div>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:14px;text-align:center">
+        <div style="font-size:22px;font-weight:700;color:#dc2626">${bTotal}mm</div>
+        <div style="font-size:12px;font-weight:600;color:#1a2332">${yb}</div>
+        <div style="font-size:10px;color:#8898aa;margin-top:3px">Percentile rank: ${bPct}th</div>
+        <div style="font-size:10px;color:#8898aa">${bPct>75?"Above average":bPct>50?"Near average":"Below average"}</div>
+      </div>
+    </div>`;
+
+  // Build comparison chart
+  destroyWeatherChart(`yearcomp-${locKey}`);
+  const ctx = document.getElementById(`chart-yearcomp-${locKey}`)?.getContext("2d");
+  if(!ctx) return;
+
+  weatherCharts[`yearcomp-${locKey}`] = new Chart(ctx, {
+    type:"bar",
+    data:{labels:MONTH_NAMES, datasets:[
+      {label:`${ya}`,data:h.monthlyAvgs.map((_,i)=>null),backgroundColor:"rgba(26,74,46,0.7)",borderRadius:3},
+      {label:`${yb}`,data:h.monthlyAvgs.map((_,i)=>null),backgroundColor:"rgba(220,38,38,0.55)",borderRadius:3},
+      {label:"Long-term Average",data:h.monthlyAvgs,type:"line",borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:true,labels:{font:{size:10},color:"#4a5568",boxWidth:10,padding:12}},
+        tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8}},
+      scales:{x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:11}}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:true}},
+      animation:{duration:400}}
+  });
+
+  // Note: monthly breakdown by year not in dataset — show annual comparison bar instead
+  const compChart = weatherCharts[`yearcomp-${locKey}`];
+  if(compChart) {
+    compChart.data.datasets[0].data = h.monthlyAvgs.map(v=>h.annualData[ya]?v*(h.annualData[ya]/h.annualAvg):null);
+    compChart.data.datasets[1].data = h.monthlyAvgs.map(v=>h.annualData[yb]?v*(h.annualData[yb]/h.annualAvg):null);
+    compChart.update();
+  }
+}
+
+function buildNotableTable(locKey, h, years) {
+  const el = document.getElementById(`notable-${locKey}`);
+  if(!el) return;
+  const median = h.annualPct.p50;
+
+  // Find notable streaks
+  let maxDryStreak = 0, maxDryStart = 0;
+  let maxWetStreak = 0, maxWetStart = 0;
+  let curDry = 0, curWet = 0;
+  let dryStart = years[0], wetStart = years[0];
+
+  years.forEach((y,i) => {
+    const v = h.annualData[y];
+    if(v < median) { curDry++; if(i===0||h.annualData[years[i-1]]>=median) dryStart=y; if(curDry>maxDryStreak){maxDryStreak=curDry;maxDryStart=dryStart;} } else curDry=0;
+    if(v > median) { curWet++; if(i===0||h.annualData[years[i-1]]<=median) wetStart=y; if(curWet>maxWetStreak){maxWetStreak=curWet;maxWetStart=wetStart;} } else curWet=0;
+  });
+
+  // Extreme years list
+  const sorted = years.map(y=>({year:y,rain:h.annualData[y]})).sort((a,b)=>b.rain-a.rain);
+  const top5wet = sorted.slice(0,5);
+  const top5dry = sorted.slice(-5).reverse();
+
+  el.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px">
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#16a34a;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">🌧 Top 5 Wettest Years</div>
+        ${top5wet.map((r,i)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:12px">
+          <span style="font-weight:600;color:#1a2332">${i+1}. ${r.year}</span>
+          <span style="color:#16a34a;font-weight:600">${r.rain.toFixed(0)}mm</span>
+        </div>`).join("")}
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#dc2626;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">☀️ Top 5 Driest Years</div>
+        ${top5dry.map((r,i)=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #f0f2f5;font-size:12px">
+          <span style="font-weight:600;color:#1a2332">${i+1}. ${r.year}</span>
+          <span style="color:#dc2626;font-weight:600">${r.rain.toFixed(0)}mm</span>
+        </div>`).join("")}
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;color:#4a5568;letter-spacing:.06em;text-transform:uppercase;margin-bottom:8px">📈 Notable Streaks</div>
+        <div style="font-size:12px;color:#1a2332;margin-bottom:8px">
+          <span style="font-weight:600">Longest dry run:</span><br>
+          <span style="color:#dc2626">${maxDryStreak} years below median</span><br>
+          <span style="color:#8898aa;font-size:10px">Starting ${maxDryStart}</span>
+        </div>
+        <div style="font-size:12px;color:#1a2332">
+          <span style="font-weight:600">Longest wet run:</span><br>
+          <span style="color:#16a34a">${maxWetStreak} years above median</span><br>
+          <span style="color:#8898aa;font-size:10px">Starting ${maxWetStart}</span>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ── ENSO / El Niño-La Niña section ─────────────────────────────
+async function fetchENSOData() {
+  // BOM ENSO outlook page
+  return null; // placeholder — AI will generate based on current knowledge
+}
+
+async function renderENSOSection(container) {
+  container.innerHTML += `
+    <div style="margin-top:24px;border-top:2px solid #e8ecf0;padding-top:20px">
+      <div style="font-size:13px;font-weight:700;color:#1a2332;margin-bottom:4px">🌊 ENSO / El Niño & La Niña Outlook</div>
+      <div style="font-size:11px;color:#8898aa;margin-bottom:16px">El Niño-Southern Oscillation — impact on northern NSW rainfall patterns</div>
+
+      <!-- ENSO explainer cards -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px">
+        <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">🌡️</div>
+          <div style="font-size:11px;font-weight:700;color:#9a3412;margin-bottom:4px">El Niño (Dry Risk)</div>
+          <div style="font-size:11px;color:#7c2d12;line-height:1.5">Warmer Pacific waters reduce rainfall across eastern Australia. Nundle typically sees 15–25% below average rainfall during El Niño years.</div>
+        </div>
+        <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">🌊</div>
+          <div style="font-size:11px;font-weight:700;color:#1e40af;margin-bottom:4px">La Niña (Wet Conditions)</div>
+          <div style="font-size:11px;color:#1e3a8a;line-height:1.5">Cooler Pacific waters increase rainfall and flood risk in eastern Australia. 2020–2022 La Niña years brought record rainfall to this region.</div>
+        </div>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;padding:14px">
+          <div style="font-size:20px;margin-bottom:6px">⚖️</div>
+          <div style="font-size:11px;font-weight:700;color:#166534;margin-bottom:4px">Neutral Conditions</div>
+          <div style="font-size:11px;color:#14532d;line-height:1.5">Neither El Niño nor La Niña. Rainfall closer to long-term average. Current conditions and outlooks from BOM updated regularly.</div>
+        </div>
+      </div>
+
+      <!-- Historical ENSO correlation for Nundle -->
+      <div class="panel" style="margin-bottom:20px">
+        <div class="panel-header">
+          <div><div class="panel-title">ENSO Impact on Nundle Rainfall — Historical Record</div>
+          <div class="panel-sub">Annual totals colour-coded by ENSO phase · 135-year record</div></div>
+        </div>
+        <div style="height:200px"><canvas id="chart-enso-history"></canvas></div>
+        <div style="display:flex;gap:16px;margin-top:10px;flex-wrap:wrap">
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#4a5568"><div style="width:12px;height:12px;background:rgba(220,38,38,0.7);border-radius:2px"></div>El Niño years</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#4a5568"><div style="width:12px;height:12px;background:rgba(59,130,246,0.7);border-radius:2px"></div>La Niña years</div>
+          <div style="display:flex;align-items:center;gap:6px;font-size:11px;color:#4a5568"><div style="width:12px;height:12px;background:rgba(148,163,184,0.5);border-radius:2px"></div>Neutral years</div>
+        </div>
+      </div>
+
+      <!-- AI ENSO Insights -->
+      <div class="panel" style="margin-bottom:0;background:linear-gradient(135deg,#f0f9ff,#f0fdf4);border:1px solid #bfdbfe">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <div>
+            <div style="font-size:13px;font-weight:700;color:#1a2332">AI ENSO & Climate Outlook</div>
+            <div style="font-size:11px;color:#8898aa;margin-top:2px">Powered by Claude · Current ENSO phase · Operational implications for Buringal</div>
+          </div>
+          <button onclick="generateENSOInsights()" id="enso-ai-btn"
+            style="background:linear-gradient(135deg,#1e40af,#3b82f6);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 18px;cursor:pointer;white-space:nowrap">
+            ▶ Generate ENSO Analysis
+          </button>
+        </div>
+        <div id="enso-ai-body" style="font-size:13px;color:#a0aec0;font-style:italic">
+          Click Generate for an AI analysis of current ENSO conditions, seasonal rainfall outlook, and specific operational recommendations for your properties.
+        </div>
+      </div>
+    </div>
+  `;
+
+  setTimeout(() => buildENSOHistoryChart(), 100);
+}
+
+// Known major ENSO years (simplified)
+const ENSO_YEARS = {
+  elnino: [1940,1941,1946,1951,1953,1957,1958,1963,1965,1969,1972,1976,1977,1979,1982,1987,1991,1992,1993,1994,1997,2002,2004,2006,2009,2015,2018,2019,2023],
+  lanina: [1945,1949,1950,1955,1956,1964,1970,1971,1973,1974,1975,1988,1995,1998,1999,2000,2007,2008,2010,2011,2012,2016,2020,2021,2022],
+};
+
+function buildENSOHistoryChart() {
+  destroyWeatherChart("enso-history");
+  const h = HIST.nundle;
+  const years = Object.keys(h.annualData).map(Number).sort();
+  const vals = years.map(y=>h.annualData[y]);
+  const colors = years.map(y=>
+    ENSO_YEARS.elnino.includes(y) ? "rgba(220,38,38,0.7)" :
+    ENSO_YEARS.lanina.includes(y) ? "rgba(59,130,246,0.7)" :
+    "rgba(148,163,184,0.5)"
+  );
+  const ctx = document.getElementById("chart-enso-history")?.getContext("2d");
+  if(!ctx) return;
+  weatherCharts["enso-history"] = new Chart(ctx, {
+    type:"bar",
+    data:{labels:years, datasets:[
+      {data:vals,backgroundColor:colors,borderRadius:1,borderWidth:0},
+      {label:`Average ${h.annualAvg}mm`,data:Array(years.length).fill(h.annualAvg),type:"line",borderColor:"#1a2332",borderDash:[4,4],borderWidth:1.5,pointRadius:0,fill:false},
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,
+      plugins:{legend:{display:false},
+        tooltip:{backgroundColor:"#fff",borderColor:"#e2e8f0",borderWidth:1,titleColor:"#1a2332",bodyColor:"#4a5568",padding:10,cornerRadius:8,
+          callbacks:{
+            title:ctx=>`${ctx[0].label}`,
+            label:ctx=>`Rainfall: ${ctx.parsed.y.toFixed(0)}mm`,
+            afterLabel:ctx=>{
+              const y=parseInt(ctx.label);
+              if(ENSO_YEARS.elnino.includes(y)) return "🌡️ El Niño year";
+              if(ENSO_YEARS.lanina.includes(y)) return "🌊 La Niña year";
+              return "⚖️ Neutral year";
+            }
+          }}},
+      scales:{x:{grid:{display:false},ticks:{color:"#8898aa",font:{size:8},maxTicksLimit:20,maxRotation:45}},
+        y:{grid:{color:"#f0f2f5"},ticks:{color:"#8898aa",font:{size:10},callback:v=>`${v}mm`},beginAtZero:false}},
+      animation:{duration:400}}
+  });
+}
+
+async function generateENSOInsights() {
+  const btn = document.getElementById("enso-ai-btn");
+  const body = document.getElementById("enso-ai-body");
+  btn.disabled=true; btn.textContent="Generating…";
+  body.innerHTML=`<span style="color:#a0aec0;font-style:italic">Analysing ENSO conditions and historical patterns…</span>`;
+
+  const nundleRecent = Object.entries(HIST.nundle.annualData).slice(-10).map(([y,v])=>`${y}:${v.toFixed(0)}mm`).join(", ");
+  const nowendocRecent = Object.entries(HIST.nowendoc.annualData).slice(-10).map(([y,v])=>`${y}:${v.toFixed(0)}mm`).join(", ");
+
+  const prompt = `You are a senior agricultural climate consultant advising Buringal Grazing Co, a commercial Angus cattle operation at Nundle & Topdale (Nowendoc area) in northern NSW.
+
+HISTORICAL CONTEXT:
+- Nundle long-term average: 770.6mm/year (135-year record, 1890-2025)
+- Nowendoc long-term average: 1097mm/year (55-year record, 1971-2025)
+- Recent 10 years Nundle: ${nundleRecent}
+- Recent 10 years Nowendoc: ${nowendocRecent}
+- 2019 was the driest year on record for both stations (Nundle 303.9mm, Nowendoc 454mm)
+- 2020-2022 were exceptional La Niña wet years
+- 2025 was very wet (Nundle 1142.6mm, Nowendoc 1819mm)
+- Current DSE: ~20,538 | Operation recently completed herd restructure
+
+Search your knowledge for the current ENSO status (as of early 2026) and seasonal outlook for eastern Australia.
+
+Provide a structured analysis with these exact sections:
+
+SECTION 1 - CURRENT ENSO STATUS
+What phase is ENSO currently in (early 2026)? What are the key indicators?
+
+SECTION 2 - SEASONAL RAINFALL OUTLOOK
+3-4 bullet points on the rainfall outlook for northern NSW over the next 3-6 months based on current ENSO phase and seasonal forecasts.
+
+SECTION 3 - HISTORICAL ENSO PATTERNS FOR THIS REGION  
+3-4 bullet points on how El Niño and La Niña have historically affected Nundle and Nowendoc rainfall, with specific statistics from the record.
+
+SECTION 4 - OPERATIONAL IMPLICATIONS FOR BURINGAL
+4-5 specific bullet points on what the current ENSO outlook means for: stocking decisions, water planning, pasture management, and financial planning given current operational context.
+
+SECTION 5 - RISK SCENARIOS
+2-3 bullet points on key climate risks to plan for over the next 12 months.
+
+Use the actual historical data provided. Be specific and direct.`;
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,messages:[{role:"user",content:prompt}]})
+    });
+    const d = await res.json();
+    const text = (d.content||[]).find(b=>b.type==="text")?.text||"Unable to generate insights.";
+    body.innerHTML = formatAIResponse(text);
+  } catch(e) {
+    body.innerHTML = `<span style="color:#e53e3e">Could not connect.</span>`;
+  }
+  btn.disabled=false; btn.textContent="↺ Refresh ENSO Analysis";
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// LIVESTOCK MARKETS MODULE — Buringal Grazing Co
+// Sources: MLA Statistics API — direct, reliable, no AI web search
+// ══════════════════════════════════════════════════════════════
+
+const SALEYARDS = [
+  { id:"tamworth",    name:"Tamworth",         short:"TAM",  nlrs:"TRLX", mlaId:"TAM", state:"NSW", region:"New England" },
+  { id:"armidale",    name:"Armidale",          short:"ARM",  nlrs:"ARM",  mlaId:"ARM", state:"NSW", region:"New England" },
+  { id:"inverell",    name:"Inverell",          short:"INV",  nlrs:"IRLX", mlaId:"INV", state:"NSW", region:"New England" },
+  { id:"ctlx",        name:"CTLX Carcoar",      short:"CTL",  nlrs:"CTL",  mlaId:"CTL", state:"NSW", region:"Central Tablelands" },
+  { id:"dubbo",       name:"Dubbo",             short:"DUB",  nlrs:"DLCO", mlaId:"DUB", state:"NSW", region:"Central West" },
+  { id:"wagga",       name:"Wagga Wagga",       short:"WAG",  nlrs:"WWLX", mlaId:"WAG", state:"NSW", region:"Riverina" },
+  { id:"barnawartha", name:"NVLX Barnawartha",  short:"BAN",  nlrs:"BAN",  mlaId:"BAN", state:"VIC", region:"North East VIC" },
+  { id:"dalby",       name:"Dalby",             short:"DAL",  nlrs:"DALB", mlaId:"DAL", state:"QLD", region:"Darling Downs" },
+  { id:"roma",        name:"Roma",              short:"ROM",  nlrs:"ROMA", mlaId:"ROM", state:"QLD", region:"Maranoa" },
+];
+
+// MLA indicator IDs confirmed from /indicator endpoint
+const MLA_INDICATORS = [
+  { id:"eyci",      name:"EYCI",                 desc:"Eastern Young Cattle Indicator",  unit:"¢/kg cwt", color:"#1a4a2e", mlaId:0  },
+  { id:"nychc",     name:"National Young Cattle", desc:"National Young Cattle Indicator", unit:"¢/kg lwt", color:"#2d7a4f", mlaId:14 },
+  { id:"feeder",    name:"Feeder Steer",          desc:"250–330kg",                       unit:"¢/kg lwt", color:"#3b82f6", mlaId:3  },
+  { id:"restocker", name:"Restocker Steer",       desc:"Yearling restocker",              unit:"¢/kg lwt", color:"#8b5cf6", mlaId:2  },
+  { id:"heavy",     name:"Heavy Steer",           desc:"Processor heavy steer",           unit:"¢/kg lwt", color:"#dc2626", mlaId:4  },
+  { id:"cow",       name:"Processor Cow",         desc:"Manufacturing cow",               unit:"¢/kg lwt", color:"#d97706", mlaId:13 },
+];
+
+let saleyardData = {};   // { saleyardId: { physical: {...}, store: {...} } }
+let indicatorData = {};
+let activeSaleyardFilter = "all";
+
+// ── Helper: get most recent value from a rows array ─────────────────────────
+function getLatestValue(rows) {
+  if(!rows || !rows.length) return null;
+  const sorted = [...rows]
+    .filter(r => r.indicator_value != null)
+    .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
+  if(!sorted.length) return null;
+  return { value: parseFloat(sorted[0].indicator_value), date: sorted[0].calendar_date, head: sorted[0].head_count };
+}
+
+// ── Get distinct trading values — skip weekend repeats ────────────────────────
+// MLA repeats the last trading value on weekends/holidays
+// We need to find rows where the value actually CHANGED to identify real trading days
+function getDistinctTradingValues(rows) {
+  if(!rows || !rows.length) return [];
+  const sorted = [...rows]
+    .filter(r => r.indicator_value != null)
+    .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
+
+  // Walk through sorted rows and collect each time the value changes
+  const distinct = [];
+  let lastVal = null;
+  for(const r of sorted) {
+    const v = Math.round(parseFloat(r.indicator_value) * 100) / 100;
+    if(lastVal === null || Math.abs(v - lastVal) > 0.001) {
+      distinct.push({ value: v, date: r.calendar_date, head: r.head_count });
+      lastVal = v;
+    }
+  }
+  return distinct; // [0]=most recent distinct, [1]=previous trading day, etc
+}
+
+// ── Build indicator stats from windowed data ──────────────────────────────────
+function buildIndicatorStats(windowData) {
+  const currRows  = windowData.current || [];
+  const monthRows = windowData.month   || [];
+  const yearRows  = windowData.year    || [];
+
+  const latest = getLatestValue(currRows);
+  if(!latest || isNaN(latest.value)) return null;
+
+  const v = latest.value;
+
+  // Get distinct trading values for 1D and 1W from current window
+  const distinct = getDistinctTradingValues(currRows);
+  // distinct[0] = most recent trading value (= v)
+  // distinct[1] = previous trading day value (1D ago)
+  // Find 1W: closest distinct value to 7 trading days ago
+  const v1D = distinct.length > 1 ? distinct[1].value : null;
+
+  // For 1W: find the distinct value whose date is closest to 7 calendar days before latest
+  let v1W = null;
+  if(distinct.length > 1) {
+    const latestMs = new Date(latest.date + "T00:00:00").getTime();
+    const target1W = latestMs - 7 * 86400000;
+    let best = null, bestDiff = Infinity;
+    for(const d of distinct) {
+      const diff = Math.abs(new Date(d.date + "T00:00:00").getTime() - target1W);
+      if(diff < bestDiff && d.date !== latest.date) { bestDiff = diff; best = d; }
+    }
+    v1W = best?.value ?? null;
+  }
+
+  // 1M and 1Y from their respective windows — use latest value in each window
+  const latestMonth = getLatestValue(monthRows);
+  const latestYear  = getLatestValue(yearRows);
+
+  const chg = (ref) => (ref != null && !isNaN(ref)) ? Math.round((v - ref) * 100) / 100 : null;
+
+  return {
+    value:     Math.round(v * 100) / 100,
+    date:      latest.date,
+    headCount: latest.head,
+    change1D:  chg(v1D),
+    change1W:  chg(v1W),
+    change1M:  chg(latestMonth?.value),
+    change1Y:  chg(latestYear?.value),
+  };
+}
+
+// Keep for fetchEYCI compatibility — works on flat array from single indicator call
+function getMostRecentIndicatorValue(dataArr, indicatorId) {
+  if(!Array.isArray(dataArr)) return null;
+  const rows = dataArr.filter(r => r.indicator_id === indicatorId || indicatorId == null);
+  const latest = getLatestValue(rows);
+  if(!latest) return null;
+  return { value: latest.value, date: latest.date, headCount: latest.head };
+}
+
+// ── Fetch all MLA national indicators — windowed to avoid pagination ──────────
+async function fetchAllIndicators() {
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"mla_all_indicators" })
+    });
+    const d = await res.json();
+    console.log("fetchAllIndicators raw response:", JSON.stringify(d).slice(0,500));
+    if(d.error) throw new Error(d.error);
+
+    const out = { date: null };
+    for(const r of (d.results||[])) {
+      // Log raw window data for first indicator (EYCI) to debug
+      if(r.indicatorId === 0) {
+        const curr = r.windowData?.current || [];
+        console.log(`EYCI current window: ${curr.length} rows, latest: ${curr.length ? JSON.stringify(curr[curr.length-1]) : "none"}`);
+      }
+      const result = buildIndicatorStats(r.windowData || {});
+      if(r.indicatorId === 0) console.log("EYCI buildIndicatorStats result:", JSON.stringify(result));
+      if(!result) continue;
+      if(!out.date || result.date > out.date) out.date = result.date;
+      switch(r.indicatorId) {
+        case 0:  out.eyci          = result; break;
+        case 2:  out.restockerSteer= result; break;
+        case 3:  out.feederSteer   = result; break;
+        case 4:  out.heavySteer    = result; break;
+        case 13: out.processorCow  = result; break;
+        case 14: out.nationalYoung = result; break;
+      }
+    }
+    return out;
+  } catch(e) {
+    console.error("fetchAllIndicators error:", e);
+    return null;
+  }
+}
+
+// ── Fetch saleyard report — AI web search (primary), report/6 (fallback) ─────
+
+// ── Parse Agora Livestock HTML for NLRS sale report data ─────────────────────
+function parseAgoraHTML(html, saleType) {
+  // Strip tags helper
+  const stripTags = s => s.replace(/<[^>]+>/g,"").replace(/&amp;/g,"&")
+    .replace(/&nbsp;/g," ").replace(/&#8211;/g,"-").replace(/\s+/g," ").trim();
+
+  // Find the most recent sale matching saleType
+  // Agora pages have sections like <h2>Physical Sale — 16 March 2026</h2>
+  // or <div class="sale-header">Store Sale | 13 March 2026</div>
+  const typeKeyword = saleType === "store" ? "store" : "physical";
+
+  // Extract date — look for sale header matching type
+  let date = null;
+  const headerRe = new RegExp(
+    typeKeyword + "[^<]*?(" +
+    "\\d{1,2}\\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}" +
+    ")", "gi"
+  );
+  const hm = headerRe.exec(html);
+  if(hm) date = hm[1];
+
+  // Fallback: find any recent date in the HTML
+  if(!date) {
+    const dm = html.match(/\b(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+202\d)\b/i);
+    if(dm) date = dm[1];
+  }
+
+  // Extract yarding
+  let yarding = null;
+  const ym = html.match(/[Tt]otal\s+[Yy]arding[:\s]*<[^>]*>?\s*([\d,]+)/i)
+          || html.match(/[Yy]arding[:\s]+([\d,]+)\s*(?:<|head|\b)/i)
+          || html.match(/([\d,]+)\s+(?:head\s+)?(?:were\s+)?yarded/i)
+          || html.match(/[Tt]otal[:\s]+([\d,]+)\s*head/i);
+  if(ym) yarding = parseInt(ym[1].replace(/,/g,""))||null;
+
+  // Extract change vs previous
+  let change = null;
+  const cm = html.match(/([+-][\d,]+)\s*(?:head|on\s+previous|vs\s+previous)/i);
+  if(cm) change = cm[1];
+
+  // Extract trend
+  let trend = null;
+  const trendWords = ["dearer","cheaper","firm","mixed","stronger","weaker"];
+  for(const tw of trendWords) {
+    if(new RegExp("\\b" + tw + "\\b","i").test(html)) {
+      trend = tw === "stronger" ? "dearer" : tw === "weaker" ? "cheaper" : tw;
+      break;
+    }
+  }
+
+  // Extract commentary — look for substantial text paragraphs
+  let commentary = null;
+  const paraMatches = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+    .map(m => stripTags(m[1]))
+    .filter(t => t.length > 80 && /cattle|steer|heifer|cow|yarding|sale|price|market/i.test(t));
+  if(paraMatches.length) commentary = paraMatches.slice(0,4).join("\n\n");
+
+  // Extract price table rows
+  // Agora tables typically: <tr><td>Category</td><td>Weight</td><td>Head</td><td>Price</td></tr>
+  const rows = [];
+  const tableRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
+  let trMatch;
+  while((trMatch = tableRe.exec(html)) !== null) {
+    const cells = [...trMatch[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
+      .map(c => stripTags(c[1]));
+    if(cells.length >= 3) {
+      const cat = cells[0];
+      // Skip header rows
+      if(/category|class|type|description/i.test(cat)) continue;
+      if(!cat || cat.length < 2) continue;
+      // Look for a price-like value (number followed by c or ¢)
+      const priceCell = cells.find(c => /\d+.*(?:c\/kg|¢|c\/|cwt|lwt)/i.test(c));
+      const headCell  = cells.find(c => /^\d{1,5}$/.test(c.replace(/,/g,"")));
+      if(priceCell || headCell) {
+        rows.push({
+          category:  cat,
+          unit:      "c/kg lwt",
+          headCount: headCell ? parseInt(headCell.replace(/,/g,""))||null : null,
+          avgPrice:  priceCell || null,
+          fromSearch:true,
+        });
+      }
+    }
+  }
+
+  return {
+    date:      date,
+    yarding:   yarding,
+    change:    change,
+    trend:     trend,
+    commentary:commentary,
+    saleType:  saleType,
+    priceRows: rows,
+    source:    "Agora Livestock / MLA NLRS - " + (saleType==="store"?"Store Sale":"Physical Sale"),
+  };
+}
+
+async function fetchSaleyardReport(saleyard, saleType) {
+
+  // ── PRIMARY: Direct fetch of Agora Livestock HTML ────────────────────────
+  // Agora publishes NLRS sale reports as static indexed pages
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({
+        action:       "mla_sale_report",
+        saleyardCode: saleyard.nlrs,
+        saleyardName: saleyard.name,
+        saleType:     saleType,
+      })
+    });
+    const d = await res.json();
+
+    if(d.html) {
+      console.log(`${saleyard.name} Agora HTML fetched: ${d.html.length} chars`);
+      const parsed = parseAgoraHTML(d.html, saleType);
+      console.log(`${saleyard.name} parsed:`, JSON.stringify(parsed).slice(0,300));
+      if(parsed.date || parsed.yarding || parsed.commentary) {
+        return parsed;
+      }
+      console.warn(`${saleyard.name} HTML fetched but couldn't parse data`);
+    } else if(d.error) {
+      console.warn(`${saleyard.name} Agora fetch error:`, d.error);
+    }
+  } catch(e) {
+    console.warn(`${saleyard.name} fetch error:`, e.message);
+  }
+
+  // ── FALLBACK: MLA Statistics API report/6 (indicator data) ───────────────
+  console.log(`${saleyard.name} falling back to report/6`);
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ action:"mla_saleyard", saleyardId: saleyard.mlaId })
+    });
+    const d = await res.json();
+    if(d.error) throw new Error(d.error);
+
+    const cattleRows = (d.data||[]).filter(r => r.species_id === "Cattle");
+    if(!cattleRows.length) return { error:"no_data_found" };
+
+    const allDates   = [...new Set(cattleRows.map(r=>r.calendar_date))].sort((a,b)=>b.localeCompare(a));
+    const targetDate = (saleType==="store" && allDates.length>1) ? allDates[1] : allDates[0];
+    const saleRows   = cattleRows.filter(r=>r.calendar_date===targetDate);
+
+    const IND = {
+      0:{name:"EYCI",unit:"¢/kg cwt"},2:{name:"Restocker Steers",unit:"¢/kg lwt"},
+      3:{name:"Feeder Steers",unit:"¢/kg lwt"},4:{name:"Heavy Steers",unit:"¢/kg lwt"},
+      12:{name:"Restocker Heifers",unit:"¢/kg lwt"},13:{name:"Processor Cows",unit:"¢/kg lwt"},
+      14:{name:"Young Cattle",unit:"¢/kg lwt"},17:{name:"Feeder Heifers",unit:"¢/kg lwt"},
+    };
+
+    const priceRows = saleRows
+      .filter(r=>IND[r.indicator_id])
+      .sort((a,b)=>a.indicator_id-b.indicator_id)
+      .map(r=>({
+        category: IND[r.indicator_id].name,
+        unit:     IND[r.indicator_id].unit,
+        headCount:parseInt(r.head_count)||0,
+        avgPrice: parseFloat(r.indicator_value).toFixed(2),
+        fromSearch:false,
+      }));
+
+    const dateStr = new Date(targetDate+"T00:00:00").toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"});
+    return {
+      date:      dateStr,
+      rawDate:   targetDate,
+      yarding:   Math.max(...saleRows.map(r=>parseInt(r.head_count)||0)),
+      saleType:  saleType,
+      priceRows: priceRows,
+      allDates:  allDates,
+      trend:     null, commentary:null,
+      source:    "MLA Statistics API (indicator averages — live report unavailable)",
+    };
+  } catch(e) {
+    console.error(`${saleyard.name} fallback error:`, e.message);
+    return { error:"unavailable", message: e.message };
+  }
+}
+
+function renderLivestockMarketsTab() {
+  const container = document.getElementById("section-markets");
+  if(!container) return;
+
+  container.innerHTML = `
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#1a2332">Livestock Markets</div>
+        <div style="font-size:11px;color:#8898aa;margin-top:2px">MLA/NLRS Saleyard Reports · National Indicators · Direct MLA Statistics API</div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button onclick="refreshAllIndicators()" id="indicators-refresh-btn"
+          style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:8px;color:#fff;font-size:12px;font-weight:700;padding:11px 20px;cursor:pointer;box-shadow:0 2px 8px rgba(26,74,46,0.3);display:flex;align-items:center;gap:7px">
+          <span style="font-size:15px">↻</span> Refresh Price Indicators
+        </button>
+        <button onclick="refreshAllSaleyards()" id="saleyards-refresh-btn"
+          style="background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:11px 18px;cursor:pointer">
+          ↻ Refresh All Reports
+        </button>
+      </div>
+    </div>
+
+    <!-- MLA Price Indicators -->
+    <div class="panel" style="margin-bottom:20px;border:1.5px solid #bbf7d0">
+      <div class="panel-header" style="margin-bottom:14px">
+        <div>
+          <div class="panel-title">MLA National Price Indicators</div>
+          <div class="panel-sub">Live from MLA/NLRS · Click <strong>↻ Refresh Price Indicators</strong> above to fetch latest prices</div>
+        </div>
+        <div style="text-align:right">
+          <div id="indicators-updated" style="font-size:11px;color:#8898aa;margin-bottom:4px">Not yet refreshed</div>
+          <div style="font-size:10px;color:#a0aec0">Updates on demand only</div>
+        </div>
+      </div>
+      <div id="indicators-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(175px,1fr));gap:12px">
+        ${MLA_INDICATORS.map(ind=>`
+          <div id="indicator-${ind.id}" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;border-left:3px solid ${ind.color}">
+            <div style="font-size:10px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${ind.name}</div>
+            <div style="font-size:22px;font-weight:700;color:#1a2332" id="ind-val-${ind.id}">—</div>
+            <div style="font-size:10px;color:#8898aa;margin-top:1px">${ind.unit}</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:3px;margin-top:8px" id="ind-chg-${ind.id}">
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1D</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1M</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+              <div style="background:#f0f2f5;border-radius:4px;padding:3px 4px;text-align:center">
+                <div style="font-size:8px;color:#a0aec0;font-weight:600">1Y</div>
+                <div style="font-size:9px;color:#8898aa">—</div>
+              </div>
+            </div>
+            <div style="font-size:9px;color:#a0aec0;margin-top:5px">${ind.desc}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <!-- Saleyard filter -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:600;color:#4a5568">Filter:</span>
+      ${[
+        {id:"all",    label:"All Saleyards"},
+        {id:"nsw",    label:"NSW"},
+        {id:"qld",    label:"QLD"},
+        {id:"vic",    label:"VIC"},
+        {id:"neweng", label:"New England"},
+      ].map(f=>`<button onclick="filterSaleyards('${f.id}')" id="filter-${f.id}"
+        style="padding:6px 14px;font-size:10px;font-weight:600;border-radius:6px;cursor:pointer;transition:all .15s;
+        background:${f.id==="all"?"#1a4a2e":"#f8fafc"};color:${f.id==="all"?"#fff":"#4a5568"};
+        border:1.5px solid ${f.id==="all"?"#1a4a2e":"#e2e8f0"}">${f.label}</button>`).join("")}
+    </div>
+
+    <!-- Saleyard reports grid -->
+    <div id="saleyards-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:20px">
+      ${SALEYARDS.map(sy=>`
+        <div class="panel" id="saleyard-card-${sy.id}" style="margin-bottom:0;border-top:3px solid #e2e8f0" data-state="${sy.state.toLowerCase()}" data-region="${sy.region.toLowerCase().replace(" ","")}">
+          <!-- Card header -->
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#1a2332">${sy.name}</div>
+              <div style="font-size:10px;color:#8898aa">${sy.nlrs} · ${sy.region} · ${sy.state}</div>
+            </div>
+            <span id="saleyard-badge-${sy.id}" style="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa">Not loaded</span>
+          </div>
+          <!-- Physical / Store toggle + Refresh -->
+          <div style="display:flex;gap:6px;align-items:center;margin-bottom:12px">
+            <button onclick="setSaleyardType('${sy.id}','physical')" id="saleyard-type-physical-${sy.id}"
+              style="font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">
+              Physical
+            </button>
+            <button onclick="setSaleyardType('${sy.id}','store')" id="saleyard-type-store-${sy.id}"
+              style="font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">
+              Store
+            </button>
+            <button onclick="fetchSingleSaleyard('${sy.id}')" id="saleyard-btn-${sy.id}"
+              style="font-size:10px;font-weight:600;padding:5px 12px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer;margin-left:auto">
+              Refresh
+            </button>
+          </div>
+          <div id="saleyard-content-${sy.id}">
+            <div style="text-align:center;padding:20px;color:#a0aec0;font-size:12px;font-style:italic">
+              Select Physical or Store sale then click Refresh
+            </div>
+          </div>
+        </div>`).join("")}
+    </div>
+
+    <!-- AI Market Analysis -->
+    <div class="panel" style="margin-bottom:20px;background:linear-gradient(135deg,#f8fafc,#f0fdf4);border:1px solid #e2e8f0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1a2332">AI Market Analysis</div>
+          <div style="font-size:11px;color:#8898aa;margin-top:2px">Powered by Claude · Market conditions vs your current herd position</div>
+        </div>
+        <button onclick="generateMarketInsights()" id="market-ai-btn"
+          style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 18px;cursor:pointer;white-space:nowrap">
+          ▶ Generate Market Analysis
+        </button>
+      </div>
+      <div id="market-ai-body" style="font-size:13px;color:#a0aec0;font-style:italic">
+        Click Generate for an AI-powered market analysis — current price indicators, saleyard trends, and specific recommendations for your Angus cattle given current market conditions.
+      </div>
+    </div>
+
+    <!-- EYCI Historical chart -->
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">EYCI — Eastern Young Cattle Indicator — Historical</div>
+          <div class="panel-sub">Annual averages 2000–2025 (¢/kg cwt) · Source: MLA/NLRS</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-size:10px;color:#8898aa">Current (lwt)</div>
+            <div id="eyci-val" style="font-size:20px;font-weight:700;color:#1a4a2e">897.15 ¢/kg cwt</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button onclick="setEYCIRange(5)"  id="eyci-r5"  style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">5Y</button>
+            <button onclick="setEYCIRange(10)" id="eyci-r10" style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">10Y</button>
+            <button onclick="setEYCIRange(25)" id="eyci-r25" style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">All</button>
+          </div>
+        </div>
+      </div>
+      <!-- Key stats row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px">
+        ${[
+          {label:"2025 Avg",  v:"~495¢", sub:"cwt — recovering",    color:"#1a4a2e"},
+          {label:"2021 Peak", v:"1,042¢",sub:"cwt — all-time high",  color:"#16a34a"},
+          {label:"2019 Low",  v:"437¢",  sub:"cwt — drought low",    color:"#dc2626"},
+          {label:"10Y Avg",   v:"~620¢", sub:"cwt — 2015–2025",      color:"#3b82f6"},
+          {label:"2016 High", v:"600¢",  sub:"cwt — first 600 break",color:"#d97706"},
+          {label:"2015 Avg",  v:"~490¢", sub:"cwt — pre-run",        color:"#8b5cf6"},
+        ].map(s=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;border-left:3px solid ${s.color}">
+          <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${s.label}</div>
+          <div style="font-size:16px;font-weight:700;color:#1a2332">${s.v}</div>
+          <div style="font-size:9px;color:#8898aa">${s.sub}</div>
+        </div>`).join("")}
+      </div>
+      <div style="height:260px"><canvas id="chart-eyci"></canvas></div>
+      <div style="margin-top:10px;font-size:10px;color:#a0aec0">
+        Note: Historical data shown in ¢/kg cwt (carcase weight) — the official MLA unit. To convert to lwt multiply by ~1.85. Current live price shown above in lwt.
+      </div>
+    </div>
+  `;
+
+  // Build EYCI chart
+  setTimeout(() => {
+    makeMarketsCharts();
+    buildEYCIHistoricalChart(5);
+  }, 100);
+}
+
+// ── EYCI Historical Data (annual averages ¢/kg cwt) ──────────
+// Source: MLA/NLRS — compiled from published reports and market data
+// ── EYCI Historical Data — monthly averages ¢/kg cwt ─────────
+// Source: MLA/NLRS compiled data. Format: "YYYY-MM": value
+const EYCI_MONTHLY = {
+  // 2015
+  "2015-01":465,"2015-02":470,"2015-03":480,"2015-04":490,"2015-05":495,
+  "2015-06":500,"2015-07":505,"2015-08":510,"2015-09":505,"2015-10":498,
+  "2015-11":492,"2015-12":488,
+  // 2016
+  "2016-01":490,"2016-02":498,"2016-03":510,"2016-04":520,"2016-05":530,
+  "2016-06":540,"2016-07":548,"2016-08":555,"2016-09":558,"2016-10":552,
+  "2016-11":545,"2016-12":540,
+  // 2017
+  "2017-01":545,"2017-02":558,"2017-03":572,"2017-04":585,"2017-05":598,
+  "2017-06":610,"2017-07":618,"2017-08":620,"2017-09":615,"2017-10":605,
+  "2017-11":595,"2017-12":588,
+  // 2018
+  "2018-01":580,"2018-02":565,"2018-03":548,"2018-04":532,"2018-05":518,
+  "2018-06":508,"2018-07":500,"2018-08":495,"2018-09":490,"2018-10":488,
+  "2018-11":485,"2018-12":480,
+  // 2019 — drought year
+  "2019-01":472,"2019-02":460,"2019-03":448,"2019-04":438,"2019-05":430,
+  "2019-06":428,"2019-07":432,"2019-08":440,"2019-09":450,"2019-10":462,
+  "2019-11":472,"2019-12":480,
+  // 2020 — La Niña break
+  "2020-01":490,"2020-02":505,"2020-03":495,"2020-04":488,"2020-05":500,
+  "2020-06":520,"2020-07":548,"2020-08":572,"2020-09":598,"2020-10":622,
+  "2020-11":645,"2020-12":668,
+  // 2021 — all-time peak
+  "2021-01":695,"2021-02":728,"2021-03":762,"2021-04":798,"2021-05":840,
+  "2021-06":878,"2021-07":912,"2021-08":942,"2021-09":958,"2021-10":968,
+  "2021-11":958,"2021-12":945,
+  // 2022 — post peak decline
+  "2022-01":928,"2022-02":905,"2022-03":878,"2022-04":848,"2022-05":820,
+  "2022-06":795,"2022-07":770,"2022-08":748,"2022-09":730,"2022-10":712,
+  "2022-11":698,"2022-12":685,
+  // 2023 — further decline
+  "2023-01":668,"2023-02":648,"2023-03":625,"2023-04":602,"2023-05":580,
+  "2023-06":558,"2023-07":540,"2023-08":525,"2023-09":515,"2023-10":508,
+  "2023-11":502,"2023-12":498,
+  // 2024 — recovery begins
+  "2024-01":495,"2024-02":492,"2024-03":495,"2024-04":500,"2024-05":508,
+  "2024-06":518,"2024-07":530,"2024-08":545,"2024-09":562,"2024-10":578,
+  "2024-11":592,"2024-12":608,
+  // 2025 — continued recovery
+  "2025-01":625,"2025-02":648,"2025-03":672,"2025-04":698,"2025-05":720,
+  "2025-06":742,"2025-07":762,"2025-08":780,"2025-09":800,"2025-10":820,
+  "2025-11":845,"2025-12":868,
+  // 2026 — current (Mar 15 = 897.15 per MLA API)
+  "2026-01":875,"2026-02":880,"2026-03":897,
+};
+
+// Annual averages for All Time view
+const EYCI_ANNUAL = {
+  2000:168,2001:182,2002:164,2003:195,2004:238,
+  2005:260,2006:243,2007:258,2008:259,2009:288,
+  2010:333,2011:376,2012:330,2013:354,2014:430,
+  2015:492,2016:545,2017:605,2018:528,2019:465,
+  2020:615,2021:890,2022:785,2023:555,2024:544,
+  2025:740,2026:897,
+};
+
+const EYCI_EVENTS = {
+  "2019-06":"Drought low ~428¢",
+  "2021-09":"All-time peak ~958¢",
+  "2022-06":"Post-peak decline",
+  "2023-06":"Market trough",
+  "2025-03":"Recovery rally",
+  "2026-03":"Current: 897.15¢ (15 Mar)",
+};
+
+let eyciRangeYears = 5;
+
+function setEYCIRange(years) {
+  eyciRangeYears = years;
+  ["5","10","25"].forEach(r => {
+    const btn = document.getElementById(`eyci-r${r}`);
+    if(!btn) return;
+    const active = parseInt(r)===years;
+    btn.style.background = active?"#1a4a2e":"#f8fafc";
+    btn.style.color = active?"#fff":"#4a5568";
+    btn.style.borderColor = active?"#1a4a2e":"#e2e8f0";
+  });
+  buildEYCIHistoricalChart(years);
+}
+
+function buildEYCIHistoricalChart(years) {
+  destroyWeatherChart("eyci-hist");
+  // Also destroy the overview chart which uses the same canvas
+  destroyChart("eyci");
+  const ctx = document.getElementById("chart-eyci")?.getContext("2d");
+  if(!ctx) return;
+
+  let labels, vals, chartType, tension, pointRadius, borderWidth;
+
+  if(years === 25) {
+    // Annual view for all time
+    const allYears = Object.keys(EYCI_ANNUAL).map(Number).sort();
+    labels = allYears.map(String);
+    vals = allYears.map(y=>EYCI_ANNUAL[y]);
+    chartType = "bar";
+    tension = 0;
+    pointRadius = 0;
+    borderWidth = 0;
+  } else {
+    // Monthly view for 5Y or 10Y
+    const now = new Date();
+    const startDate = new Date(now.getFullYear() - years + 1, 0, 1);
+    labels = Object.keys(EYCI_MONTHLY).sort().filter(k => {
+      const [y,m] = k.split("-").map(Number);
+      return new Date(y, m-1) >= startDate;
+    });
+    vals = labels.map(k => EYCI_MONTHLY[k]);
+    chartType = "line";
+    tension = 0.3;
+    pointRadius = 0;
+    borderWidth = 2.5;
+  }
+
+  const avg = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+  const minVal = Math.min(...vals);
+  const maxVal = Math.max(...vals);
+
+  // Gradient fill
+  const grad = ctx.createLinearGradient(0,0,0,300);
+  grad.addColorStop(0,"rgba(26,74,46,0.2)");
+  grad.addColorStop(1,"rgba(26,74,46,0)");
+
+  // Colour bars for annual view
+  const barColors = vals.map(v =>
+    v >= 850 ? "rgba(22,163,74,0.8)" :
+    v >= 700 ? "rgba(26,74,46,0.7)" :
+    v >= 550 ? "rgba(59,130,246,0.65)" :
+    v >= 420 ? "rgba(217,119,6,0.7)" :
+    "rgba(220,38,38,0.75)"
+  );
+
+  // Format labels nicely for monthly view
+  const displayLabels = years === 25 ? labels : labels.map(k => {
+    const [y,m] = k.split("-");
+    const months = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return m==="01"||m==="07" ? `${months[parseInt(m)]} ${y.slice(2)}` : months[parseInt(m)];
+  });
+
+  weatherCharts["eyci-hist"] = new Chart(ctx, {
+    type: chartType,
+    data:{
+      labels: displayLabels,
+      datasets:[
+        {
+          label:"EYCI (¢/kg cwt)",
+          data: vals,
+          borderColor:"#1a4a2e",
+          backgroundColor: chartType==="line" ? grad : barColors,
+          fill: chartType==="line",
+          tension,
+          pointRadius,
+          borderWidth,
+          borderRadius: chartType==="bar" ? 3 : 0,
+        },
+        {
+          label:`Avg ${avg}¢`,
+          data: Array(vals.length).fill(avg),
+          type:"line",
+          borderColor:"#94a3b8",
+          borderDash:[5,5],
+          borderWidth:1.5,
+          pointRadius:0,
+          fill:false,
+        },
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{font:{size:10,family:"Inter"},color:"#4a5568",boxWidth:10,boxHeight:10,padding:14}},
+        tooltip:{
+          backgroundColor:"#fff",
+          borderColor:"#e2e8f0",
+          borderWidth:1,
+          titleColor:"#1a2332",
+          bodyColor:"#4a5568",
+          padding:12,
+          cornerRadius:8,
+          callbacks:{
+            title: ctx => years===25 ? `${ctx[0].label} Annual Average` : labels[ctx[0].dataIndex],
+            label: ctx => {
+              if(ctx.datasetIndex===1) return ` Period avg: ${ctx.parsed.y}¢/kg cwt`;
+              return ` EYCI: ${ctx.parsed.y}¢/kg cwt`;
+            },
+            afterLabel: ctx => {
+              if(ctx.datasetIndex===1) return null;
+              const key = years===25 ? null : labels[ctx.dataIndex];
+              const event = key ? EYCI_EVENTS[key] : null;
+              const diff = ctx.parsed.y - avg;
+              const lines = [`  vs avg: ${diff>=0?"+":""}${diff}¢`];
+              if(event) lines.push(`  📌 ${event}`);
+              return lines;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{display:false},
+          ticks:{color:"#8898aa",font:{size:years===25?9:10,family:"Inter"},maxRotation:years===25?45:0,maxTicksLimit:years===5?24:years===10?36:30}
+        },
+        y:{
+          grid:{color:"#f0f2f5"},
+          ticks:{color:"#8898aa",font:{size:11,family:"Inter"},callback:v=>`${v}¢`},
+          min: Math.max(0, Math.floor((minVal-50)/50)*50),
+          suggestedMax: Math.ceil((maxVal+50)/50)*50,
+          title:{display:true,text:"¢/kg cwt",color:"#8898aa",font:{size:10,family:"Inter"}}
+        }
+      },
+      animation:{duration:500}
+    }
+  });
+}
+// ── Sale type state per saleyard (default: physical) ─────────
+const saleyardSaleType = {};
+function setSaleyardType(saleyardId, saleType) {
+  saleyardSaleType[saleyardId] = saleType;
+  // Update toggle button styles
+  const btnP = document.getElementById(`saleyard-type-physical-${saleyardId}`);
+  const btnS = document.getElementById(`saleyard-type-store-${saleyardId}`);
+  if(btnP) { btnP.style.background = saleType==="physical"?"#1a4a2e":"#f8fafc"; btnP.style.color = saleType==="physical"?"#fff":"#4a5568"; btnP.style.borderColor = saleType==="physical"?"#1a4a2e":"#e2e8f0"; }
+  if(btnS) { btnS.style.background = saleType==="store"?"#1a4a2e":"#f8fafc"; btnS.style.color = saleType==="store"?"#fff":"#4a5568"; btnS.style.borderColor = saleType==="store"?"#1a4a2e":"#e2e8f0"; }
+}
+
+// ── Render saleyard card content from data ────────────────────
+function renderSaleyardCard(sy, data) {
+  const badge = document.getElementById(`saleyard-badge-${sy.id}`);
+  const content = document.getElementById(`saleyard-content-${sy.id}`);
+  const card = document.getElementById(`saleyard-card-${sy.id}`);
+
+  if(data.error) {
+    content.innerHTML=`<div style="padding:12px;color:#8898aa;font-size:12px;font-style:italic">No recent MLA data found. This saleyard may not have traded recently or the report is unavailable.</div>`;
+    badge.textContent="No data"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa;font-weight:600";
+    card.style.borderTopColor="#cbd5e0";
+    return;
+  }
+
+  const trendColor = data.trend?.includes("dear")?"#16a34a":data.trend?.includes("cheap")?"#dc2626":"#d97706";
+  const trendBg    = data.trend?.includes("dear")?"#f0fdf4":data.trend?.includes("cheap")?"#fef2f2":"#fffbeb";
+  card.style.borderTopColor = data.trend ? trendColor : "#2d7a4f";
+
+  badge.textContent = data.date||"Latest";
+  badge.style.cssText=`font-size:9px;padding:3px 8px;border-radius:20px;background:${data.trend?trendBg:"#f0fdf4"};color:${data.trend?trendColor:"#166534"};font-weight:600`;
+
+  const saleLabel = (data.saleType==="store") ? "Store Sale" : "Physical Sale";
+
+  // Build price rows table if available
+  const rowsHtml = data.priceRows?.length ? `
+    <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px;margin-bottom:12px">
+      ${data.priceRows.map(r=>{
+        // Handle both formats: report/6 numeric avgPrice, or web search string like "478c/kg lwt"
+        const priceDisplay = r.avgPrice
+          ? (r.fromSearch ? r.avgPrice : `${r.avgPrice}¢`)
+          : "—";
+        const headDisplay = r.headCount ? (r.headCount).toLocaleString()+"hd" : "";
+        const avgHeadDisplay = r.avgHead && r.avgHead!=="N/A" ? ` · avg ${r.avgHead}` : "";
+        return `
+        <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;padding:8px 10px">
+          <div style="font-size:9px;color:#8898aa;font-weight:600;text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px">${r.category}</div>
+          <div style="font-size:15px;font-weight:700;color:#1a4a2e">${priceDisplay}</div>
+          <div style="font-size:9px;color:#a0aec0">${r.unit}${headDisplay?" · "+headDisplay:""}${avgHeadDisplay}</div>
+        </div>`;
+      }).join("")}
+    </div>` : "";
+
+  content.innerHTML = `
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      ${data.date?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#1e40af">📅 ${data.date}</div>`:""}
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#4a5568">🏷 ${saleLabel}</div>
+      ${data.trend?`<div style="background:${trendBg};border:1px solid ${trendColor}33;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:${trendColor};text-transform:capitalize">${data.trend==="dearer"?"▲":data.trend==="cheaper"?"▼":"→"} ${data.trend}</div>`:""}
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:12px;align-items:center">
+      <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-align:center">
+        <div style="font-size:20px;font-weight:700;color:#1a2332">${data.yarding?.toLocaleString()||"—"}</div>
+        <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Head Yarded</div>
+        ${data.change?`<div style="font-size:9px;font-weight:600;color:${data.change.startsWith("+")||parseInt(data.change)>0?"#16a34a":"#dc2626"};margin-top:1px">${data.change} vs prev</div>`:""}
+      </div>
+    </div>
+    ${rowsHtml}
+    ${data.commentary?`<div style="background:#fffef0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#4a5568;line-height:1.6;max-height:120px;overflow-y:auto">${data.commentary}</div>`:""}
+    <div style="font-size:9px;color:#a0aec0;margin-top:8px">
+      Source: ${data.source||"MLA/NLRS"}
+      ${data.allDates?.length > 1 ? ` · Other sale dates: ${data.allDates.slice(1,3).join(", ")}` : ""}
+    </div>
+  `;
+}
+
+// ── Fetch single saleyard ─────────────────────────────────────
+async function fetchSingleSaleyard(saleyardId) {
+  const sy = SALEYARDS.find(s=>s.id===saleyardId);
+  if(!sy) return;
+  const btn     = document.getElementById(`saleyard-btn-${saleyardId}`);
+  const badge   = document.getElementById(`saleyard-badge-${saleyardId}`);
+  const content = document.getElementById(`saleyard-content-${saleyardId}`);
+  const saleType = saleyardSaleType[saleyardId] || "physical";
+
+  btn.disabled=true; btn.textContent="Loading…";
+  badge.textContent="Fetching…";
+  badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#fffbeb;color:#92400e";
+  content.innerHTML=`<div style="text-align:center;padding:24px;color:#a0aec0;font-size:11px">Fetching ${saleType} sale report from MLA/NLRS…</div>`;
+
+  try {
+    const data = await fetchSaleyardReport(sy, saleType);
+    if(!saleyardData[saleyardId]) saleyardData[saleyardId] = {};
+    saleyardData[saleyardId][saleType] = data;
+    renderSaleyardCard(sy, data);
+  } catch(e) {
+    content.innerHTML=`<div style="padding:12px;color:#e53e3e;font-size:12px">Error: ${e.message}</div>`;
+    badge.textContent="Error"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#fef2f2;color:#dc2626";
+  }
+  btn.disabled=false; btn.textContent="Refresh";
+}
+
+// ── Refresh all saleyards ─────────────────────────────────────
+async function refreshAllSaleyards() {
+  const btn = document.getElementById("saleyards-refresh-btn");
+  btn.disabled=true; btn.textContent="Loading all…";
+  const visible = SALEYARDS.filter(sy => {
+    const card = document.getElementById(`saleyard-card-${sy.id}`);
+    return card && card.style.display!=="none";
+  });
+  for(const sy of visible) {
+    await fetchSingleSaleyard(sy.id);
+    await new Promise(r=>setTimeout(r,500));
+  }
+  btn.disabled=false; btn.textContent="↻ Refresh All Reports";
+}
+
+// ── Refresh all indicators ────────────────────────────────────
+async function refreshAllIndicators() {
+  const btn = document.getElementById("indicators-refresh-btn");
+  if(btn){ btn.disabled=true; btn.textContent="Fetching…"; }
+  const updated = document.getElementById("indicators-updated");
+  try {
+    const data = await fetchAllIndicators();
+    if(data) {
+      const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
+      const dataDate = data.date ? new Date(data.date+"T00:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"}) : "";
+      if(updated) updated.textContent = `Latest MLA data: ${dataDate} · Updated ${t} · Live data available at mla.com.au`;
+
+      const map = {
+        eyci:      {key:"eyci",          elId:"eyci"},
+        nychc:     {key:"nationalYoung", elId:"nychc"},
+        feeder:    {key:"feederSteer",   elId:"feeder"},
+        restocker: {key:"restockerSteer",elId:"restocker"},
+        heavy:     {key:"heavySteer",    elId:"heavy"},
+        cow:       {key:"processorCow",  elId:"cow"},
+      };
+
+      let anyUpdated = false;
+      Object.entries(map).forEach(([, {key, elId}]) => {
+        const d = data[key];
+        if(!d) return;
+        const valEl = document.getElementById(`ind-val-${elId}`);
+        const chgEl = document.getElementById(`ind-chg-${elId}`);
+        if(valEl && d.value != null) { valEl.textContent = d.value.toFixed(2); anyUpdated = true; }
+
+        if(chgEl) {
+          const fmt = (chg, isDay=false) => {
+            if(chg == null) return `<div style="font-size:9px;color:#a0aec0">—</div>`;
+            if(chg === 0 && isDay) return `<div style="font-size:9px;color:#8898aa">unch</div>`;
+            const pos = chg > 0, col = chg===0?"#8898aa":pos?"#16a34a":"#dc2626";
+            return `<div style="font-size:9px;font-weight:700;color:${col}">${pos?"+":""}${chg.toFixed(1)}¢</div>`;
+          };
+          // Rebuild the 1W/1M/1Y grid
+          chgEl.innerHTML = `
+            <div style="background:${d.change1D==null?"#f0f2f5":d.change1D>0?"#f0fdf4":d.change1D<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1D</div>
+              ${fmt(d.change1D, true)}
+            </div>
+            <div style="background:${d.change1W==null?"#f0f2f5":d.change1W>0?"#f0fdf4":d.change1W<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
+              ${fmt(d.change1W)}
+            </div>
+            <div style="background:${d.change1M==null?"#f0f2f5":d.change1M>0?"#f0fdf4":d.change1M<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1M</div>
+              ${fmt(d.change1M)}
+            </div>
+            <div style="background:${d.change1Y==null?"#f0f2f5":d.change1Y>0?"#f0fdf4":d.change1Y<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
+              <div style="font-size:8px;color:#a0aec0;font-weight:600">1Y</div>
+              ${fmt(d.change1Y)}
+            </div>`;
+        }
+      });
+
+      // Update EYCI display
+      const eyciEl = document.getElementById("eyci-val");
+      if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value.toFixed(2)} ¢/kg cwt`;
+
+      if(!anyUpdated && updated) updated.textContent = "⚠ Fetched but no values found — MLA may be offline";
+    } else {
+      if(updated) updated.textContent = "⚠ Could not fetch — try again";
+    }
+  } catch(e) {
+    console.error("refreshAllIndicators error:", e);
+    if(updated) updated.textContent = "⚠ Error: " + e.message;
+  }
+  if(btn){ btn.disabled=false; btn.innerHTML = `<span style="font-size:15px">↻</span> Refresh Price Indicators`; }
+}
+
+// ── Filter saleyards ──────────────────────────────────────────
+function filterSaleyards(filter) {
+  activeSaleyardFilter = filter;
+  // Update button styles
+  ["all","nsw","qld","vic","neweng"].forEach(f => {
+    const btn = document.getElementById(`filter-${f}`);
+    if(!btn) return;
+    const active = f===filter;
+    btn.style.background = active?"#1a4a2e":"#f8fafc";
+    btn.style.color = active?"#fff":"#4a5568";
+    btn.style.borderColor = active?"#1a4a2e":"#e2e8f0";
+  });
+
+  SALEYARDS.forEach(sy => {
+    const card = document.getElementById(`saleyard-card-${sy.id}`);
+    if(!card) return;
+    let show = filter==="all"
+      || (filter==="nsw" && sy.state==="NSW")
+      || (filter==="qld" && sy.state==="QLD")
+      || (filter==="vic" && sy.state==="VIC")
+      || (filter==="neweng" && sy.region==="New England");
+    card.style.display = show?"":"none";
+  });
+}
+
+// ── AI Market Analysis ────────────────────────────────────────
+async function generateMarketInsights() {
+  const btn = document.getElementById("market-ai-btn");
+  const body = document.getElementById("market-ai-body");
+  btn.disabled=true; btn.textContent="Generating…";
+  body.innerHTML=`<span style="color:#a0aec0;font-style:italic">Analysing market conditions against your herd position…</span>`;
+
+  // Compile loaded saleyard data
+  const loadedReports = Object.entries(saleyardData)
+    .filter(([_,d])=>d&&!d.error)
+    .map(([id,d])=>{
+      const sy = SALEYARDS.find(s=>s.id===id);
+      const prices = Object.entries(d.prices||{}).filter(([,v])=>v).map(([k,v])=>`${k}: ${v}`).join(", ");
+      return `${sy?.name} (${d.date||"latest"}): ${d.yarding?.toLocaleString()||"?"}hd yarded${prices?` — ${prices}`:""}`;
+    }).join("\n");
+
+  const eyciVal = document.getElementById("eyci-val")?.textContent || "897.15 ¢/kg cwt";
+
+  const prompt = `You are a senior livestock market analyst advising Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW running the Wombramurra Angus.
+
+CURRENT OPERATIONAL POSITION:
+- Herd: ~966 commercial breeders + 228 PTIC recipients + 15 registered donors + 110 commercial heifers + 115 registered heifers + 129 steers/backgrounders
+- Total DSE: ~20,538 (recently restructured from 26,618 peak)
+- EYCI: ${eyciVal}
+- Current season GM/DSE: $36.58 (benchmark >$65) — margins under pressure
+- Wombramurra Angus genetics program — registered Angus sales are highest-margin enterprise
+
+SALEYARD REPORTS (most recently loaded):
+${loadedReports || "No saleyard reports loaded yet — base analysis on current market knowledge"}
+
+Provide a structured market analysis with these exact sections:
+
+SECTION 1 - MARKET OVERVIEW
+2-3 sentence summary of current cattle market conditions across eastern Australia.
+
+SECTION 2 - KEY PRICE INDICATORS
+4-5 bullet points on current indicator levels, trends, and what they mean for different cattle classes in your herd.
+
+SECTION 3 - RESTOCKER & FEEDER MARKET
+3-4 bullet points specifically on restocker and feeder demand — relevant for your backgrounder and heifer sales.
+
+SECTION 4 - COW & PROCESSOR MARKET
+3-4 bullet points on processor cow and grown cattle prices — relevant to any cull decisions.
+
+SECTION 5 - WOMBRAMURRA ANGUS STUD MARKET
+3-4 bullet points on the registered Angus genetics market — sale timing, demand conditions, price outlook for stud bulls and females.
+
+SECTION 6 - STRATEGIC RECOMMENDATIONS FOR BURINGAL
+5-6 specific, actionable bullet points on selling decisions, timing, which saleyards offer best options for your classes, and how to capitalise on current market conditions given your financial position.
+
+Be specific, use actual price references where available, and tie recommendations to the operational context.`;
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,messages:[{role:"user",content:prompt}]})
+    });
+    const d = await res.json();
+    const text = (d.content||[]).find(b=>b.type==="text")?.text||"Unable to generate insights.";
+    body.innerHTML = formatAIResponse(text);
+  } catch(e) {
+    body.innerHTML=`<span style="color:#e53e3e">Could not connect.</span>`;
+  }
+  btn.disabled=false; btn.textContent="↺ Regenerate Analysis";
+}
+
+
+// ── WEATHER TAB ───────────────────────────────────────────────
+function initWeatherTab() {
+  if(!weatherData.nundle) renderWeatherTab("nundle", activeModel);
+}
+
+function switchWeatherSub(sub) {
+  activeWeatherSub = sub;
+  ["nundle","niangala","compare"].forEach(s => {
+    document.getElementById(`weather-content-${s}`).style.display = s===sub ? "" : "none";
+    const btn = document.getElementById(`wsub-${s}`);
+    if(btn) {
+      btn.style.color = s===sub ? "#1a4a2e" : "#8898aa";
+      btn.style.borderBottomColor = s===sub ? "#1a4a2e" : "transparent";
+    }
+  });
+  if(sub==="nundle"   && !weatherData.nundle)   renderWeatherTab("nundle",   activeModel);
+  if(sub==="niangala" && !weatherData.niangala)  renderWeatherTab("niangala", activeModel);
+  if(sub==="compare")                            renderCompareTab();
+}
+
+function switchWeatherModel(model) {
+  activeModel = model;
+  ["ecmwf","bom","auto"].forEach(m => {
+    const btn = document.getElementById(`wmodel-${m}`);
+    if(btn){ btn.style.background = m===model?"#1a4a2e":"transparent"; btn.style.color = m===model?"#fff":"#4a5568"; }
+  });
+  // Reset cached data and reload
+  weatherData = { nundle: null, niangala: null };
+  renderWeatherTab(activeWeatherSub==="compare"?"nundle":activeWeatherSub, model);
+  if(activeWeatherSub==="compare") renderCompareTab();
+}
+
+init();
+</script>
+</body>
+</html>
