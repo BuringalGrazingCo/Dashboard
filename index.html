@@ -2243,69 +2243,83 @@ let saleyardData = {};   // { saleyardId: { physical: {...}, store: {...} } }
 let indicatorData = {};
 let activeSaleyardFilter = "all";
 
-// ── Helper: get most recent value from a flat rows array ─────────────────────
+// ── Helper: get most recent value from a rows array ─────────────────────────
 function getLatestValue(rows) {
   if(!rows || !rows.length) return null;
-  const sorted = [...rows].filter(r => r.indicator_value != null)
+  const sorted = [...rows]
+    .filter(r => r.indicator_value != null)
     .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
   if(!sorted.length) return null;
   return { value: parseFloat(sorted[0].indicator_value), date: sorted[0].calendar_date, head: sorted[0].head_count };
 }
 
-// ── Helper: get representative value from a window of rows ───────────────────
-function getWindowValue(rows) {
-  // Use the most recent row in the window as the reference value
-  return getLatestValue(rows);
+// ── Get distinct trading values — skip weekend repeats ────────────────────────
+// MLA repeats the last trading value on weekends/holidays
+// We need to find rows where the value actually CHANGED to identify real trading days
+function getDistinctTradingValues(rows) {
+  if(!rows || !rows.length) return [];
+  const sorted = [...rows]
+    .filter(r => r.indicator_value != null)
+    .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
+
+  // Walk through sorted rows and collect each time the value changes
+  const distinct = [];
+  let lastVal = null;
+  for(const r of sorted) {
+    const v = Math.round(parseFloat(r.indicator_value) * 100) / 100;
+    if(lastVal === null || Math.abs(v - lastVal) > 0.001) {
+      distinct.push({ value: v, date: r.calendar_date, head: r.head_count });
+      lastVal = v;
+    }
+  }
+  return distinct; // [0]=most recent distinct, [1]=previous trading day, etc
 }
 
 // ── Build indicator stats from windowed data ──────────────────────────────────
 function buildIndicatorStats(windowData) {
-  const curr  = getLatestValue(windowData.current || []);
-  const month = getWindowValue(windowData.month   || []);
-  const year  = getWindowValue(windowData.year    || []);
+  const currRows  = windowData.current || [];
+  const monthRows = windowData.month   || [];
+  const yearRows  = windowData.year    || [];
 
-  if(!curr || curr.value == null || isNaN(curr.value)) return null;
+  const latest = getLatestValue(currRows);
+  if(!latest || isNaN(latest.value)) return null;
 
-  // 1W: find value 7 days before current from the current window
-  const sorted = [...(windowData.current||[])].filter(r => r.indicator_value != null)
-    .sort((a,b) => b.calendar_date.localeCompare(a.calendar_date));
-  const latestDate = sorted.length ? new Date(sorted[0].calendar_date + "T00:00:00") : null;
+  const v = latest.value;
+
+  // Get distinct trading values for 1D and 1W from current window
+  const distinct = getDistinctTradingValues(currRows);
+  // distinct[0] = most recent trading value (= v)
+  // distinct[1] = previous trading day value (1D ago)
+  // Find 1W: closest distinct value to 7 trading days ago
+  const v1D = distinct.length > 1 ? distinct[1].value : null;
+
+  // For 1W: find the distinct value whose date is closest to 7 calendar days before latest
   let v1W = null;
-  if(latestDate && sorted.length > 1) {
-    const target = new Date(latestDate.getTime() - 7 * 86400000);
+  if(distinct.length > 1) {
+    const latestMs = new Date(latest.date + "T00:00:00").getTime();
+    const target1W = latestMs - 7 * 86400000;
     let best = null, bestDiff = Infinity;
-    for(const r of sorted) {
-      const diff = Math.abs(new Date(r.calendar_date+"T00:00:00") - target);
-      if(diff < bestDiff) { bestDiff = diff; best = r; }
+    for(const d of distinct) {
+      const diff = Math.abs(new Date(d.date + "T00:00:00").getTime() - target1W);
+      if(diff < bestDiff && d.date !== latest.date) { bestDiff = diff; best = d; }
     }
-    // Only use as 1W ref if it's actually a different day
-    if(best && best.calendar_date !== sorted[0].calendar_date) v1W = parseFloat(best.indicator_value);
+    v1W = best?.value ?? null;
   }
 
-  // 1D: previous trading day value (second most recent in current window)
-  let v1D = null;
-  if(sorted.length > 1) {
-    // Find the most recent entry that is actually a different value (prev trading day)
-    for(let i = 1; i < sorted.length; i++) {
-      const candidate = parseFloat(sorted[i].indicator_value);
-      if(!isNaN(candidate) && sorted[i].calendar_date !== sorted[0].calendar_date) {
-        v1D = candidate;
-        break;
-      }
-    }
-  }
+  // 1M and 1Y from their respective windows — use latest value in each window
+  const latestMonth = getLatestValue(monthRows);
+  const latestYear  = getLatestValue(yearRows);
 
-  const v  = curr.value;
   const chg = (ref) => (ref != null && !isNaN(ref)) ? Math.round((v - ref) * 100) / 100 : null;
 
   return {
     value:     Math.round(v * 100) / 100,
-    date:      curr.date,
-    headCount: curr.head,
+    date:      latest.date,
+    headCount: latest.head,
     change1D:  chg(v1D),
     change1W:  chg(v1W),
-    change1M:  chg(month?.value),
-    change1Y:  chg(year?.value),
+    change1M:  chg(latestMonth?.value),
+    change1Y:  chg(latestYear?.value),
   };
 }
 
@@ -2349,9 +2363,10 @@ async function fetchAllIndicators() {
   }
 }
 
-// ── Fetch saleyard report — AI web search for Physical/Store, report/6 fallback ─
+// ── Fetch saleyard report — AI web search (primary), report/6 (fallback) ─────
 async function fetchSaleyardReport(saleyard, saleType) {
-  // Step 1: Try AI web search for the actual MLA NLRS sale report
+
+  // ── PRIMARY: AI web search for actual NLRS sale report ───────────────────
   try {
     const searchRes = await fetch(CONFIG.WORKER_URL, {
       method:"POST", headers:{"Content-Type":"application/json"},
@@ -2363,52 +2378,63 @@ async function fetchSaleyardReport(saleyard, saleType) {
       })
     });
     const searchD = await searchRes.json();
+    console.log(`${saleyard.name} raw response blocks:`, (searchD.content||[]).map(b=>b.type));
 
+    // Extract text from all text blocks
     const text = (searchD.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
+    console.log(`${saleyard.name} extracted text (first 500):`, text.slice(0,500));
+
     if(text.trim()) {
       const get = (label) => {
         const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
         const v = m ? m[1].trim() : null;
         return (v && v !== "N/A" && v !== "n/a") ? v : null;
       };
+
+      const dateVal    = get("REPORT_DATE");
       const yardingRaw = get("YARDING");
       const yarding    = yardingRaw ? parseInt(yardingRaw.replace(/[^0-9]/g,"")) : null;
+      const trendVal   = get("TREND")?.toLowerCase();
+      const commVal    = get("COMMENTARY");
+      const changeVal  = get("CHANGE");
+
       const rows = [];
       for(const m of text.matchAll(/^ROW:\s*(.+)$/gmi)) {
         const p = m[1].split("|").map(s=>s.trim());
-        if(p.length >= 2 && p[0] && p[0]!=="N/A") rows.push({
-          category:  p[0],
-          unit:      "¢/kg lwt",
-          headCount: parseInt(p[2])||null,
-          avgPrice:  p[3]||null,
-          avgHead:   p[4]||null,
-          fromSearch:true,
-        });
+        if(p.length >= 2 && p[0] && p[0]!=="N/A" && p[0]!=="Category") {
+          rows.push({
+            category:  p[0],
+            unit:      "¢/kg lwt",
+            headCount: parseInt(p[2])||null,
+            avgPrice:  p[3] && p[3]!=="N/A" ? p[3] : null,
+            avgHead:   p[4] && p[4]!=="N/A" ? p[4] : null,
+            fromSearch:true,
+          });
+        }
       }
 
-      const dateVal   = get("REPORT_DATE");
-      const trendVal  = get("TREND")?.toLowerCase();
-      const commVal   = get("COMMENTARY");
-
-      // Only accept result if we got at least a date or yarding
-      if(dateVal || (!isNaN(yarding) && yarding > 0)) {
+      // Accept if we got a date, or yarding > 0, or at least some rows
+      if(dateVal || (yarding > 0) || rows.length > 0) {
+        console.log(`${saleyard.name} web search SUCCESS: date=${dateVal}, yarding=${yarding}, rows=${rows.length}`);
         return {
           date:       dateVal,
           yarding:    isNaN(yarding) ? null : yarding,
-          change:     get("CHANGE"),
+          change:     changeVal,
           trend:      trendVal,
           commentary: commVal,
           saleType:   saleType,
           priceRows:  rows,
-          source:     "MLA/NLRS",
+          source:     "MLA/NLRS · " + (saleType==="store"?"Store Sale":"Physical Sale"),
         };
       }
+      console.warn(`${saleyard.name} web search returned text but no structured data`);
     }
   } catch(e) {
-    console.warn(`${saleyard.name} web search failed, falling back to report/6:`, e.message);
+    console.warn(`${saleyard.name} web search error:`, e.message);
   }
 
-  // Step 2: Fallback to MLA Statistics API report/6 (indicator data per saleyard)
+  // ── FALLBACK: MLA Statistics API report/6 (indicator data) ───────────────
+  console.log(`${saleyard.name} falling back to report/6`);
   try {
     const res = await fetch(CONFIG.WORKER_URL, {
       method:"POST", headers:{"Content-Type":"application/json"},
@@ -2417,12 +2443,12 @@ async function fetchSaleyardReport(saleyard, saleType) {
     const d = await res.json();
     if(d.error) throw new Error(d.error);
 
-    const rows = (d.data||[]).filter(r => r.species_id === "Cattle");
-    if(!rows.length) return { error:"no_data_found" };
+    const cattleRows = (d.data||[]).filter(r => r.species_id === "Cattle");
+    if(!cattleRows.length) return { error:"no_data_found" };
 
-    const allDates = [...new Set(rows.map(r => r.calendar_date))].sort((a,b)=>b.localeCompare(a));
+    const allDates   = [...new Set(cattleRows.map(r=>r.calendar_date))].sort((a,b)=>b.localeCompare(a));
     const targetDate = (saleType==="store" && allDates.length>1) ? allDates[1] : allDates[0];
-    const saleRows   = rows.filter(r => r.calendar_date === targetDate);
+    const saleRows   = cattleRows.filter(r=>r.calendar_date===targetDate);
 
     const IND = {
       0:{name:"EYCI",unit:"¢/kg cwt"},2:{name:"Restocker Steers",unit:"¢/kg lwt"},
@@ -2439,10 +2465,10 @@ async function fetchSaleyardReport(saleyard, saleType) {
         unit:     IND[r.indicator_id].unit,
         headCount:parseInt(r.head_count)||0,
         avgPrice: parseFloat(r.indicator_value).toFixed(2),
+        fromSearch:false,
       }));
 
     const dateStr = new Date(targetDate+"T00:00:00").toLocaleDateString("en-AU",{day:"numeric",month:"long",year:"numeric"});
-
     return {
       date:      dateStr,
       rawDate:   targetDate,
@@ -2450,9 +2476,8 @@ async function fetchSaleyardReport(saleyard, saleType) {
       saleType:  saleType,
       priceRows: priceRows,
       allDates:  allDates,
-      trend:     null,
-      commentary:null,
-      source:    "MLA Statistics API (indicator data)",
+      trend:     null, commentary:null,
+      source:    "MLA Statistics API (indicator averages — live report unavailable)",
     };
   } catch(e) {
     console.error(`${saleyard.name} fallback error:`, e.message);
