@@ -2242,61 +2242,42 @@ let activeSaleyardFilter = "all";
 
 // ── Fetch saleyard report via AI web search ───────────────────
 async function fetchSaleyardReport(saleyard) {
-  const prompt = `Fetch the latest cattle saleyard report for ${saleyard.name} (${saleyard.short}) in ${saleyard.state} from MLA/NLRS. 
+  const prompt = `Search the web for the latest MLA/NLRS cattle saleyard report for ${saleyard.name} in ${saleyard.state}. 
+Try this URL first: ${saleyard.url}
+Also search: "MLA ${saleyard.name} cattle report 2026"
 
-Go to this URL and extract the report: ${saleyard.url}
-
-Return ONLY a JSON object with exactly these fields (no other text):
-{
-  "date": "date of report e.g. 9 March 2026",
-  "yarding": number (total head),
-  "commentary": "the full commentary text",
-  "prices": {
-    "feederSteers": "price range e.g. 450-514c/kg",
-    "feederHeifers": "price range",
-    "restockerSteers": "price range", 
-    "cows": "price range",
-    "heavySteers": "price range",
-    "bullocksBulls": "price range"
-  },
-  "trend": "dearer/firm/cheaper/mixed",
-  "reporter": "name of reporter if listed"
-}
-If a price category is not mentioned, use null. If the page cannot be fetched, return {"error": "unavailable"}.`;
+Extract all available data and respond with ONLY valid JSON, no other text, no markdown, no backticks:
+{"date":"report date e.g. 9 March 2026","saleType":"Physical Store Sale or Physical Prime Sale or Online Store Sale etc","yarding":5320,"commentary":"full commentary text here","prices":{"feederSteers":"450-514c/kg lwt","feederHeifers":"320-441c/kg lwt","restockerSteers":"500-540c/kg lwt","cows":"310-425c/kg lwt","heavySteers":"426-480c/kg lwt","bullocksBulls":"400-410c/kg lwt"},"trend":"dearer","reporter":"Hamish Hosegood"}
+Use null for missing price categories. If no report found return: {"error":"unavailable"}`;
 
   const res = await fetch(CONFIG.WORKER_URL, {
     method:"POST", headers:{"Content-Type":"application/json"},
     body: JSON.stringify({
       model:"claude-sonnet-4-20250514",
-      max_tokens:1000,
+      max_tokens:1200,
       tools:[{type:"web_search_20250305",name:"web_search"}],
       messages:[{role:"user",content:prompt}]
     })
   });
   const d = await res.json();
+  // Extract text from all content blocks including after tool use
   const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    // Try to find JSON - strip any markdown code fences first
+    const clean = text.replace(/```json|```/g,"").trim();
+    const jsonMatch = clean.match(/\{[\s\S]*\}/);
     if(jsonMatch) return JSON.parse(jsonMatch[0]);
   } catch(e) {}
-  return {error:"parse_failed", raw:text.slice(0,200)};
+  return {error:"parse_failed"};
 }
 
 // ── Fetch all MLA indicators at once ─────────────────────────
 async function fetchAllIndicators() {
-  const prompt = `Search for the current MLA cattle price indicators from the MLA website (mla.com.au/prices-markets). 
+  const prompt = `Search the MLA website for current cattle price indicators. Search for "MLA cattle indicators today site:mla.com.au" or visit https://www.mla.com.au/prices-markets/cattle-prices/
 
-Return ONLY a JSON object with these exact fields (no other text):
-{
-  "date": "today's date",
-  "eyci": {"value": number, "change": number, "unit": "¢/kg lwt"},
-  "nationalYoung": {"value": number, "change": number, "unit": "¢/kg lwt"},
-  "feederSteer": {"value": number, "change": number, "unit": "¢/kg lwt"},
-  "restockerSteer": {"value": number, "change": number, "unit": "¢/kg lwt"},
-  "heavySteer": {"value": number, "change": number, "unit": "¢/kg cwt"},
-  "processorCow": {"value": number, "change": number, "unit": "¢/kg cwt"}
-}
-Use null for any indicator you cannot find. change = today vs yesterday in cents.`;
+Respond with ONLY valid JSON, no other text, no markdown, no backticks:
+{"date":"16 March 2026","eyci":{"value":888.33,"change":2.5,"unit":"c/kg lwt"},"nationalYoung":{"value":null,"change":null,"unit":"c/kg lwt"},"feederSteer":{"value":null,"change":null,"unit":"c/kg lwt"},"restockerSteer":{"value":null,"change":null,"unit":"c/kg lwt"},"heavySteer":{"value":null,"change":null,"unit":"c/kg cwt"},"processorCow":{"value":null,"change":null,"unit":"c/kg cwt"}}
+Fill in actual values found. Use null if not found.`;
 
   const res = await fetch(CONFIG.WORKER_URL, {
     method:"POST", headers:{"Content-Type":"application/json"},
@@ -2310,7 +2291,8 @@ Use null for any indicator you cannot find. change = today vs yesterday in cents
   const d = await res.json();
   const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
   try {
-    const m = text.match(/\{[\s\S]*\}/);
+    const clean = text.replace(/```json|```/g,"").trim();
+    const m = clean.match(/\{[\s\S]*\}/);
     if(m) return JSON.parse(m[0]);
   } catch(e){}
   return null;
@@ -2626,16 +2608,19 @@ async function fetchSingleSaleyard(saleyardId) {
       const priceLabels = {feederSteers:"Feeder Steers",feederHeifers:"Feeder Heifers",restockerSteers:"Restocker Steers",cows:"Cows",heavySteers:"Heavy Steers",bullocksBulls:"Bullocks/Bulls"};
 
       content.innerHTML = `
-        <!-- Yarding and trend -->
-        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
-          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;flex:1;min-width:80px;text-align:center">
+        <!-- Date, sale type and trend row -->
+        <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center">
+          ${data.date?`<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#1e40af">📅 ${data.date}</div>`:""}
+          ${data.saleType?`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:600;color:#4a5568">🏷 ${data.saleType}</div>`:""}
+          ${data.trend?`<div style="background:${trendBg};border:1px solid ${trendColor}33;border-radius:6px;padding:4px 10px;font-size:10px;font-weight:700;color:${trendColor};text-transform:capitalize">${data.trend==="dearer"?"▲":data.trend==="cheaper"?"▼":"→"} ${data.trend}</div>`:""}
+        </div>
+
+        <!-- Yarding -->
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;text-align:center;min-width:90px">
             <div style="font-size:18px;font-weight:700;color:#1a2332">${data.yarding?.toLocaleString()||"—"}</div>
             <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Head Yarded</div>
           </div>
-          ${data.trend?`<div style="background:${trendBg};border:1px solid ${trendColor}33;border-radius:8px;padding:8px 14px;flex:1;min-width:80px;text-align:center">
-            <div style="font-size:14px;font-weight:700;color:${trendColor};text-transform:capitalize">${data.trend}</div>
-            <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Market Trend</div>
-          </div>`:""}
         </div>
 
         <!-- Price ranges -->
