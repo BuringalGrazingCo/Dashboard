@@ -894,6 +894,8 @@ function makeRatioChart(){
 
 function makeMarketsCharts(){
   destroyChart("eyci");destroyChart("gmdse");
+  // Also destroy the EYCI historical chart which uses the same canvas on the Markets tab
+  destroyWeatherChart("eyci-hist");
   const MS=D.monthsShort;
 
   charts.eyci=new Chart(document.getElementById("chart-eyci"),{type:"line",
@@ -2760,6 +2762,8 @@ function setEYCIRange(years) {
 
 function buildEYCIHistoricalChart(years) {
   destroyWeatherChart("eyci-hist");
+  // Also destroy the overview chart which uses the same canvas
+  destroyChart("eyci");
   const ctx = document.getElementById("chart-eyci")?.getContext("2d");
   if(!ctx) return;
 
