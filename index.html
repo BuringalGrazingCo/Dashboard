@@ -3015,7 +3015,7 @@ async function refreshAllIndicators() {
     if(data) {
       const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
       const dataDate = data.date ? new Date(data.date+"T00:00:00").toLocaleDateString("en-AU",{weekday:"short",day:"numeric",month:"short"}) : "";
-      if(updated) updated.textContent = `MLA data to ${dataDate} · Fetched ${t}`;
+      if(updated) updated.textContent = `Latest MLA data: ${dataDate} · Updated ${t} · Live data available at mla.com.au`;
 
       const map = {
         eyci:      {key:"eyci",          elId:"eyci"},
@@ -3035,8 +3035,9 @@ async function refreshAllIndicators() {
         if(valEl && d.value != null) { valEl.textContent = d.value.toFixed(2); anyUpdated = true; }
 
         if(chgEl) {
-          const fmt = (chg) => {
+          const fmt = (chg, isDay=false) => {
             if(chg == null) return `<div style="font-size:9px;color:#a0aec0">—</div>`;
+            if(chg === 0 && isDay) return `<div style="font-size:9px;color:#8898aa">unch</div>`;
             const pos = chg > 0, col = chg===0?"#8898aa":pos?"#16a34a":"#dc2626";
             return `<div style="font-size:9px;font-weight:700;color:${col}">${pos?"+":""}${chg.toFixed(1)}¢</div>`;
           };
@@ -3044,7 +3045,7 @@ async function refreshAllIndicators() {
           chgEl.innerHTML = `
             <div style="background:${d.change1D==null?"#f0f2f5":d.change1D>0?"#f0fdf4":d.change1D<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
               <div style="font-size:8px;color:#a0aec0;font-weight:600">1D</div>
-              ${fmt(d.change1D)}
+              ${fmt(d.change1D, true)}
             </div>
             <div style="background:${d.change1W==null?"#f0f2f5":d.change1W>0?"#f0fdf4":d.change1W<0?"#fef2f2":"#f0f2f5"};border-radius:4px;padding:3px 4px;text-align:center">
               <div style="font-size:8px;color:#a0aec0;font-weight:600">1W</div>
