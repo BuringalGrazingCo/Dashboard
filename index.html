@@ -2376,100 +2376,86 @@ async function fetchAllIndicators() {
  
 // ── Parse Agora Livestock HTML for NLRS sale report data ─────────────────────
 function parseAgoraHTML(html, saleType) {
-  // Strip tags helper
-  const stripTags = s => s.replace(/<[^>]+>/g,"").replace(/&amp;/g,"&")
-    .replace(/&nbsp;/g," ").replace(/&#8211;/g,"-").replace(/\s+/g," ").trim();
+  // Remove style/script/head blocks before any parsing to avoid CSS contamination
+  let clean = html
+    .replace(/<style[\s\S]*?<\/style>/gi, "")
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<head[\s\S]*?<\/head>/gi, "");
  
-  // Find the most recent sale matching saleType
-  // Agora pages have sections like <h2>Physical Sale — 16 March 2026</h2>
-  // or <div class="sale-header">Store Sale | 13 March 2026</div>
+  const stripTags = s => s.replace(/<[^>]+>/g,"")
+    .replace(/&amp;/g,"&").replace(/&nbsp;/g," ").replace(/&lt;/g,"<")
+    .replace(/&gt;/g,">").replace(/&#8211;/g,"-").replace(/&#8212;/g,"\u2014")
+    .replace(/&#[0-9]+;/g,"").replace(/\s+/g," ").trim();
+ 
+  const MONTHS = "January|February|March|April|May|June|July|August|September|October|November|December";
   const typeKeyword = saleType === "store" ? "store" : "physical";
  
-  // Extract date — look for sale header matching type
+  // Date: look near the sale type keyword first, then anywhere in page
   let date = null;
-  const headerRe = new RegExp(
-    typeKeyword + "[^<]*?(" +
-    "\\d{1,2}\\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\\s+\\d{4}" +
-    ")", "gi"
-  );
-  const hm = headerRe.exec(html);
-  if(hm) date = hm[1];
- 
-  // Fallback: find any recent date in the HTML
+  const nearRe = new RegExp(typeKeyword + "[\\s\\S]{0,300}?(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+\\d{4})", "gi");
+  const nm = nearRe.exec(clean);
+  if(nm) date = nm[1];
   if(!date) {
-    const dm = html.match(/\b(\d{1,2}\s+(?:January|February|March|April|May|June|July|August|September|October|November|December)\s+202\d)\b/i);
+    const dm = clean.match(new RegExp("\\b(\\d{1,2}\\s+(?:" + MONTHS + ")\\s+202\\d)\\b","i"));
     if(dm) date = dm[1];
   }
  
-  // Extract yarding
+  // Yarding
   let yarding = null;
-  const ym = html.match(/[Tt]otal\s+[Yy]arding[:\s]*<[^>]*>?\s*([\d,]+)/i)
-          || html.match(/[Yy]arding[:\s]+([\d,]+)\s*(?:<|head|\b)/i)
-          || html.match(/([\d,]+)\s+(?:head\s+)?(?:were\s+)?yarded/i)
-          || html.match(/[Tt]otal[:\s]+([\d,]+)\s*head/i);
+  const ym = clean.match(/[Tt]otal\s+[Yy]arding[^\d]*(\d[\d,]+)/i)
+          || clean.match(/(\d[\d,]+)\s*(?:head\s+)?(?:cattle\s+)?yarded/i)
+          || clean.match(/[Yy]arding[^\d]*(\d[\d,]+)/i);
   if(ym) yarding = parseInt(ym[1].replace(/,/g,""))||null;
  
-  // Extract change vs previous
+  // Change vs previous
   let change = null;
-  const cm = html.match(/([+-][\d,]+)\s*(?:head|on\s+previous|vs\s+previous)/i);
+  const cm = clean.match(/([+-][\d,]+)\s*(?:head|on\s+prev|vs\s+prev)/i);
   if(cm) change = cm[1];
  
-  // Extract trend
+  // Trend — from plain text only
   let trend = null;
-  const trendWords = ["dearer","cheaper","firm","mixed","stronger","weaker"];
-  for(const tw of trendWords) {
-    if(new RegExp("\\b" + tw + "\\b","i").test(html)) {
-      trend = tw === "stronger" ? "dearer" : tw === "weaker" ? "cheaper" : tw;
-      break;
-    }
+  const bodyText = stripTags(clean);
+  for(const tw of ["dearer","cheaper","firm","mixed"]) {
+    if(new RegExp("\\b"+tw+"\\b","i").test(bodyText)) { trend = tw; break; }
   }
  
-  // Extract commentary — look for substantial text paragraphs
+  // Commentary — paragraphs from cleaned HTML, skip anything CSS-like
   let commentary = null;
-  const paraMatches = [...html.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
+  const paras = [...clean.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/gi)]
     .map(m => stripTags(m[1]))
-    .filter(t => t.length > 80 && /cattle|steer|heifer|cow|yarding|sale|price|market/i.test(t));
-  if(paraMatches.length) commentary = paraMatches.slice(0,4).join("\n\n");
+    .filter(t =>
+      t.length > 60 &&
+      !/[{};]/.test(t.slice(0,50)) &&
+      /cattle|steer|heifer|cow|bull|yarding|sale|price|market|quality|competition|buyer/i.test(t)
+    );
+  if(paras.length) commentary = paras.slice(0,5).join("\n\n");
  
-  // Extract price table rows
-  // Agora tables typically: <tr><td>Category</td><td>Weight</td><td>Head</td><td>Price</td></tr>
+  // Price rows from tables
   const rows = [];
-  const tableRe = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  let trMatch;
-  while((trMatch = tableRe.exec(html)) !== null) {
-    const cells = [...trMatch[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)]
-      .map(c => stripTags(c[1]));
-    if(cells.length >= 3) {
+  for(const tbl of clean.matchAll(/<table[\s\S]*?<\/table>/gi)) {
+    for(const tr of tbl[0].matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/gi)) {
+      const cells = [...tr[1].matchAll(/<td[^>]*>([\s\S]*?)<\/td>/gi)].map(c=>stripTags(c[1]));
+      if(cells.length < 3) continue;
       const cat = cells[0];
-      // Skip header rows
-      if(/category|class|type|description/i.test(cat)) continue;
-      if(!cat || cat.length < 2) continue;
-      // Look for a price-like value (number followed by c or ¢)
-      const priceCell = cells.find(c => /\d+.*(?:c\/kg|¢|c\/|cwt|lwt)/i.test(c));
-      const headCell  = cells.find(c => /^\d{1,5}$/.test(c.replace(/,/g,"")));
+      if(!cat || cat.length < 2 || /category|weight|head|price|avg|description/i.test(cat)) continue;
+      const priceCell = cells.find(c => /\d+[.\d]*\s*c\/kg/i.test(c) || /\d{3,}c/.test(c));
+      const headCell  = cells.find((c,i) => i>0 && /^[\d,]+$/.test(c.trim()) && parseInt(c.replace(/,/g,""))<50000);
       if(priceCell || headCell) {
         rows.push({
           category:  cat,
           unit:      "c/kg lwt",
           headCount: headCell ? parseInt(headCell.replace(/,/g,""))||null : null,
-          avgPrice:  priceCell || null,
+          avgPrice:  priceCell||null,
           fromSearch:true,
         });
       }
     }
   }
  
-  return {
-    date:      date,
-    yarding:   yarding,
-    change:    change,
-    trend:     trend,
-    commentary:commentary,
-    saleType:  saleType,
-    priceRows: rows,
-    source:    "Agora Livestock / MLA NLRS - " + (saleType==="store"?"Store Sale":"Physical Sale"),
-  };
+  return { date, yarding, change, trend, commentary, saleType, priceRows: rows,
+    source: "Agora Livestock / MLA NLRS - "+(saleType==="store"?"Store Sale":"Physical Sale") };
 }
+ 
  
 async function fetchSaleyardReport(saleyard, saleType) {
  
@@ -3267,5 +3253,5 @@ function switchWeatherModel(model) {
  
 init();
 </script>
-</body>
-</html> 
+</body> 
+</html>
