@@ -256,7 +256,7 @@ button:focus,input:focus,select:focus{outline:none}
     <button class="tab-btn" data-tab="cashflow">Cashflow</button>
     <button class="tab-btn" data-tab="balance">Balance Sheet</button>
     <button class="tab-btn" data-tab="ratios">KPI Ratios</button>
-    <button class="tab-btn" data-tab="markets">Markets</button>
+    <button class="tab-btn" data-tab="markets">🐄 Livestock Markets</button>
     <button class="tab-btn" data-tab="weather">⛅ Weather</button>
   </div>
 
@@ -405,7 +405,7 @@ button:focus,input:focus,select:focus{outline:none}
         <div class="markets-header">
           <div>
             <div style="font-size:11px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Eastern Young Cattle Indicator (EYCI)</div>
-            <div class="eyci-price" id="eyci-val">338 ¢/kg cwt</div>
+            <div class="eyci-price" id="eyci-val">888 ¢/kg lwt</div>
             <div class="eyci-label" id="eyci-sub">Static — click Refresh for live MLA price</div>
           </div>
           <button class="live-btn" id="eyci-btn" onclick="fetchEYCI()">↻ Refresh Live Price</button>
@@ -897,7 +897,7 @@ function makeMarketsCharts(){
   const MS=D.monthsShort;
 
   charts.eyci=new Chart(document.getElementById("chart-eyci"),{type:"line",
-    data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"EYCI (¢/kg cwt)",data:D.eyci,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5}]},
+    data:{labels:["W1","W2","W3","W4","W5","W6","W7","W8"],datasets:[{label:"EYCI (¢/kg lwt)",data:D.eyci,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5}]},
     options:{...BASE,plugins:{...BASE.plugins,legend:{display:false}},scales:{x:{...BASE.scales.x},y:{...BASE.scales.y,min:290,max:360,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}¢`}}}}
   });
 
@@ -960,6 +960,7 @@ function setTab(tab){
     if(tab==="overview"||tab==="ratios")   {renderRatios();makeRatioChart();}
     if(tab==="overview"||tab==="markets")  makeMarketsCharts();
     if(tab==="weather") initWeatherTab();
+    if(tab==="markets") { renderLivestockMarketsTab(); }
   },50);
 }
 document.querySelectorAll(".tab-btn").forEach(btn=>{btn.addEventListener("click",()=>setTab(btn.dataset.tab));});
@@ -969,12 +970,12 @@ async function fetchEYCI(){
   const btn=document.getElementById("eyci-btn");
   btn.disabled=true;btn.textContent="Fetching…";
   try{
-    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"What is the current EYCI Eastern Young Cattle Indicator price in cents per kg carcase weight from MLA? Reply ONLY with a string like '342 ¢/kg cwt'."}]})});
+    const res=await fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,tools:[{type:"web_search_20250305",name:"web_search"}],messages:[{role:"user",content:"What is the current EYCI Eastern Young Cattle Indicator price in cents per kg carcase weight from MLA? Reply ONLY with a string like '342 ¢/kg lwt'."}]})});
     const d=await res.json();
     const text=(d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join(" ");
     const m=text.match(/(\d{2,4}(?:\.\d+)?)\s*[¢c]?\s*\/?\s*kg/i);
     if(m){
-      document.getElementById("eyci-val").textContent=`${m[1]} ¢/kg cwt`;
+      document.getElementById("eyci-val").textContent=`${m[1]} ¢/kg lwt`;
       document.getElementById("eyci-sub").textContent=`Live MLA · Updated ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
     }
   }catch(e){document.getElementById("eyci-sub").textContent="Update failed — check connection";}
@@ -998,7 +999,7 @@ Balance Sheet: Total Assets $32.78M | Equity $29.23M (89%) | NAB Loans $3.1M tot
 Key Ratios (Feb 26 vs benchmark): Interest Cover 0.06x (>1.75x CRITICAL) | ROAM 0.03% (>4% CRITICAL) | GM/DSE $36.58 (>$65 CRITICAL) | Expense Ratio 106% (<70% CRITICAL) | ROE -0.57%
 DSE: 22,892→20,538 (peak 26,618 Sep 25, now reducing)
 EYCI current: ${eyciVal}
-Context: Wombramurra Angus stud is highest-margin enterprise (IVF program). Herd restructure from 33% overstock largely complete. FY27 ROAM target 6%.
+Context: Wombramurra Angus is highest-margin enterprise (IVF program). Herd restructure from 33% overstock largely complete. FY27 ROAM target 6%.
 
 Provide a detailed structured analysis in exactly this format — use specific numbers throughout:
 
@@ -1620,7 +1621,7 @@ async function generateWeatherInsights(loc) {
   const bomAvg = BOM_MONTHLY_AVG[loc];
   const currentMonth = new Date().getMonth();
 
-  const prompt = `You are an experienced NSW agricultural consultant advising on Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW (Wombramurra Angus stud). Current DSE load: ~20,538. Recent season has been dry with margins under pressure (GM/DSE $36.58 vs $65 benchmark). Herd restructure recently completed.
+  const prompt = `You are an experienced NSW agricultural consultant advising on Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW (Wombramurra Angus). Current DSE load: ~20,538. Recent season has been dry with margins under pressure (GM/DSE $36.58 vs $65 benchmark). Herd restructure recently completed.
 
 WEATHER FORECAST — ${locData.name} (next 14 days, ${WEATHER_MODELS[activeModel].label}):
 - 7-day rainfall total: ${total7}mm
@@ -2206,6 +2207,609 @@ Use the actual historical data provided. Be specific and direct.`;
     body.innerHTML = `<span style="color:#e53e3e">Could not connect.</span>`;
   }
   btn.disabled=false; btn.textContent="↺ Refresh ENSO Analysis";
+}
+
+
+// ══════════════════════════════════════════════════════════════
+// LIVESTOCK MARKETS MODULE — Buringal Grazing Co
+// Sources: MLA/NLRS via Agora Livestock + AI-powered fetching
+// ══════════════════════════════════════════════════════════════
+
+const SALEYARDS = [
+  { id:"tamworth",  name:"Tamworth",        short:"TRLX",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-trlx-tamworth-cattle/",   region:"New England" },
+  { id:"armidale",  name:"Armidale",        short:"NELSF", state:"NSW", url:"https://agoralivestock.com.au/saleyard-armidale-cattle/",          region:"New England" },
+  { id:"inverell",  name:"Inverell",        short:"IRLX",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-irlx-inverell-cattle/",     region:"New England" },
+  { id:"dubbo",     name:"Dubbo",           short:"DLCO",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-dubbo-cattle/",             region:"Central West" },
+  { id:"wagga",     name:"Wagga Wagga",     short:"WWLX",  state:"NSW", url:"https://agoralivestock.com.au/saleyard-wagga-cattle/",             region:"Riverina" },
+  { id:"wvlx",      name:"WVLX Wodonga",   short:"WVLX",  state:"VIC", url:"https://agoralivestock.com.au/saleyard-wvlx-wodonga-cattle/",      region:"North East VIC" },
+  { id:"nvlx",      name:"NVLX Wodonga",   short:"NVLX",  state:"VIC", url:"https://agoralivestock.com.au/saleyard-nvlx-wodonga-cattle/",      region:"North East VIC" },
+  { id:"dalby",     name:"Dalby",           short:"DALB",  state:"QLD", url:"https://agoralivestock.com.au/saleyard-dalby-cattle/",             region:"Darling Downs" },
+  { id:"roma",      name:"Roma",            short:"ROMA",  state:"QLD", url:"https://agoralivestock.com.au/saleyard-roma-cattle/",              region:"Maranoa" },
+];
+
+const MLA_INDICATORS = [
+  { id:"eyci",    name:"EYCI",                     desc:"Eastern Young Cattle Indicator",  unit:"¢/kg lwt", color:"#1a4a2e" },
+  { id:"nychc",   name:"National Young Cattle",    desc:"National Young Cattle Indicator", unit:"¢/kg lwt", color:"#2d7a4f" },
+  { id:"feeder",  name:"Feeder Steer",             desc:"250–330kg",                       unit:"¢/kg lwt", color:"#3b82f6" },
+  { id:"restocker",name:"Restocker Steer",         desc:"Yearling restocker",              unit:"¢/kg lwt", color:"#8b5cf6" },
+  { id:"heavy",   name:"Heavy Steer",              desc:"Processor heavy steer",           unit:"¢/kg cwt", color:"#dc2626" },
+  { id:"cow",     name:"Processor Cow",            desc:"Manufacturing cow",               unit:"¢/kg cwt", color:"#d97706" },
+];
+
+let saleyardData = {};
+let indicatorData = {};
+let activeSaleyardFilter = "all";
+
+// ── Fetch saleyard report via AI web search ───────────────────
+async function fetchSaleyardReport(saleyard) {
+  const prompt = `Fetch the latest cattle saleyard report for ${saleyard.name} (${saleyard.short}) in ${saleyard.state} from MLA/NLRS. 
+
+Go to this URL and extract the report: ${saleyard.url}
+
+Return ONLY a JSON object with exactly these fields (no other text):
+{
+  "date": "date of report e.g. 9 March 2026",
+  "yarding": number (total head),
+  "commentary": "the full commentary text",
+  "prices": {
+    "feederSteers": "price range e.g. 450-514c/kg",
+    "feederHeifers": "price range",
+    "restockerSteers": "price range", 
+    "cows": "price range",
+    "heavySteers": "price range",
+    "bullocksBulls": "price range"
+  },
+  "trend": "dearer/firm/cheaper/mixed",
+  "reporter": "name of reporter if listed"
+}
+If a price category is not mentioned, use null. If the page cannot be fetched, return {"error": "unavailable"}.`;
+
+  const res = await fetch(CONFIG.WORKER_URL, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body: JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens:1000,
+      tools:[{type:"web_search_20250305",name:"web_search"}],
+      messages:[{role:"user",content:prompt}]
+    })
+  });
+  const d = await res.json();
+  const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  try {
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if(jsonMatch) return JSON.parse(jsonMatch[0]);
+  } catch(e) {}
+  return {error:"parse_failed", raw:text.slice(0,200)};
+}
+
+// ── Fetch all MLA indicators at once ─────────────────────────
+async function fetchAllIndicators() {
+  const prompt = `Search for the current MLA cattle price indicators from the MLA website (mla.com.au/prices-markets). 
+
+Return ONLY a JSON object with these exact fields (no other text):
+{
+  "date": "today's date",
+  "eyci": {"value": number, "change": number, "unit": "¢/kg lwt"},
+  "nationalYoung": {"value": number, "change": number, "unit": "¢/kg lwt"},
+  "feederSteer": {"value": number, "change": number, "unit": "¢/kg lwt"},
+  "restockerSteer": {"value": number, "change": number, "unit": "¢/kg lwt"},
+  "heavySteer": {"value": number, "change": number, "unit": "¢/kg cwt"},
+  "processorCow": {"value": number, "change": number, "unit": "¢/kg cwt"}
+}
+Use null for any indicator you cannot find. change = today vs yesterday in cents.`;
+
+  const res = await fetch(CONFIG.WORKER_URL, {
+    method:"POST", headers:{"Content-Type":"application/json"},
+    body:JSON.stringify({
+      model:"claude-sonnet-4-20250514",
+      max_tokens:800,
+      tools:[{type:"web_search_20250305",name:"web_search"}],
+      messages:[{role:"user",content:prompt}]
+    })
+  });
+  const d = await res.json();
+  const text = (d.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("");
+  try {
+    const m = text.match(/\{[\s\S]*\}/);
+    if(m) return JSON.parse(m[0]);
+  } catch(e){}
+  return null;
+}
+
+// ── Render the full Livestock Markets section ─────────────────
+function renderLivestockMarketsTab() {
+  const container = document.getElementById("section-markets");
+  if(!container) return;
+
+  container.innerHTML = `
+    <!-- Header -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:12px">
+      <div>
+        <div style="font-size:15px;font-weight:700;color:#1a2332">Livestock Markets</div>
+        <div style="font-size:11px;color:#8898aa;margin-top:2px">MLA/NLRS Saleyard Reports · National Indicators · AI-powered live fetch</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button onclick="refreshAllIndicators()" id="indicators-refresh-btn"
+          style="background:#1a4a2e;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 16px;cursor:pointer">
+          ↻ Refresh Indicators
+        </button>
+        <button onclick="refreshAllSaleyards()" id="saleyards-refresh-btn"
+          style="background:#1d4ed8;border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 16px;cursor:pointer">
+          ↻ Refresh All Reports
+        </button>
+      </div>
+    </div>
+
+    <!-- MLA Price Indicators -->
+    <div class="panel" style="margin-bottom:20px">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">MLA National Price Indicators</div>
+          <div class="panel-sub">Live from MLA/NLRS · Click Refresh to update</div>
+        </div>
+        <div id="indicators-updated" style="font-size:10px;color:#8898aa"></div>
+      </div>
+      <div id="indicators-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px">
+        ${MLA_INDICATORS.map(ind=>`
+          <div id="indicator-${ind.id}" style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:10px;padding:14px;border-left:3px solid ${ind.color}">
+            <div style="font-size:10px;font-weight:600;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">${ind.name}</div>
+            <div style="font-size:22px;font-weight:700;color:#1a2332" id="ind-val-${ind.id}">—</div>
+            <div style="font-size:10px;color:#8898aa;margin-top:2px">${ind.unit}</div>
+            <div style="font-size:10px;margin-top:4px" id="ind-chg-${ind.id}"></div>
+            <div style="font-size:9px;color:#a0aec0;margin-top:2px">${ind.desc}</div>
+          </div>`).join("")}
+      </div>
+    </div>
+
+    <!-- Saleyard filter -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap">
+      <span style="font-size:11px;font-weight:600;color:#4a5568">Filter:</span>
+      ${[
+        {id:"all",    label:"All Saleyards"},
+        {id:"nsw",    label:"NSW"},
+        {id:"qld",    label:"QLD"},
+        {id:"vic",    label:"VIC"},
+        {id:"neweng", label:"New England"},
+      ].map(f=>`<button onclick="filterSaleyards('${f.id}')" id="filter-${f.id}"
+        style="padding:6px 14px;font-size:10px;font-weight:600;border-radius:6px;cursor:pointer;transition:all .15s;
+        background:${f.id==="all"?"#1a4a2e":"#f8fafc"};color:${f.id==="all"?"#fff":"#4a5568"};
+        border:1.5px solid ${f.id==="all"?"#1a4a2e":"#e2e8f0"}">${f.label}</button>`).join("")}
+    </div>
+
+    <!-- Saleyard reports grid -->
+    <div id="saleyards-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:16px;margin-bottom:20px">
+      ${SALEYARDS.map(sy=>`
+        <div class="panel" id="saleyard-card-${sy.id}" style="margin-bottom:0;border-top:3px solid #e2e8f0" data-state="${sy.state.toLowerCase()}" data-region="${sy.region.toLowerCase().replace(" ","")}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:#1a2332">${sy.name}</div>
+              <div style="font-size:10px;color:#8898aa">${sy.short} · ${sy.region} · ${sy.state}</div>
+            </div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <span id="saleyard-badge-${sy.id}" style="font-size:9px;padding:3px 8px;border-radius:20px;background:#f0f2f5;color:#8898aa">Not loaded</span>
+              <button onclick="fetchSingleSaleyard('${sy.id}')" id="saleyard-btn-${sy.id}"
+                style="font-size:9px;font-weight:600;padding:4px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">
+                Fetch
+              </button>
+            </div>
+          </div>
+          <div id="saleyard-content-${sy.id}">
+            <div style="text-align:center;padding:20px;color:#a0aec0;font-size:12px;font-style:italic">
+              Click Fetch to load latest report
+            </div>
+          </div>
+        </div>`).join("")}
+    </div>
+
+    <!-- AI Market Analysis -->
+    <div class="panel" style="margin-bottom:20px;background:linear-gradient(135deg,#f8fafc,#f0fdf4);border:1px solid #e2e8f0">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#1a2332">AI Market Analysis</div>
+          <div style="font-size:11px;color:#8898aa;margin-top:2px">Powered by Claude · Market conditions vs your current herd position</div>
+        </div>
+        <button onclick="generateMarketInsights()" id="market-ai-btn"
+          style="background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border:none;border-radius:8px;color:#fff;font-size:11px;font-weight:600;padding:9px 18px;cursor:pointer;white-space:nowrap">
+          ▶ Generate Market Analysis
+        </button>
+      </div>
+      <div id="market-ai-body" style="font-size:13px;color:#a0aec0;font-style:italic">
+        Click Generate for an AI-powered market analysis — current price indicators, saleyard trends, and specific recommendations for your Angus cattle given current market conditions.
+      </div>
+    </div>
+
+    <!-- EYCI Historical chart -->
+    <div class="panel" style="margin-bottom:0">
+      <div class="panel-header">
+        <div>
+          <div class="panel-title">EYCI — Eastern Young Cattle Indicator — Historical</div>
+          <div class="panel-sub">Annual averages 2000–2025 (¢/kg cwt) · Source: MLA/NLRS</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="text-align:right">
+            <div style="font-size:10px;color:#8898aa">Current (lwt)</div>
+            <div id="eyci-val" style="font-size:20px;font-weight:700;color:#1a4a2e">888 ¢/kg lwt</div>
+          </div>
+          <div style="display:flex;gap:6px">
+            <button onclick="setEYCIRange(5)"  id="eyci-r5"  style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #1a4a2e;background:#1a4a2e;color:#fff;cursor:pointer">5Y</button>
+            <button onclick="setEYCIRange(10)" id="eyci-r10" style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">10Y</button>
+            <button onclick="setEYCIRange(25)" id="eyci-r25" style="font-size:10px;font-weight:600;padding:5px 10px;border-radius:6px;border:1.5px solid #e2e8f0;background:#f8fafc;color:#4a5568;cursor:pointer">All</button>
+          </div>
+        </div>
+      </div>
+      <!-- Key stats row -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px">
+        ${[
+          {label:"2025 Avg",  v:"~495¢", sub:"cwt — recovering",    color:"#1a4a2e"},
+          {label:"2021 Peak", v:"1,042¢",sub:"cwt — all-time high",  color:"#16a34a"},
+          {label:"2019 Low",  v:"437¢",  sub:"cwt — drought low",    color:"#dc2626"},
+          {label:"10Y Avg",   v:"~620¢", sub:"cwt — 2015–2025",      color:"#3b82f6"},
+          {label:"2016 High", v:"600¢",  sub:"cwt — first 600 break",color:"#d97706"},
+          {label:"2015 Avg",  v:"~490¢", sub:"cwt — pre-run",        color:"#8b5cf6"},
+        ].map(s=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;border-left:3px solid ${s.color}">
+          <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.06em;margin-bottom:3px">${s.label}</div>
+          <div style="font-size:16px;font-weight:700;color:#1a2332">${s.v}</div>
+          <div style="font-size:9px;color:#8898aa">${s.sub}</div>
+        </div>`).join("")}
+      </div>
+      <div style="height:260px"><canvas id="chart-eyci"></canvas></div>
+      <div style="margin-top:10px;font-size:10px;color:#a0aec0">
+        Note: Historical data shown in ¢/kg cwt (carcase weight) — the official MLA unit. To convert to lwt multiply by ~1.85. Current live price shown above in lwt.
+      </div>
+    </div>
+  `;
+
+  // Build EYCI chart
+  setTimeout(() => {
+    makeMarketsCharts();
+    buildEYCIHistoricalChart(5);
+  }, 100);
+}
+
+// ── EYCI Historical Data (annual averages ¢/kg cwt) ──────────
+// Source: MLA/NLRS — compiled from published reports and market data
+const EYCI_HISTORY = {
+  2000: 168, 2001: 182, 2002: 164, 2003: 195, 2004: 238,
+  2005: 260, 2006: 243, 2007: 258, 2008: 259, 2009: 288,
+  2010: 333, 2011: 376, 2012: 330, 2013: 354, 2014: 430,
+  2015: 492, 2016: 545, 2017: 605, 2018: 528, 2019: 465,
+  2020: 615, 2021: 890, 2022: 785, 2023: 520, 2024: 500,
+  2025: 495,
+};
+
+let eyciRangeYears = 5;
+
+function setEYCIRange(years) {
+  eyciRangeYears = years;
+  ["5","10","25"].forEach(r => {
+    const btn = document.getElementById(`eyci-r${r}`);
+    if(!btn) return;
+    const active = parseInt(r)===years;
+    btn.style.background = active?"#1a4a2e":"#f8fafc";
+    btn.style.color = active?"#fff":"#4a5568";
+    btn.style.borderColor = active?"#1a4a2e":"#e2e8f0";
+  });
+  buildEYCIHistoricalChart(years);
+}
+
+function buildEYCIHistoricalChart(years) {
+  destroyWeatherChart("eyci-hist");
+  const ctx = document.getElementById("chart-eyci")?.getContext("2d");
+  if(!ctx) return;
+
+  const currentYear = 2025;
+  const startYear = years === 25 ? 2000 : currentYear - years + 1;
+  const allYears = Object.keys(EYCI_HISTORY).map(Number).filter(y => y >= startYear).sort();
+  const vals = allYears.map(y => EYCI_HISTORY[y]);
+  const avg = Math.round(vals.reduce((s,v)=>s+v,0)/vals.length);
+
+  // Colour bars by threshold
+  const colors = vals.map(v =>
+    v >= 800 ? "rgba(22,163,74,0.75)" :
+    v >= 600 ? "rgba(26,74,46,0.65)" :
+    v >= 450 ? "rgba(59,130,246,0.6)" :
+    v >= 350 ? "rgba(217,119,6,0.65)" :
+    "rgba(220,38,38,0.7)"
+  );
+
+  // Notable events annotations
+  const notableYears = {2016:"First 600¢",2019:"Drought low",2021:"All-time peak",2022:"Post-peak",2023:"Price fall"};
+
+  const grad = ctx.createLinearGradient(0,0,0,260);
+  grad.addColorStop(0,"rgba(26,74,46,0.15)");
+  grad.addColorStop(1,"rgba(26,74,46,0)");
+
+  weatherCharts["eyci-hist"] = new Chart(ctx, {
+    type:"bar",
+    data:{
+      labels: allYears,
+      datasets:[
+        {
+          label:"EYCI Annual Avg (¢/kg cwt)",
+          data:vals,
+          backgroundColor:colors,
+          borderRadius:3,
+          borderWidth:0,
+        },
+        {
+          label:`Period Avg ${avg}¢`,
+          data:Array(allYears.length).fill(avg),
+          type:"line",
+          borderColor:"#1a2332",
+          borderDash:[5,5],
+          borderWidth:1.5,
+          pointRadius:0,
+          fill:false,
+        },
+      ]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      plugins:{
+        legend:{display:true,labels:{font:{size:10,family:"Inter"},color:"#4a5568",boxWidth:10,boxHeight:10,padding:14}},
+        tooltip:{
+          backgroundColor:"#fff",
+          borderColor:"#e2e8f0",
+          borderWidth:1,
+          titleColor:"#1a2332",
+          bodyColor:"#4a5568",
+          padding:12,
+          cornerRadius:8,
+          callbacks:{
+            title: ctx => `${ctx[0].label} Annual Average`,
+            label: ctx => ` EYCI: ${ctx.parsed.y}¢/kg cwt`,
+            afterLabel: ctx => {
+              const y = parseInt(ctx.label);
+              const lwt = Math.round(ctx.parsed.y * 1.85);
+              const note = notableYears[y]||"";
+              const lines = [` ≈ ${lwt}¢/kg lwt (est.)`];
+              if(note) lines.push(` 📌 ${note}`);
+              // vs long-term avg
+              const diff = ctx.parsed.y - avg;
+              lines.push(` ${diff>=0?"▲":"▼"} ${Math.abs(diff)}¢ vs period avg`);
+              return lines;
+            }
+          }
+        }
+      },
+      scales:{
+        x:{
+          grid:{display:false},
+          ticks:{color:"#8898aa",font:{size:10,family:"Inter"},maxRotation:45}
+        },
+        y:{
+          grid:{color:"#f0f2f5"},
+          ticks:{color:"#8898aa",font:{size:10,family:"Inter"},callback:v=>`${v}¢`},
+          beginAtZero:false,
+          title:{display:true,text:"¢/kg cwt",color:"#8898aa",font:{size:10}}
+        }
+      },
+      animation:{duration:400}
+    }
+  });
+}
+
+// ── Fetch single saleyard ─────────────────────────────────────
+async function fetchSingleSaleyard(saleyardId) {
+  const sy = SALEYARDS.find(s=>s.id===saleyardId);
+  if(!sy) return;
+  const btn = document.getElementById(`saleyard-btn-${saleyardId}`);
+  const badge = document.getElementById(`saleyard-badge-${saleyardId}`);
+  const content = document.getElementById(`saleyard-content-${saleyardId}`);
+  const card = document.getElementById(`saleyard-card-${saleyardId}`);
+
+  btn.disabled=true; btn.textContent="Loading…";
+  badge.textContent="Fetching…";
+  badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#fffbeb;color:#92400e";
+  content.innerHTML=`<div style="text-align:center;padding:20px;color:#a0aec0;font-size:11px">Fetching latest report from MLA/NLRS…</div>`;
+
+  try {
+    const data = await fetchSaleyardReport(sy);
+    saleyardData[saleyardId] = data;
+
+    if(data.error) {
+      content.innerHTML=`<div style="padding:12px;color:#8898aa;font-size:12px;font-style:italic">Report unavailable — ${data.error}. <a href="${sy.url}" target="_blank" style="color:#3b82f6">View on Agora →</a></div>`;
+      badge.textContent="Unavailable"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#f1f5f9;color:#64748b";
+      card.style.borderTopColor="#e2e8f0";
+    } else {
+      const trendColor = data.trend?.toLowerCase().includes("dear")?"#16a34a":data.trend?.toLowerCase().includes("cheap")?"#dc2626":"#d97706";
+      const trendBg = data.trend?.toLowerCase().includes("dear")?"#f0fdf4":data.trend?.toLowerCase().includes("cheap")?"#fef2f2":"#fffbeb";
+      card.style.borderTopColor = trendColor;
+
+      badge.textContent = data.date||"Latest";
+      badge.style.cssText=`font-size:9px;padding:3px 8px;border-radius:20px;background:${trendBg};color:${trendColor};font-weight:600`;
+
+      // Price tags
+      const prices = data.prices||{};
+      const priceEntries = Object.entries(prices).filter(([k,v])=>v);
+      const priceLabels = {feederSteers:"Feeder Steers",feederHeifers:"Feeder Heifers",restockerSteers:"Restocker Steers",cows:"Cows",heavySteers:"Heavy Steers",bullocksBulls:"Bullocks/Bulls"};
+
+      content.innerHTML = `
+        <!-- Yarding and trend -->
+        <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap">
+          <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:8px 14px;flex:1;min-width:80px;text-align:center">
+            <div style="font-size:18px;font-weight:700;color:#1a2332">${data.yarding?.toLocaleString()||"—"}</div>
+            <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Head Yarded</div>
+          </div>
+          ${data.trend?`<div style="background:${trendBg};border:1px solid ${trendColor}33;border-radius:8px;padding:8px 14px;flex:1;min-width:80px;text-align:center">
+            <div style="font-size:14px;font-weight:700;color:${trendColor};text-transform:capitalize">${data.trend}</div>
+            <div style="font-size:9px;color:#8898aa;text-transform:uppercase;letter-spacing:.04em">Market Trend</div>
+          </div>`:""}
+        </div>
+
+        <!-- Price ranges -->
+        ${priceEntries.length?`<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:12px">
+          ${priceEntries.map(([k,v])=>`<div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:6px;padding:6px 10px">
+            <div style="font-size:9px;color:#8898aa;font-weight:600;text-transform:uppercase">${priceLabels[k]||k}</div>
+            <div style="font-size:11px;font-weight:700;color:#1a2332;margin-top:2px">${v}</div>
+          </div>`).join("")}
+        </div>`:""}
+
+        <!-- Commentary -->
+        ${data.commentary?`<div style="background:#fffef0;border:1px solid #fde68a;border-radius:8px;padding:10px 12px;font-size:11px;color:#4a5568;line-height:1.6;max-height:100px;overflow-y:auto">
+          ${data.commentary}
+        </div>`:""}
+
+        ${data.reporter?`<div style="font-size:10px;color:#a0aec0;margin-top:8px">Reporter: ${data.reporter} · <a href="${sy.url}" target="_blank" style="color:#3b82f6">Full report →</a></div>`:`<div style="margin-top:6px"><a href="${sy.url}" target="_blank" style="font-size:10px;color:#3b82f6">View full report on Agora →</a></div>`}
+      `;
+    }
+  } catch(e) {
+    content.innerHTML=`<div style="padding:12px;color:#e53e3e;font-size:12px">Error: ${e.message}. <a href="${sy.url}" target="_blank" style="color:#3b82f6">View directly →</a></div>`;
+    badge.textContent="Error"; badge.style.cssText="font-size:9px;padding:3px 8px;border-radius:20px;background:#fef2f2;color:#dc2626";
+  }
+  btn.disabled=false; btn.textContent="Refresh";
+}
+
+// ── Refresh all saleyards ─────────────────────────────────────
+async function refreshAllSaleyards() {
+  const btn = document.getElementById("saleyards-refresh-btn");
+  btn.disabled=true; btn.textContent="Loading all…";
+  const visible = SALEYARDS.filter(sy => {
+    const card = document.getElementById(`saleyard-card-${sy.id}`);
+    return card && card.style.display!=="none";
+  });
+  for(const sy of visible) {
+    await fetchSingleSaleyard(sy.id);
+    await new Promise(r=>setTimeout(r,1500)); // stagger to avoid rate limits
+  }
+  btn.disabled=false; btn.textContent="↻ Refresh All Reports";
+}
+
+// ── Refresh all indicators ────────────────────────────────────
+async function refreshAllIndicators() {
+  const btn = document.getElementById("indicators-refresh-btn");
+  if(btn){ btn.disabled=true; btn.textContent="Fetching…"; }
+
+  const data = await fetchAllIndicators();
+  const updated = document.getElementById("indicators-updated");
+
+  if(data && !data.error) {
+    const t = new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"});
+    if(updated) updated.textContent = `Updated ${t}`;
+
+    const map = {
+      eyci:         {key:"eyci",         elId:"eyci"},
+      nychc:        {key:"nationalYoung",elId:"nychc"},
+      feeder:       {key:"feederSteer",  elId:"feeder"},
+      restocker:    {key:"restockerSteer",elId:"restocker"},
+      heavy:        {key:"heavySteer",   elId:"heavy"},
+      cow:          {key:"processorCow", elId:"cow"},
+    };
+
+    Object.entries(map).forEach(([indId, {key, elId}]) => {
+      const d = data[key];
+      if(!d) return;
+      const valEl = document.getElementById(`ind-val-${elId}`);
+      const chgEl = document.getElementById(`ind-chg-${elId}`);
+      if(valEl && d.value) valEl.textContent = `${d.value}`;
+      if(chgEl && d.change !== null && d.change !== undefined) {
+        const positive = d.change > 0;
+        const neutral = d.change === 0;
+        chgEl.innerHTML = `<span style="color:${neutral?"#8898aa":positive?"#16a34a":"#dc2626"};font-weight:600">
+          ${neutral?"→":positive?"▲":"▼"} ${Math.abs(d.change).toFixed(1)}¢
+        </span>`;
+      }
+    });
+
+    // Update EYCI display
+    const eyciEl = document.getElementById("eyci-val");
+    if(eyciEl && data.eyci?.value) eyciEl.textContent = `${data.eyci.value} ¢/kg lwt`;
+
+  } else {
+    if(updated) updated.textContent = "Could not fetch — check connection";
+  }
+  if(btn){ btn.disabled=false; btn.textContent="↻ Refresh Indicators"; }
+}
+
+// ── Filter saleyards ──────────────────────────────────────────
+function filterSaleyards(filter) {
+  activeSaleyardFilter = filter;
+  // Update button styles
+  ["all","nsw","qld","vic","neweng"].forEach(f => {
+    const btn = document.getElementById(`filter-${f}`);
+    if(!btn) return;
+    const active = f===filter;
+    btn.style.background = active?"#1a4a2e":"#f8fafc";
+    btn.style.color = active?"#fff":"#4a5568";
+    btn.style.borderColor = active?"#1a4a2e":"#e2e8f0";
+  });
+
+  SALEYARDS.forEach(sy => {
+    const card = document.getElementById(`saleyard-card-${sy.id}`);
+    if(!card) return;
+    let show = filter==="all"
+      || (filter==="nsw" && sy.state==="NSW")
+      || (filter==="qld" && sy.state==="QLD")
+      || (filter==="vic" && sy.state==="VIC")
+      || (filter==="neweng" && sy.region==="New England");
+    card.style.display = show?"":"none";
+  });
+}
+
+// ── AI Market Analysis ────────────────────────────────────────
+async function generateMarketInsights() {
+  const btn = document.getElementById("market-ai-btn");
+  const body = document.getElementById("market-ai-body");
+  btn.disabled=true; btn.textContent="Generating…";
+  body.innerHTML=`<span style="color:#a0aec0;font-style:italic">Analysing market conditions against your herd position…</span>`;
+
+  // Compile loaded saleyard data
+  const loadedReports = Object.entries(saleyardData)
+    .filter(([_,d])=>d&&!d.error)
+    .map(([id,d])=>{
+      const sy = SALEYARDS.find(s=>s.id===id);
+      return `${sy?.name} (${d.date||"latest"}): ${d.yarding?.toLocaleString()||"?"}hd yarded, trend: ${d.trend||"unknown"}${d.prices?.restockerSteers?`, restocker steers ${d.prices.restockerSteers}`:""}${d.prices?.feederSteers?`, feeder steers ${d.prices.feederSteers}`:""}${d.prices?.cows?`, cows ${d.prices.cows}`:""}`;
+    }).join("\n");
+
+  const eyciVal = document.getElementById("eyci-val")?.textContent || "888 ¢/kg lwt";
+
+  const prompt = `You are a senior livestock market analyst advising Buringal Grazing Co, a commercial and registered Angus cattle operation at Nundle & Topdale NSW running the Wombramurra Angus.
+
+CURRENT OPERATIONAL POSITION:
+- Herd: ~966 commercial breeders + 228 PTIC recipients + 15 registered donors + 110 commercial heifers + 115 registered heifers + 129 steers/backgrounders
+- Total DSE: ~20,538 (recently restructured from 26,618 peak)
+- EYCI: ${eyciVal}
+- Current season GM/DSE: $36.58 (benchmark >$65) — margins under pressure
+- Wombramurra Angus genetics program — registered Angus sales are highest-margin enterprise
+
+SALEYARD REPORTS (most recently loaded):
+${loadedReports || "No saleyard reports loaded yet — base analysis on current market knowledge"}
+
+Provide a structured market analysis with these exact sections:
+
+SECTION 1 - MARKET OVERVIEW
+2-3 sentence summary of current cattle market conditions across eastern Australia.
+
+SECTION 2 - KEY PRICE INDICATORS
+4-5 bullet points on current indicator levels, trends, and what they mean for different cattle classes in your herd.
+
+SECTION 3 - RESTOCKER & FEEDER MARKET
+3-4 bullet points specifically on restocker and feeder demand — relevant for your backgrounder and heifer sales.
+
+SECTION 4 - COW & PROCESSOR MARKET
+3-4 bullet points on processor cow and grown cattle prices — relevant to any cull decisions.
+
+SECTION 5 - WOMBRAMURRA ANGUS STUD MARKET
+3-4 bullet points on the registered Angus genetics market — sale timing, demand conditions, price outlook for stud bulls and females.
+
+SECTION 6 - STRATEGIC RECOMMENDATIONS FOR BURINGAL
+5-6 specific, actionable bullet points on selling decisions, timing, which saleyards offer best options for your classes, and how to capitalise on current market conditions given your financial position.
+
+Be specific, use actual price references where available, and tie recommendations to the operational context.`;
+
+  try {
+    const res = await fetch(CONFIG.WORKER_URL, {
+      method:"POST", headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:2000,messages:[{role:"user",content:prompt}]})
+    });
+    const d = await res.json();
+    const text = (d.content||[]).find(b=>b.type==="text")?.text||"Unable to generate insights.";
+    body.innerHTML = formatAIResponse(text);
+  } catch(e) {
+    body.innerHTML=`<span style="color:#e53e3e">Could not connect.</span>`;
+  }
+  btn.disabled=false; btn.textContent="↺ Regenerate Analysis";
 }
 
 
