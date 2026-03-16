@@ -2387,56 +2387,76 @@ async function fetchSaleyardReport(saleyard, saleType) {
       })
     });
     const searchD = await searchRes.json();
-    console.log(`${saleyard.name} raw response blocks:`, (searchD.content||[]).map(b=>b.type));
+    console.log(`${saleyard.name} response blocks:`, (searchD.content||[]).map(b=>b.type));
 
-    // Extract text from all text blocks
     const text = (searchD.content||[]).filter(b=>b.type==="text").map(b=>b.text).join("\n");
-    console.log(`${saleyard.name} extracted text (first 500):`, text.slice(0,500));
+    console.log(`${saleyard.name} FULL TEXT (${text.length} chars):`, text.slice(0,1200));
 
-    if(text.trim()) {
+    if(text.trim() && text.length > 50) {
+      // Strategy 1: structured format
       const get = (label) => {
-        const m = text.match(new RegExp(`^${label}:\\s*(.+)$`,"mi"));
+        const m = text.match(new RegExp("^" + label + ":\\s*(.+)$","mi"));
         const v = m ? m[1].trim() : null;
         return (v && v !== "N/A" && v !== "n/a") ? v : null;
       };
+      let dateVal   = get("REPORT_DATE");
+      let yarding   = parseInt((get("YARDING")||"").replace(/[^0-9]/g,""))||0;
+      let trendVal  = get("TREND")?.toLowerCase();
+      let commVal   = get("COMMENTARY");
+      let changeVal = get("CHANGE");
 
-      const dateVal    = get("REPORT_DATE");
-      const yardingRaw = get("YARDING");
-      const yarding    = yardingRaw ? parseInt(yardingRaw.replace(/[^0-9]/g,"")) : null;
-      const trendVal   = get("TREND")?.toLowerCase();
-      const commVal    = get("COMMENTARY");
-      const changeVal  = get("CHANGE");
+      // Strategy 2: prose extraction for date and yarding
+      if(!dateVal) {
+        const dm = text.match(/\b(\d{1,2})\s+(January|February|March|April|May|June|July|August|September|October|November|December)\s+(202\d)\b/i);
+        if(dm) dateVal = dm[1] + " " + dm[2] + " " + dm[3];
+      }
+      if(!yarding) {
+        const ym = text.match(/(?:total\s+yarding[:\s]+|yarding\s+of\s+)([\d,]+)/i)
+                || text.match(/([\d,]+)\s+(?:head\s+)?(?:were\s+)?yarded/i)
+                || text.match(/Total\s+Yarding[:\s]+([\d,]+)/i);
+        if(ym) yarding = parseInt(ym[1].replace(/,/g,""))||0;
+      }
 
+      // Strategy 3: ROW: lines
       const rows = [];
-      for(const m of text.matchAll(/^ROW:\s*(.+)$/gmi)) {
-        const p = m[1].split("|").map(s=>s.trim());
+      const rowRe = /^ROW:\s*(.+)$/gmi;
+      let rm;
+      while((rm = rowRe.exec(text)) !== null) {
+        const p = rm[1].split("|").map(s=>s.trim());
         if(p.length >= 2 && p[0] && p[0]!=="N/A" && p[0]!=="Category") {
           rows.push({
             category:  p[0],
-            unit:      "¢/kg lwt",
-            headCount: parseInt(p[2])||null,
-            avgPrice:  p[3] && p[3]!=="N/A" ? p[3] : null,
-            avgHead:   p[4] && p[4]!=="N/A" ? p[4] : null,
+            unit:      "c/kg lwt",
+            headCount: parseInt((p[2]||"").replace(/[^0-9]/g,""))||null,
+            avgPrice:  (p[3] && p[3]!=="N/A") ? p[3] : null,
+            avgHead:   (p[4] && p[4]!=="N/A") ? p[4] : null,
             fromSearch:true,
           });
         }
       }
 
-      // Accept if we got a date, or yarding > 0, or at least some rows
-      if(dateVal || (yarding > 0) || rows.length > 0) {
-        console.log(`${saleyard.name} web search SUCCESS: date=${dateVal}, yarding=${yarding}, rows=${rows.length}`);
+      // Strategy 4: commentary from paragraphs
+      if(!commVal) {
+        const paras = text.split(/\n{2,}/).filter(p =>
+          p.length > 80 && /cattle|yarding|steer|heifer|cow|sale|market|price/i.test(p)
+        );
+        if(paras.length) commVal = paras.slice(0,3).join("\n\n").trim();
+      }
+
+      if(dateVal || yarding > 0 || commVal || rows.length > 0) {
+        console.log(`${saleyard.name} web search SUCCESS: date=${dateVal}, yarding=${yarding}, rows=${rows.length}, comm=${commVal?.length||0}chars`);
         return {
-          date:       dateVal,
-          yarding:    isNaN(yarding) ? null : yarding,
-          change:     changeVal,
-          trend:      trendVal,
-          commentary: commVal,
-          saleType:   saleType,
-          priceRows:  rows,
-          source:     "MLA/NLRS · " + (saleType==="store"?"Store Sale":"Physical Sale"),
+          date:      dateVal || "Latest available",
+          yarding:   yarding || null,
+          change:    changeVal,
+          trend:     trendVal,
+          commentary:commVal,
+          saleType:  saleType,
+          priceRows: rows,
+          source:    "MLA/NLRS - " + (saleType==="store"?"Store Sale":"Physical Sale"),
         };
       }
-      console.warn(`${saleyard.name} web search returned text but no structured data`);
+      console.warn(`${saleyard.name} web search: no usable data extracted`);
     }
   } catch(e) {
     console.warn(`${saleyard.name} web search error:`, e.message);
