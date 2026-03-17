@@ -3,219 +3,189 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Figured API Auth — Buringal Dashboard</title>
+<title>Figured Auth — Buringal Dashboard</title>
 <style>
-  * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: -apple-system, 'Inter', sans-serif; background: #f0f2f5; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-  .card { background: #fff; border-radius: 16px; padding: 40px; max-width: 560px; width: 100%; box-shadow: 0 8px 40px rgba(0,0,0,0.12); }
-  .logo { display: flex; align-items: center; gap: 12px; margin-bottom: 28px; }
-  .logo-mark { width: 40px; height: 40px; background: linear-gradient(135deg, #1a4a2e, #2d7a4f); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 18px; }
-  h1 { font-size: 22px; font-weight: 700; color: #1a2332; margin-bottom: 6px; }
-  .sub { font-size: 13px; color: #8898aa; margin-bottom: 28px; }
-  .step { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 20px; margin-bottom: 16px; }
-  .step-num { font-size: 10px; font-weight: 700; color: #8898aa; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .step-title { font-size: 14px; font-weight: 600; color: #1a2332; margin-bottom: 4px; }
-  .step-desc { font-size: 12px; color: #8898aa; }
-  .btn { display: block; width: 100%; background: linear-gradient(135deg, #1a4a2e, #2d7a4f); color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 700; cursor: pointer; text-align: center; text-decoration: none; margin-top: 24px; transition: all .2s; }
-  .btn:hover { box-shadow: 0 8px 24px rgba(45,122,79,.35); transform: translateY(-1px); }
-  .btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
-  .result { display: none; margin-top: 24px; }
-  .token-box { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
-  .token-label { font-size: 10px; font-weight: 700; color: #166534; text-transform: uppercase; letter-spacing: .06em; margin-bottom: 6px; }
-  .token-value { font-size: 11px; color: #1a2332; word-break: break-all; font-family: monospace; background: #fff; padding: 8px; border-radius: 6px; border: 1px solid #bbf7d0; max-height: 80px; overflow-y: auto; }
-  .copy-btn { margin-top: 8px; padding: 6px 14px; font-size: 11px; font-weight: 600; background: #1a4a2e; color: #fff; border: none; border-radius: 6px; cursor: pointer; }
-  .copy-btn.copied { background: #16a34a; }
-  .instructions { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 16px; margin-top: 16px; font-size: 12px; color: #92400e; line-height: 1.7; }
-  .instructions strong { color: #78350f; }
-  .error { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 16px; margin-top: 16px; font-size: 13px; color: #dc2626; display: none; }
-  .loading { display: none; text-align: center; padding: 20px; color: #8898aa; font-size: 13px; }
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,sans-serif;background:#f0f2f5;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+.card{background:#fff;border-radius:16px;padding:40px;max-width:560px;width:100%;box-shadow:0 8px 40px rgba(0,0,0,.12)}
+h1{font-size:22px;font-weight:700;color:#1a2332;margin-bottom:8px}
+p{font-size:13px;color:#8898aa;margin-bottom:24px;line-height:1.6}
+.btn{display:block;width:100%;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);color:#fff;border:none;border-radius:10px;padding:14px;font-size:15px;font-weight:700;cursor:pointer;margin-top:20px}
+.btn:hover{opacity:.9}
+.token-box{background:#f0fdf4;border:1.5px solid #86efac;border-radius:10px;padding:16px;margin-bottom:12px;margin-top:20px}
+.token-label{font-size:10px;font-weight:700;color:#166534;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.token-value{font-size:11px;color:#1a2332;word-break:break-all;font-family:monospace;background:#fff;padding:8px;border-radius:6px;border:1px solid #bbf7d0;max-height:80px;overflow-y:auto}
+.copy-btn{margin-top:8px;padding:6px 14px;font-size:11px;font-weight:600;background:#1a4a2e;color:#fff;border:none;border-radius:6px;cursor:pointer}
+.error{background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:16px;margin-top:16px;font-size:12px;color:#dc2626;white-space:pre-wrap;display:none}
+.info{background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:16px;margin-top:16px;font-size:12px;color:#92400e;line-height:1.7}
+.info strong{color:#78350f}
+#loading{display:none;text-align:center;padding:20px;color:#8898aa}
+#result{display:none}
+#initial{}
 </style>
 </head>
 <body>
 <div class="card">
-  <div class="logo">
-    <div class="logo-mark">B</div>
+  <div style="display:flex;align-items:center;gap:12px;margin-bottom:24px">
+    <div style="width:40px;height:40px;background:linear-gradient(135deg,#1a4a2e,#2d7a4f);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:18px">B</div>
     <div>
       <div style="font-size:15px;font-weight:700;color:#1a2332">Buringal Grazing Co</div>
       <div style="font-size:11px;color:#8898aa">Figured API — One-time authorisation</div>
     </div>
   </div>
 
-  <div id="step-initial">
+  <div id="initial">
     <h1>Connect Figured to your Dashboard</h1>
-    <p class="sub">This is a one-time setup. Click the button below to log into Figured and authorise your dashboard to access your financial data.</p>
-
-    <div class="step">
-      <div class="step-num">Step 1</div>
-      <div class="step-title">Click "Authorise with Figured" below</div>
-      <div class="step-desc">You'll be redirected to Figured to log in</div>
-    </div>
-    <div class="step">
-      <div class="step-num">Step 2</div>
-      <div class="step-title">Log in and click Authorise</div>
-      <div class="step-desc">Use your normal Figured credentials</div>
-    </div>
-    <div class="step">
-      <div class="step-num">Step 3</div>
-      <div class="step-title">Copy the tokens shown here</div>
-      <div class="step-desc">Add them to Cloudflare Worker secrets</div>
-    </div>
-
-    <a href="#" class="btn" id="auth-btn" onclick="startAuth().catch(e=>console.error(e)); return false;">🔑 Authorise with Figured</a>
+    <p>Click the button below to log into Figured. This is a one-time setup — once done, your dashboard will automatically pull live financial data from Figured.</p>
+    <button class="btn" onclick="startAuth()">🔑 Authorise with Figured</button>
   </div>
 
-  <div class="loading" id="loading">
-    <div style="font-size:24px;margin-bottom:10px">⏳</div>
-    Exchanging authorisation code for tokens…
-  </div>
+  <div id="loading"><p>⏳ Exchanging authorisation code for tokens…</p></div>
+  <div class="error" id="error"></div>
 
-  <div class="error" id="error-box"></div>
-
-  <div class="result" id="result">
-    <h1 style="margin-bottom:6px">✅ Authorisation Successful!</h1>
-    <p class="sub">Copy these values and add them as secrets in Cloudflare Workers.</p>
+  <div id="result">
+    <h1>✅ Authorisation Successful!</h1>
+    <p>Copy these two values and add them as secrets in Cloudflare Workers (buringal-api → Settings → Variables and Secrets).</p>
 
     <div class="token-box">
-      <div class="token-label">FIGURED_ACCESS_TOKEN — add to Cloudflare secrets</div>
-      <div class="token-value" id="access-token-val"></div>
-      <button class="copy-btn" onclick="copyToken('access-token-val', this)">Copy</button>
+      <div class="token-label">FIGURED_ACCESS_TOKEN</div>
+      <div class="token-value" id="at"></div>
+      <button class="copy-btn" onclick="copy('at',this)">Copy</button>
     </div>
 
     <div class="token-box">
-      <div class="token-label">FIGURED_REFRESH_TOKEN — add to Cloudflare secrets</div>
-      <div class="token-value" id="refresh-token-val"></div>
-      <button class="copy-btn" onclick="copyToken('refresh-token-val', this)">Copy</button>
+      <div class="token-label">FIGURED_REFRESH_TOKEN</div>
+      <div class="token-value" id="rt"></div>
+      <button class="copy-btn" onclick="copy('rt',this)">Copy</button>
     </div>
 
-    <div class="instructions">
+    <div class="info">
       <strong>Next steps:</strong><br>
-      1. Go to <strong>dash.cloudflare.com</strong> → Workers & Pages → buringal-api → Settings → Variables and Secrets<br>
-      2. Add secret: <strong>FIGURED_ACCESS_TOKEN</strong> = value above<br>
-      3. Add secret: <strong>FIGURED_REFRESH_TOKEN</strong> = value above<br>
-      4. Save — your dashboard will now pull live data from Figured automatically
+      1. Go to <strong>dash.cloudflare.com</strong> → Workers &amp; Pages → buringal-api → Settings → Variables and Secrets<br>
+      2. Add secret <strong>FIGURED_ACCESS_TOKEN</strong> = value above<br>
+      3. Add secret <strong>FIGURED_REFRESH_TOKEN</strong> = value above<br>
+      4. Done — your dashboard will now use live Figured data!
     </div>
   </div>
 </div>
 
 <script>
-const CLIENT_ID     = "221";
-const CLIENT_SECRET = "";
-const REDIRECT_URI  = window.location.href.split("?")[0].split("#")[0];
-const AUTH_URL      = "https://api.figured.com/oauth/authorize";
-const TOKEN_URL     = "https://api.figured.com/oauth/token";
+// ── Config ────────────────────────────────────────────────────
+const CLIENT_ID   = "221";
+const WORKER_URL  = "https://buringal-api.ryanschmitt00.workers.dev";
+const AUTH_URL    = "https://api.figured.com/oauth/authorize";
+const REDIRECT_URI = window.location.origin + window.location.pathname;
+
+// ── PKCE helpers ─────────────────────────────────────────────
+function base64url(buffer) {
+  return btoa(String.fromCharCode(...new Uint8Array(buffer)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
 
 async function generatePKCE() {
-  // Generate code verifier — random 64-char string
-  const array = new Uint8Array(48);
-  crypto.getRandomValues(array);
-  const verifier = btoa(String.fromCharCode(...array))
-    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=/g,"");
-
-  // Generate code challenge — SHA-256 hash of verifier, base64url encoded
-  const encoder = new TextEncoder();
-  const data = encoder.encode(verifier);
-  const digest = await crypto.subtle.digest("SHA-256", data);
-  const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
-    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=/g,"");
-
+  const verifier = base64url(crypto.getRandomValues(new Uint8Array(48)));
+  const digest   = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(verifier));
+  const challenge = base64url(digest);
   return { verifier, challenge };
 }
 
+// ── Start auth flow ───────────────────────────────────────────
 async function startAuth() {
-  const state = Math.random().toString(36).slice(2);
-  sessionStorage.setItem("figured_state", state);
+  try {
+    const { verifier, challenge } = await generatePKCE();
+    const state = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2);
 
-  // Generate PKCE — required for non-confidential (public) clients
-  const { verifier, challenge } = await generatePKCE();
-  sessionStorage.setItem("figured_verifier", verifier);
+    sessionStorage.setItem("pkce_verifier", verifier);
+    sessionStorage.setItem("pkce_state",    state);
 
-  const params = new URLSearchParams({
-    response_type:         "code",
-    client_id:             CLIENT_ID,
-    redirect_uri:          REDIRECT_URI,
-    state:                 state,
-    code_challenge:        challenge,
-    code_challenge_method: "S256",
-  });
+    const url = AUTH_URL + "?" + new URLSearchParams({
+      response_type:         "code",
+      client_id:             CLIENT_ID,
+      redirect_uri:          REDIRECT_URI,
+      state:                 state,
+      code_challenge:        challenge,
+      code_challenge_method: "S256",
+    }).toString();
 
-  window.location.href = AUTH_URL + "?" + params.toString();
+    console.log("Redirecting to:", url);
+    window.location.href = url;
+  } catch(e) {
+    showError("Failed to start auth: " + e.message);
+  }
 }
 
-function copyToken(id, btn) {
-  const val = document.getElementById(id).textContent;
-  navigator.clipboard.writeText(val).then(() => {
-    btn.textContent = "✓ Copied!";
-    btn.classList.add("copied");
-    setTimeout(() => { btn.textContent = "Copy"; btn.classList.remove("copied"); }, 2000);
-  });
-}
-
-function showError(msg) {
-  const el = document.getElementById("error-box");
-  el.textContent = "Error: " + msg;
-  el.style.display = "block";
-  document.getElementById("loading").style.display = "none";
-  document.getElementById("step-initial").style.display = "block";
-}
-
-// Check if we've been redirected back with an auth code
+// ── Handle callback ───────────────────────────────────────────
 async function handleCallback() {
-  const params = new URLSearchParams(window.location.search);
-  const code   = params.get("code");
-  const state  = params.get("state");
-  const error  = params.get("error");
+  const params   = new URLSearchParams(window.location.search);
+  const code     = params.get("code");
+  const state    = params.get("state");
+  const errParam = params.get("error");
 
-  if(error) {
-    showError(error + ": " + (params.get("error_description") || ""));
+  if (errParam) {
+    showError(errParam + ": " + (params.get("error_description") || ""));
     return;
   }
-
-  if(!code) return; // Not a callback — show initial screen
+  if (!code) return; // Not a callback
 
   // Verify state
-  const savedState = sessionStorage.getItem("figured_state");
-  if(state && savedState && state !== savedState) {
-    showError("State mismatch — possible CSRF attack. Please try again.");
+  const savedState    = sessionStorage.getItem("pkce_state");
+  const savedVerifier = sessionStorage.getItem("pkce_verifier");
+
+  if (!savedVerifier) {
+    showError("No PKCE verifier found in session. Please try again from the beginning.");
     return;
   }
 
-  // Hide initial, show loading
-  document.getElementById("step-initial").style.display = "none";
-  document.getElementById("loading").style.display = "block";
+  // Show loading
+  document.getElementById("initial").style.display = "none";
+  document.getElementById("loading").style.display  = "block";
 
-  // Exchange code for tokens
-  // We need to do this server-side to keep client_secret secure
-  // But for this one-time setup page, we'll use the Cloudflare worker as proxy
+  console.log("Code:", code.slice(0,10) + "...");
+  console.log("Verifier length:", savedVerifier.length);
+  console.log("Redirect URI:", REDIRECT_URI);
+
   try {
-    const verifier = sessionStorage.getItem("figured_verifier") || "";
-    console.log("Exchanging code with verifier length:", verifier.length);
-    const res = await fetch("https://buringal-api.ryanschmitt00.workers.dev", {
-      method: "POST",
+    const res  = await fetch(WORKER_URL, {
+      method:  "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
+      body:    JSON.stringify({
         action:        "figured_exchange_code",
         code:          code,
         redirect_uri:  REDIRECT_URI,
-        code_verifier: verifier,
-      })
+        code_verifier: savedVerifier,
+      }),
     });
     const data = await res.json();
-    if(data.error) {
-      throw new Error(JSON.stringify(data, null, 2));
-    }
+    console.log("Token response:", data);
 
-    // Show tokens
+    if (data.error) throw new Error(JSON.stringify(data, null, 2));
+
     document.getElementById("loading").style.display = "none";
-    document.getElementById("result").style.display = "block";
-    document.getElementById("access-token-val").textContent  = data.access_token  || "(not returned)";
-    document.getElementById("refresh-token-val").textContent = data.refresh_token || "(not returned)";
+    document.getElementById("result").style.display  = "block";
+    document.getElementById("at").textContent = data.access_token  || "(none)";
+    document.getElementById("rt").textContent = data.refresh_token || "(none)";
 
-    // Clear code from URL
+    // Clear URL
     window.history.replaceState({}, "", window.location.pathname);
 
   } catch(e) {
     showError(e.message);
   }
+}
+
+function showError(msg) {
+  document.getElementById("loading").style.display = "none";
+  document.getElementById("initial").style.display = "block";
+  const el = document.getElementById("error");
+  el.textContent = "Error: " + msg;
+  el.style.display = "block";
+}
+
+function copy(id, btn) {
+  navigator.clipboard.writeText(document.getElementById(id).textContent).then(() => {
+    btn.textContent = "✓ Copied!";
+    setTimeout(() => btn.textContent = "Copy", 2000);
+  });
 }
 
 handleCallback();
