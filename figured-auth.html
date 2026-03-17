@@ -61,7 +61,7 @@
       <div class="step-desc">Add them to Cloudflare Worker secrets</div>
     </div>
 
-    <a href="#" class="btn" id="auth-btn" onclick="startAuth(); return false;">🔑 Authorise with Figured</a>
+    <a href="#" class="btn" id="auth-btn" onclick="startAuth().catch(e=>console.error(e)); return false;">🔑 Authorise with Figured</a>
   </div>
 
   <div class="loading" id="loading">
@@ -104,16 +104,38 @@ const REDIRECT_URI  = window.location.href.split("?")[0].split("#")[0];
 const AUTH_URL      = "https://api.figured.com/oauth/authorize";
 const TOKEN_URL     = "https://api.figured.com/oauth/token";
 
-function startAuth() {
-  // Generate random state for CSRF protection
+async function generatePKCE() {
+  // Generate code verifier — random 64-char string
+  const array = new Uint8Array(48);
+  crypto.getRandomValues(array);
+  const verifier = btoa(String.fromCharCode(...array))
+    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=/g,"");
+
+  // Generate code challenge — SHA-256 hash of verifier, base64url encoded
+  const encoder = new TextEncoder();
+  const data = encoder.encode(verifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  const challenge = btoa(String.fromCharCode(...new Uint8Array(digest)))
+    .replace(/\+/g,"-").replace(/\//g,"_").replace(/=/g,"");
+
+  return { verifier, challenge };
+}
+
+async function startAuth() {
   const state = Math.random().toString(36).slice(2);
   sessionStorage.setItem("figured_state", state);
 
+  // Generate PKCE — required for non-confidential (public) clients
+  const { verifier, challenge } = await generatePKCE();
+  sessionStorage.setItem("figured_verifier", verifier);
+
   const params = new URLSearchParams({
-    response_type: "code",
-    client_id:     CLIENT_ID,
-    redirect_uri:  REDIRECT_URI,
-    state:         state,
+    response_type:         "code",
+    client_id:             CLIENT_ID,
+    redirect_uri:          REDIRECT_URI,
+    state:                 state,
+    code_challenge:        challenge,
+    code_challenge_method: "S256",
   });
 
   window.location.href = AUTH_URL + "?" + params.toString();
@@ -165,25 +187,21 @@ async function handleCallback() {
   // We need to do this server-side to keep client_secret secure
   // But for this one-time setup page, we'll use the Cloudflare worker as proxy
   try {
-    // Try body method first, then Basic Auth if it fails
-    let data = null;
-    for(const method of ["body", "basic"]) {
-      const res = await fetch("https://buringal-api.ryanschmitt00.workers.dev", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action:       "figured_exchange_code",
-          code:         code,
-          redirect_uri: REDIRECT_URI,
-          method:       method,
-        })
-      });
-      data = await res.json();
-      if(!data.error) break; // Success
-      console.log(`Method ${method} failed:`, data.message);
-    }
+    const verifier = sessionStorage.getItem("figured_verifier") || "";
+    console.log("Exchanging code with verifier length:", verifier.length);
+    const res = await fetch("https://buringal-api.ryanschmitt00.workers.dev", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action:        "figured_exchange_code",
+        code:          code,
+        redirect_uri:  REDIRECT_URI,
+        code_verifier: verifier,
+      })
+    });
+    const data = await res.json();
     if(data.error) {
-      throw new Error("Both auth methods failed.\n" + JSON.stringify(data, null, 2));
+      throw new Error(JSON.stringify(data, null, 2));
     }
 
     // Show tokens
