@@ -298,7 +298,7 @@ button:focus,input:focus,select:focus{outline:none}
         </div>
         <div class="panel">
           <div class="panel-header">
-            <div><div class="panel-title">EBIT & Net Profit</div><div class="panel-sub">Monthly trend — FY2025-26</div></div>
+            <div><div class="panel-title">EBIT & Net Profit</div><div class="panel-sub">Monthly trend — FY2025-26 · <span style="color:#f59e0b;font-weight:600">— — Budget forecast (Mar–Dec 26)</span></div></div>
           </div>
           <div class="chart-wrap" style="height:240px"><canvas id="chart-ebit"></canvas></div>
         </div>
@@ -606,10 +606,11 @@ async function syncData(silent){
  
 function parseLiveData(raw){
   try{
-    const pnl  = raw["2026 P&L"];
-    const kpis = raw["KPI's"];
-    const cf   = raw["2026 Cashflow"];
-    const bs   = raw["Balance Sheet"];
+    const pnl    = raw["2026 P&L"];
+    const kpis   = raw["KPI's"];
+    const cf     = raw["2026 Cashflow"];
+    const bs     = raw["Balance Sheet"];
+    const budget = raw["2026 Cash Flow Budget"];
  
     if(!pnl||!kpis) return null;
  
@@ -716,6 +717,66 @@ function parseLiveData(raw){
       eyci:          FALLBACK.eyci,
     };
  
+    // ── Parse Budget tab (2026 Cash Flow Budget) ─────────────────────────────
+    // Columns: col_1=Jan26, col_2=Feb26, col_3=Mar26 ... col_12=Dec26
+    // We show forecast for Mar26→Dec26 (months not yet in actuals)
+    let B = null;
+    if(budget) {
+      const budgetCols = ["col_1","col_2","col_3","col_4","col_5","col_6","col_7","col_8","col_9","col_10","col_11","col_12"];
+      const budgetMonths = ["Jan 26","Feb 26","Mar 26","Apr 26","May 26","Jun 26","Jul 26","Aug 26","Sep 26","Oct 26","Nov 26","Dec 26"];
+ 
+      const getBudgetRow = (label) => {
+        return budget.find(r => {
+          const first = String(Object.values(r)[0]||"").trim();
+          return first.toLowerCase() === label.toLowerCase();
+        }) || null;
+      };
+ 
+      const getBudgetMonths = (row, cols) => {
+        if(!row) return cols.map(()=>0);
+        return cols.map(c => {
+          const v = row[c];
+          if(v===""||v===null||v===undefined) return 0;
+          const n = parseFloat(String(v).replace(/[$,%\s,]/g,"").replace("(","-").replace(")",""));
+          return isNaN(n) ? 0 : n;
+        });
+      };
+ 
+      const bGP    = getBudgetRow("Gross Profit");
+      const bOpSurplus = getBudgetRow("Operating Surplus");  // ~EBIT
+      const bTotalSurplus = getBudgetRow("Total Surplus");   // ~Net Profit
+      const bDirCosts = getBudgetRow("Livestock Direct Costs Total");
+      const bOpExp = getBudgetRow("Operating Expenses");     // overheads
+      const bIntProp = getBudgetRow("Interest Repayment - Property");
+      const bIntMach = getBudgetRow("Interest Repayment - Machinery & Infrastructure");
+      const bClosing = getBudgetRow("Closing Balance");
+ 
+      // Combine interest sub-rows
+      const bIntPropVals = getBudgetMonths(bIntProp, budgetCols);
+      const bIntMachVals = getBudgetMonths(bIntMach, budgetCols);
+      const bInterest    = budgetCols.map((_,i) => bIntPropVals[i] + bIntMachVals[i]);
+ 
+      // Calculate budget gross margin pct = (GP - DirectCosts) / GP * 100
+      const bGPVals  = getBudgetMonths(bGP, budgetCols);
+      const bDCVals  = getBudgetMonths(bDirCosts, budgetCols);
+      const bGMPct   = bGPVals.map((gp,i) => gp > 0 ? ((gp - bDCVals[i]) / gp * 100) : 0);
+ 
+      B = {
+        months:       budgetMonths,
+        monthsShort:  ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+        grossProfit:  bGPVals,
+        directCosts:  bDCVals,
+        grossMargin:  bGPVals.map((gp,i) => gp - bDCVals[i]),
+        overheads:    getBudgetMonths(bOpExp, budgetCols),
+        ebit:         getBudgetMonths(bOpSurplus, budgetCols),
+        netProfit:    getBudgetMonths(bTotalSurplus, budgetCols),
+        interest:     bInterest,
+        cashClosing:  getBudgetMonths(bClosing, budgetCols),
+        grossMarginPct: bGMPct,
+      };
+    }
+    result.budget = B;
+ 
     // Sanity check — gross profit should be > $100k
     if(result.grossProfit.every(v=>Math.abs(v)<100000)){
       console.warn("parseLiveData: GP values look wrong, using fallback",result.grossProfit);
@@ -766,30 +827,59 @@ const BASE={
 function makePnLCharts(){
   destroyChart("gp");destroyChart("ebit");destroyChart("margins");
   const MS=D.monthsShort;
+  const B=D.budget;
+ 
+  // Budget months: Jan26..Dec26. Actuals: Jul25..Feb26.
+  // For combined chart: show actuals Jul25-Feb26, then budget Mar26-Dec26
+  // Actuals months 6&7 (Jan/Feb 26) overlap with budget months 0&1 — show both
+  const budgetMonths = B ? ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] : [];
+  // Full combined labels: Jul25..Feb26 (actuals) + Mar26..Dec26 (forecast only)
+  const combinedLabels = [...MS, ...(B ? budgetMonths.slice(2) : [])];
+  const nullPad = B ? Array(2).fill(null) : []; // Jan/Feb actuals already shown
+  const bForecast = (arr) => B ? [...nullPad, ...arr.slice(2)] : []; // Mar26 onward as forecast
+  const bOverlay  = (arr) => B ? [...arr.slice(0,2), ...Array(MS.length-2).fill(null)] : []; // Jan/Feb overlap
+ 
+  const actualLen = MS.length;
+  const gpDatasets = [
+    {label:"Gross Profit (Actual)",data:D.grossProfit,backgroundColor:CHART_COLORS.greenLight,borderColor:CHART_COLORS.green,borderWidth:2,borderRadius:3,type:"bar"},
+    {label:"Direct Costs (Actual)",data:D.directCosts,backgroundColor:"rgba(220,38,38,.1)",borderColor:CHART_COLORS.red,borderWidth:2,borderRadius:3,type:"bar"},
+    {label:"Overheads (Actual)",data:D.overheads,backgroundColor:"rgba(59,130,246,.1)",borderColor:CHART_COLORS.blue,borderWidth:2,borderRadius:3,type:"bar"},
+  ];
+  if(B) {
+    gpDatasets.push({label:"Gross Profit (Budget)",data:[...Array(actualLen).fill(null),...B.grossProfit.slice(2)],borderColor:"#f59e0b",borderDash:[6,3],borderWidth:2,pointRadius:3,pointBackgroundColor:"#f59e0b",type:"line",fill:false,tension:.3});
+    gpDatasets.push({label:"Overheads (Budget)",data:[...Array(actualLen).fill(null),...B.overheads.slice(2)],borderColor:"#60a5fa",borderDash:[4,3],borderWidth:1.5,pointRadius:2,pointBackgroundColor:"#60a5fa",type:"line",fill:false,tension:.3});
+  }
  
   charts.gp=new Chart(document.getElementById("chart-gp"),{type:"bar",
-    data:{labels:MS,datasets:[
-      {label:"Gross Profit",data:D.grossProfit,backgroundColor:CHART_COLORS.greenLight,borderColor:CHART_COLORS.green,borderWidth:2,borderRadius:3},
-      {label:"Direct Costs",data:D.directCosts,backgroundColor:"rgba(220,38,38,.1)",borderColor:CHART_COLORS.red,borderWidth:2,borderRadius:3},
-      {label:"Overheads",data:D.overheads,backgroundColor:"rgba(59,130,246,.1)",borderColor:CHART_COLORS.blue,borderWidth:2,borderRadius:3},
-    ]},
+    data:{labels:combinedLabels, datasets:gpDatasets},
     options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
   });
+ 
+  const ebitDatasets = [
+    {label:"EBIT (Actual)",data:D.ebit,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2},
+    {label:"Net Profit (Actual)",data:D.netProfit,borderColor:CHART_COLORS.blue,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:D.netProfit.map(v=>v<0?CHART_COLORS.red:CHART_COLORS.blue),pointBorderColor:"#fff",pointBorderWidth:2},
+  ];
+  if(B) {
+    ebitDatasets.push({label:"EBIT (Budget)",data:[...Array(actualLen).fill(null),...B.ebit.slice(2)],borderColor:"#f59e0b",borderDash:[6,3],borderWidth:2,pointRadius:3,pointBackgroundColor:"#f59e0b",fill:false,tension:.3});
+    ebitDatasets.push({label:"Net Profit (Budget)",data:[...Array(actualLen).fill(null),...B.netProfit.slice(2)],borderColor:"#93c5fd",borderDash:[4,3],borderWidth:2,pointRadius:3,pointBackgroundColor:"#93c5fd",fill:false,tension:.3});
+  }
  
   charts.ebit=new Chart(document.getElementById("chart-ebit"),{type:"line",
-    data:{labels:MS,datasets:[
-      {label:"EBIT",data:D.ebit,borderColor:CHART_COLORS.forest,backgroundColor:CHART_COLORS.forestLight,fill:true,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.forest,pointBorderColor:"#fff",pointBorderWidth:2},
-      {label:"Net Profit",data:D.netProfit,borderColor:CHART_COLORS.blue,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:D.netProfit.map(v=>v<0?CHART_COLORS.red:CHART_COLORS.blue),pointBorderColor:"#fff",pointBorderWidth:2},
-    ]},
+    data:{labels:combinedLabels, datasets:ebitDatasets},
     options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
   });
  
+  const marginsDatasets = [
+    {label:"Gross Margin % (Actual)",data:D.grossMarginPct,borderColor:CHART_COLORS.green,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.green,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+    {label:"Expense Ratio % (Actual)",data:D.expenseRatio,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.red,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
+    {label:"70% Benchmark",data:Array(combinedLabels.length).fill(70),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
+  ];
+  if(B) {
+    marginsDatasets.push({label:"Gross Margin % (Budget)",data:[...Array(actualLen).fill(null),...B.grossMarginPct.slice(2)],borderColor:"#f59e0b",borderDash:[6,3],borderWidth:2,pointRadius:3,pointBackgroundColor:"#f59e0b",fill:false,tension:.3});
+  }
+ 
   charts.margins=new Chart(document.getElementById("chart-margins"),{type:"line",
-    data:{labels:MS,datasets:[
-      {label:"Gross Margin %",data:D.grossMarginPct,borderColor:CHART_COLORS.green,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.green,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
-      {label:"Expense Ratio %",data:D.expenseRatio,borderColor:CHART_COLORS.red,backgroundColor:"transparent",fill:false,tension:.35,pointRadius:4,pointBackgroundColor:CHART_COLORS.red,pointBorderColor:"#fff",pointBorderWidth:2,borderWidth:2.5},
-      {label:"70% Benchmark",data:Array(MS.length).fill(70),borderColor:"#94a3b8",borderDash:[5,5],borderWidth:1.5,pointRadius:0,fill:false},
-    ]},
+    data:{labels:combinedLabels, datasets:marginsDatasets},
     options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}%`},min:0,max:120}}}
   });
 }
@@ -856,19 +946,56 @@ const RATIO_DEFS=[
  
 function renderRatios(){
   const mi=parseInt(document.getElementById("ratio-month").value);
+  const B=D.budget;
+ 
+  // Budget months: col_1=Jan26(idx0)..col_12=Dec26(idx11)
+  // Actuals month index mi maps to: Jul25=0,Aug25=1..Feb26=7
+  // Budget equivalent: Jan26=0, so actual Jul25 has no budget equivalent
+  // Actual Jan26(mi=6) = budget idx 0, Feb26(mi=7) = budget idx 1
+  // For forecast: show budget for months beyond actuals (mi>=6 use budget overlap, else no budget)
+  const getBudgetKPI = (key, mi) => {
+    if(!B) return null;
+    // Map actual month index to budget index: actual[6]=Jan26=budget[0], actual[7]=Feb26=budget[1]
+    const bIdx = mi - 6; // Jul25=-6(no budget), Jan26=0, Feb26=1
+    if(bIdx < 0 || bIdx > 11) return null;
+    // Calculate budget KPI from raw budget values
+    const gp  = B.grossProfit[bIdx]  || 0;
+    const dc  = B.directCosts[bIdx]  || 0;
+    const oh  = B.overheads[bIdx]    || 0;
+    const eb  = B.ebit[bIdx]         || 0;
+    const np  = B.netProfit[bIdx]    || 0;
+    const int = B.interest[bIdx]     || 0;
+    const gm  = gp - dc;
+    switch(key) {
+      case "grossMarginPct": return gp>0 ? gm/gp*100 : null;
+      case "expenseRatio":   return gp>0 ? (dc+oh)/gp*100 : null;
+      case "ohRatio":        return gp>0 ? oh/gp*100 : null;
+      case "interestCover":  return int>0 ? eb/int : null;
+      case "interestAsGP":   return gp>0 ? int/gp*100 : null;
+      default: return null;
+    }
+  };
+ 
   document.getElementById("ratio-grid").innerHTML=RATIO_DEFS.map(r=>{
     const v=D[r.key][mi];
+    const bv=getBudgetKPI(r.key, mi);
     const cls=r.good(v)?"r-good":r.warn(v)?"r-warn":"r-bad";
     const status=r.good(v)?"✓ On target":r.warn(v)?"⚠ Marginal":"✗ Below benchmark";
     const barPct=Math.min(100,(v/r.max)*100);
     const barColor=r.good(v)?"#16a34a":r.warn(v)?"#d97706":"#dc2626";
-    const statusBadge=r.good(v)?"badge-green":r.warn(v)?"badge-yellow":"badge-red";
+    const budgetHtml = bv!=null ? `
+      <div style="display:flex;align-items:center;gap:6px;margin-top:6px;padding-top:6px;border-top:1px solid #f0f2f5">
+        <div style="font-size:9px;color:#f59e0b;font-weight:700;text-transform:uppercase;letter-spacing:.04em">Budget</div>
+        <div style="font-size:12px;font-weight:700;color:#f59e0b">${r.fmt(bv)}</div>
+        ${v&&bv ? `<div style="font-size:9px;color:${(r.invert?(v<bv):(v>bv))?"#16a34a":"#dc2626"};font-weight:600">${(r.invert?(v<bv):(v>bv))?"▲":"▼"} vs budget</div>` : ""}
+      </div>` : "";
     return `<div class="ratio-card">
       <div class="ratio-label">${r.label}</div>
       <div class="ratio-value ${cls}">${r.fmt(v)}</div>
       <div class="ratio-bench ${cls}">${status}</div>
       <div style="font-size:10px;color:#a0aec0;margin-top:2px">Benchmark: ${r.bench}</div>
       <div class="ratio-bar-wrap"><div class="ratio-bar" style="width:${barPct}%;background:${barColor}"></div></div>
+      ${budgetHtml}
     </div>`;
   }).join("");
 }
@@ -926,22 +1053,39 @@ function renderKPIs(){
   const assets=D.totalAssets[latest];
   const eqPct=assets>0?((eq/assets)*100).toFixed(1):89;
  
+  // Budget: latest actual is Feb26 (index 7) = budget index 1 (Feb26=col_2)
+  // Full year budget totals from col_1..col_12
+  const B=D.budget;
+  const bFY = (arr) => B ? arr.reduce((s,v)=>s+v,0) : null;
+  const bGP   = B ? bFY(B.grossProfit)  : null;
+  const bNP   = B ? bFY(B.netProfit)    : null;
+  const bGM   = B ? (bFY(B.grossProfit)>0 ? bFY(B.grossMargin)/bFY(B.grossProfit)*100 : null) : null;
+  const bGMDse = B && dse>0 ? bFY(B.grossMargin)/12/dse*1000 : null; // rough monthly avg
+ 
+  const fmtBudget = (bv, fmt) => bv!=null
+    ? `<div style="font-size:10px;color:#f59e0b;font-weight:600;margin-top:3px">Budget FY: ${fmt(bv)}</div>`
+    : "";
+ 
   const npFmt=np<0?`-$${Math.abs(np/1000).toFixed(0)}k`:`$${(np/1000).toFixed(0)}k`;
   const kpis=[
-    {label:"Total Assets",   v:fmtK(assets||32782674), cls:"neutral", sub:`Equity: ${fmtK(eq||29233555)}`,  sub_cls:""},
-    {label:"Equity Ratio",   v:`${eqPct}%`,            cls:"good",    sub:"Strong asset backing",            sub_cls:"good"},
-    {label:"Net Profit",     v:npFmt,                  cls:np<0?"warn":"good", sub:np<0?"Loss — monitor closely":"Profitable month", sub_cls:np<0?"warn":"good"},
-    {label:"Interest Cover", v:`${ic.toFixed(2)}x`,    cls:ic>=1.75?"good":ic>=1?"neutral":"warn", sub:"Benchmark >1.75x", sub_cls:ic<1.75?"warn":"good"},
-    {label:"DSE Load",       v:(dse||20538).toLocaleString(), cls:"good", sub:"Reducing towards target", sub_cls:"good"},
-    {label:"GM per DSE",     v:`$${(gmd||36.58).toFixed(2)}`, cls:gmd>=65?"good":gmd>=45?"neutral":"warn", sub:"Benchmark >$65", sub_cls:gmd<65?"warn":"good"},
-    {label:"ROAM",           v:`${(roam||0.03).toFixed(2)}%`, cls:roam>=4?"good":roam>=2?"neutral":"warn",  sub:"Benchmark >4%",  sub_cls:roam<4?"warn":"good"},
-    {label:"Gross Margin",   v:`${(gm||58.97).toFixed(1)}%`,  cls:gm>=70?"good":gm>=55?"neutral":"warn",   sub:"Benchmark >70%", sub_cls:gm<70?"warn":"good"},
+    {label:"Total Assets",   v:fmtK(assets||32782674), cls:"neutral", sub:`Equity: ${fmtK(eq||29233555)}`, sub_cls:"", budget:""},
+    {label:"Equity Ratio",   v:`${eqPct}%`,            cls:"good",    sub:"Strong asset backing",           sub_cls:"good", budget:""},
+    {label:"Net Profit",     v:npFmt,                  cls:np<0?"warn":"good", sub:np<0?"Loss — monitor closely":"Profitable month", sub_cls:np<0?"warn":"good",
+      budget: fmtBudget(bNP, v=>v<0?`-$${Math.abs(v/1000).toFixed(0)}k`:`$${(v/1000).toFixed(0)}k`)},
+    {label:"Interest Cover", v:`${ic.toFixed(2)}x`,    cls:ic>=1.75?"good":ic>=1?"neutral":"warn", sub:"Benchmark >1.75x", sub_cls:ic<1.75?"warn":"good", budget:""},
+    {label:"DSE Load",       v:(dse||20538).toLocaleString(), cls:"good", sub:"Reducing towards target", sub_cls:"good", budget:""},
+    {label:"GM per DSE",     v:`$${(gmd||36.58).toFixed(2)}`, cls:gmd>=65?"good":gmd>=45?"neutral":"warn", sub:"Benchmark >$65", sub_cls:gmd<65?"warn":"good",
+      budget: fmtBudget(bGMDse, v=>`$${v.toFixed(2)}`)},
+    {label:"ROAM",           v:`${(roam||0.03).toFixed(2)}%`, cls:roam>=4?"good":roam>=2?"neutral":"warn", sub:"Benchmark >4%", sub_cls:roam<4?"warn":"good", budget:""},
+    {label:"Gross Margin",   v:`${(gm||58.97).toFixed(1)}%`,  cls:gm>=70?"good":gm>=55?"neutral":"warn",  sub:"Benchmark >70%", sub_cls:gm<70?"warn":"good",
+      budget: fmtBudget(bGM, v=>`${v.toFixed(1)}%`)},
   ];
   document.getElementById("kpi-grid").innerHTML=kpis.map(k=>`
     <div class="kpi-card ${k.cls}">
       <div class="kpi-label">${k.label}</div>
       <div class="kpi-value${k.v.length>7?" sm":""}">${k.v}</div>
       <div class="kpi-sub ${k.sub_cls}">${k.sub}</div>
+      ${k.budget||""}
     </div>`).join("");
 }
  
@@ -3324,4 +3468,4 @@ function switchWeatherModel(model) {
 init();
 </script>
 </body>
-</html>
+</html> 
