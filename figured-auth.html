@@ -176,7 +176,10 @@ async function handleCallback() {
     });
 
     const data = await res.json();
-    if(data.error) throw new Error(data.message || data.error);
+    if(data.error) {
+      // Show full debug info
+      throw new Error(JSON.stringify(data, null, 2));
+    }
 
     // Show tokens
     document.getElementById("loading").style.display = "none";
