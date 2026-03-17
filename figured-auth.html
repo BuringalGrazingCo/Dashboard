@@ -98,8 +98,8 @@
 </div>
 
 <script>
-const CLIENT_ID     = "220";
-const CLIENT_SECRET = "QnCR3FWHwtspivYF1G0dOzqmqTSw0QOouK91UGhO";
+const CLIENT_ID     = "221";
+const CLIENT_SECRET = "";
 const REDIRECT_URI  = window.location.href.split("?")[0].split("#")[0];
 const AUTH_URL      = "https://api.figured.com/oauth/authorize";
 const TOKEN_URL     = "https://api.figured.com/oauth/token";
@@ -165,20 +165,25 @@ async function handleCallback() {
   // We need to do this server-side to keep client_secret secure
   // But for this one-time setup page, we'll use the Cloudflare worker as proxy
   try {
-    const res = await fetch("https://buringal-api.ryanschmitt00.workers.dev", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action:       "figured_exchange_code",
-        code:         code,
-        redirect_uri: REDIRECT_URI,
-      })
-    });
-
-    const data = await res.json();
+    // Try body method first, then Basic Auth if it fails
+    let data = null;
+    for(const method of ["body", "basic"]) {
+      const res = await fetch("https://buringal-api.ryanschmitt00.workers.dev", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action:       "figured_exchange_code",
+          code:         code,
+          redirect_uri: REDIRECT_URI,
+          method:       method,
+        })
+      });
+      data = await res.json();
+      if(!data.error) break; // Success
+      console.log(`Method ${method} failed:`, data.message);
+    }
     if(data.error) {
-      // Show full debug info
-      throw new Error(JSON.stringify(data, null, 2));
+      throw new Error("Both auth methods failed.\n" + JSON.stringify(data, null, 2));
     }
 
     // Show tokens
