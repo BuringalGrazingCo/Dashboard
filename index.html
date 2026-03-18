@@ -588,18 +588,27 @@ async function syncData(silent){
       if(json.status==="ok") parsed = parseLiveData(json.data);
     }
  
+    // Google Sheets is mandatory — fail if it's unavailable
     if(!parsed) throw new Error("Google Sheets failed");
  
-    // Figured provides forecast/budget data only
-    if(figuredRes.status==="fulfilled"){
-      const fj = await figuredRes.value.json();
-      if(fj.forecast?.length) {
-        const figuredBudget = parseFiguredBudget(fj.forecast);
-        if(figuredBudget) {
-          parsed.budget = figuredBudget;
-          console.log("Figured forecast loaded:", fj.forecast.length, "months");
+    // Figured forecast is optional — never let it break the dashboard
+    try {
+      if(figuredRes.status==="fulfilled"){
+        const fj = await figuredRes.value.json();
+        if(fj.forecast?.length) {
+          const figuredBudget = parseFiguredBudget(fj.forecast);
+          if(figuredBudget) {
+            parsed.budget = figuredBudget;
+            console.log("Figured forecast loaded:", fj.forecast.length, "months");
+          } else {
+            console.warn("Figured forecast parse failed — using Sheets budget");
+          }
+        } else {
+          console.warn("Figured returned empty forecast — token may be expired");
         }
       }
+    } catch(fe) {
+      console.warn("Figured forecast error (non-fatal):", fe.message);
     }
  
     D = parsed;
