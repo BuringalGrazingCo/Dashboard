@@ -569,10 +569,10 @@ async function syncData(silent){
   const btn=document.getElementById("sync-btn");
   if(!silent){btn.disabled=true;btn.textContent="Syncing…";}
   try{
-    // Fetch Google Sheets and Figured in parallel
     const controller=new AbortController();
     const timeout=setTimeout(()=>controller.abort(),30000);
  
+    // Fetch Google Sheets (actuals/KPIs) and Figured (forecast only) in parallel
     const [sheetsRes, figuredRes] = await Promise.allSettled([
       fetch(CONFIG.WORKER_URL,{method:"POST",headers:{"Content-Type":"application/json"},
         body:JSON.stringify({action:"sheets",url:CONFIG.SHEET_API_URL}),signal:controller.signal}),
@@ -581,53 +581,37 @@ async function syncData(silent){
     ]);
     clearTimeout(timeout);
  
-    // Parse Google Sheets
+    // Google Sheets is primary — actuals, KPIs, ratios
     let parsed = null;
     if(sheetsRes.status==="fulfilled"){
       const json = await sheetsRes.value.json();
       if(json.status==="ok") parsed = parseLiveData(json.data);
     }
  
-    // Parse Figured data
-    let figuredData = null;
+    if(!parsed) throw new Error("Google Sheets failed");
+ 
+    // Figured provides forecast/budget data only
     if(figuredRes.status==="fulfilled"){
       const fj = await figuredRes.value.json();
-      if(fj.actuals) {
-        figuredData = parseFiguredData(fj);
-        console.log("Figured data loaded:", figuredData ? "OK" : "failed", fj.actuals?.length, "actuals,", fj.forecast?.length, "forecast");
+      if(fj.forecast?.length) {
+        const figuredBudget = parseFiguredBudget(fj.forecast);
+        if(figuredBudget) {
+          parsed.budget = figuredBudget;
+          console.log("Figured forecast loaded:", fj.forecast.length, "months");
+        }
       }
     }
  
-    // Merge: use Figured for financials if available, Google Sheets as fallback
-    if(figuredData) {
-      D = figuredData;
-      // Overlay KPIs from Google Sheets if available (they have ratios not in Figured)
-      if(parsed) {
-        D.grossMarginPct  = parsed.grossMarginPct  || D.grossMarginPct;
-        D.expenseRatio    = parsed.expenseRatio    || D.expenseRatio;
-        D.ohRatio         = parsed.ohRatio         || D.ohRatio;
-        D.roam            = parsed.roam            || D.roam;
-        D.roe             = parsed.roe             || D.roe;
-        D.gmDse           = parsed.gmDse           || D.gmDse;
-        D.interestCover   = parsed.interestCover   || D.interestCover;
-        D.interestAsGP    = parsed.interestAsGP    || D.interestAsGP;
-        D.dse             = parsed.dse             || D.dse;
-      }
-      usingLive=true;
-      setTab(currentTab);
-      const pill=document.getElementById("data-pill");
-      pill.className="data-pill";
-      pill.querySelector("#data-pill-text").textContent=`Figured + Sheets (Live) · ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
-    } else if(parsed){
-      D=parsed;
-      usingLive=true;
-      setTab(currentTab);
-      const pill=document.getElementById("data-pill");
-      pill.className="data-pill";
-      pill.querySelector("#data-pill-text").textContent=`Google Sheets (Live) · ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
-    } else {
-      throw new Error("Both data sources failed");
-    }
+    D = parsed;
+    usingLive = true;
+    setTab(currentTab);
+ 
+    const pill = document.getElementById("data-pill");
+    pill.className = "data-pill";
+    const src = D.budget ? "Sheets + Figured Forecast" : "Google Sheets";
+    pill.querySelector("#data-pill-text").textContent =
+      `${src} (Live) · ${new Date().toLocaleTimeString("en-AU",{hour:"2-digit",minute:"2-digit"})}`;
+ 
   }catch(e){
     console.error("syncData error:", e);
     usingLive=false;
@@ -638,324 +622,48 @@ async function syncData(silent){
   if(!silent){btn.disabled=false;btn.textContent="↻ Sync";}
 }
  
-// ── Parse Figured API response into dashboard data format ────
-function parseFiguredData(fj) {
+// ── Parse Figured forecast into budget format for charts ────
+// Replaces the Google Sheets '2026 Cash Flow Budget' tab
+// Forecast months: Mar26-Jun26 (4 months) from Figured
+function parseFiguredBudget(forecast) {
   try {
-    const actuals  = fj.actuals  || [];  // 8 months Jul25-Feb26
-    const forecast = fj.forecast || [];  // 4 months Mar26-Jun26
-    const balance  = fj.balance  || [];  // 8 months Jul25-Feb26
+    if (!forecast?.length) return null;
  
-    if(!actuals.length) return null;
+    const MONTH_NAMES = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
  
-    const get = (arr, key) => arr.map(m => m[key] || 0);
- 
-    // Month labels from actual data
-    const monthKeys  = actuals.map(m => m.month);  // "2025-07" etc
-    const monthLabels = monthKeys.map(k => {
-      const [y,mo] = k.split("-");
-      const names = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      return names[parseInt(mo)] + " " + y.slice(2);
+    const months = forecast.map(m => {
+      const [y, mo] = m.month.split("-");
+      return MONTH_NAMES[parseInt(mo)] + " " + y.slice(2);
     });
-    const monthShort = monthKeys.map(k => {
-      const names = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      return names[parseInt(k.split("-")[1])];
-    });
+    const monthsShort = forecast.map(m => MONTH_NAMES[parseInt(m.month.split("-")[1])]);
  
-    // Budget: forecast months Mar-Jun 26
-    const bMonthKeys   = forecast.map(m => m.month);
-    const bMonthLabels = bMonthKeys.map(k => {
-      const [y,mo] = k.split("-");
-      const names  = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-      return names[parseInt(mo)] + " " + y.slice(2);
-    });
+    const get = (key) => forecast.map(m => m[key] || 0);
  
-    const result = {
-      months:      monthLabels,
-      monthsShort: monthShort,
+    const grossProfit = get("income");
+    const grossMargin = get("gp");
+    const directCosts = forecast.map(m => Math.max(0, (m.income||0) - (m.gp||0)));
+    const overheads   = get("opEx");
+    const ebit        = get("ebit");
+    const netProfit   = get("netProfit");
+    const interest    = get("nonOpEx");
+    const cashClosing = get("closing");
+    const grossMarginPct = forecast.map(m =>
+      m.income > 0 ? Math.round((m.gp||0) / m.income * 1000) / 10 : 0
+    );
  
-      // Actuals from Figured cashflow sections:
-      // income          = gross revenue (all cash inflows)
-      // gross_profit    = income minus direct livestock costs
-      // operating_expenses = overheads/operating costs
-      // operating_surplus  = EBIT (gross_profit minus operating_expenses)
-      // non_operating_expenses = interest + depreciation
-      // total_surplus   = net profit (operating_surplus minus non_operating_expenses)
-      grossProfit:  get(actuals, "income"),         // gross revenue
-      directCosts:  actuals.map(m => Math.max(0, (m.income||0) - (m.gp||0))),
-      grossMargin:  get(actuals, "gp"),             // after direct costs
-      overheads:    get(actuals, "opEx"),
-      ebit:         get(actuals, "ebit"),
-      interest:     actuals.map(m => m.nonOpEx||0),
-      netProfit:    get(actuals, "netProfit"),
-      cashClosing:  get(actuals, "closing"),
- 
-      // Balance sheet
-      totalAssets:  balance.map(m => m.totalAssets||0),
-      totalLiab:    balance.map(m => m.totalLiab||0),
-      equity:       balance.map(m => m.equity||0),
- 
-      // Placeholders for KPI ratios (will be overlaid from Google Sheets)
-      grossMarginPct: actuals.map(m => m.income>0 ? ((m.gp||0)/m.income*100) : 0),
-      expenseRatio:   actuals.map(m => m.income>0 ? ((m.opEx||0)/m.income*100) : 0),
-      ohRatio:        FALLBACK.ohRatio,
-      roam:           FALLBACK.roam,
-      roe:            FALLBACK.roe,
-      gmDse:          FALLBACK.gmDse,
-      interestCover:  actuals.map(m => (m.nonOpEx||0)>0 ? (m.ebit||0)/(m.nonOpEx||0) : 0),
-      interestAsGP:   actuals.map(m => (m.income||0)>0 ? (m.nonOpEx||0)/(m.income||0)*100 : 0),
-      dse:            FALLBACK.dse,
-      cafds:          get(actuals, "ebit"),
-      cashAfterDS:    get(actuals, "netProfit"),
-      nab1:           FALLBACK.nab1,
-      nab2:           FALLBACK.nab2,
-      eyci:           FALLBACK.eyci,
- 
-      // Budget/forecast from Figured
-      budget: forecast.length ? {
-        months:      bMonthLabels,
-        monthsShort: bMonthKeys.map(k => {
-          const names=["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
-          return names[parseInt(k.split("-")[1])];
-        }),
-        grossProfit:   get(forecast, "income"),
-        directCosts:   forecast.map(m => Math.max(0,(m.income||0)-(m.gp||0))),
-        grossMargin:   get(forecast, "gp"),
-        overheads:     get(forecast, "opEx"),
-        ebit:          get(forecast, "ebit"),
-        netProfit:     get(forecast, "netProfit"),
-        interest:      forecast.map(m => m.nonOpEx||0),
-        cashClosing:   get(forecast, "closing"),
-        grossMarginPct: forecast.map(m => m.income>0 ? (m.gp||0)/m.income*100 : 0),
-      } : null,
-    };
- 
-    console.log("parseFiguredData:", {
-      months: result.months,
-      gp: result.grossProfit,
-      ebit: result.ebit,
-      np: result.netProfit,
+    console.log("parseFiguredBudget:", {
+      months, grossProfit: grossProfit.map(v=>Math.round(v/1000)+"k"),
+      ebit: ebit.map(v=>Math.round(v/1000)+"k"),
     });
  
-    // Sanity check
-    if(result.grossProfit.every(v => Math.abs(v) < 1000)) {
-      console.warn("Figured GP values too low, may be wrong");
-    }
- 
-    return result;
+    return { months, monthsShort, grossProfit, grossMargin, directCosts,
+             overheads, ebit, netProfit, interest, cashClosing, grossMarginPct };
   } catch(e) {
-    console.error("parseFiguredData error:", e);
+    console.error("parseFiguredBudget error:", e);
     return null;
   }
 }
  
-// ── LIVE DATA PARSER ─────────────────────────────────────────
-// Maps your Google Sheet structure to dashboard data
-// Tab: 2026 P&L — cols B-I = Jul25→Feb26, rows: 2=GP,4=DirectCosts,6=GrossMargin,8=Overheads,11=EBIT,13=Interest,15=NetProfit,17=DSE
-// Tab: KPI's — cols C-J = Jul25→Feb26, rows: 7=GrossMarginRatio,8=OHRatio,9=ExpenseRatio,10=ROAM,11=ROE,13=GM/DSE,17=InterestCover,20=InterestAsGP
-// Tab: 2026 Cashflow — cols B-I = Jul25→Feb26, rows: 7=CAFDS,12=CashAfterDS
-// Tab: Balance Sheet — cols D-K = Jul25→Feb26, rows: 40=TotalAssets,65=TotalLiabilities,67=Equity
-// Tab: Livestock Numbers — col B, rows: 4=CommBreeders,5=PTICRecipients,6=RegBreeders,7=Donors,8=HeiferComm,9=HeiferReg,10=Steers
- 
-function parseLiveData(raw){
-  try{
-    const pnl    = raw["2026 P&L"];
-    const kpis   = raw["KPI's"];
-    const cf     = raw["2026 Cashflow"];
-    const bs     = raw["Balance Sheet"];
-    const budget = raw["2026 Cash Flow Budget"];
- 
-    if(!pnl||!kpis) return null;
- 
-    // ── Helper: find a row by searching for a label in the first column ──
-    function findRow(rows, labelSearch){
-      if(!rows) return null;
-      return rows.find(r=>{
-        const vals=Object.values(r);
-        const first=String(vals[0]||"").trim().toLowerCase();
-        return first.includes(labelSearch.toLowerCase());
-      })||null;
-    }
- 
-    // ── Helper: extract monthly values (8 months) from a row ──
-    // Skips the first column (label), takes next 8 numeric values
-    function getMonths(row){
-      if(!row) return Array(8).fill(0);
-      const vals=Object.values(row);
-      const result=[];
-      // Find where numbers start (skip label cols)
-      let started=false;
-      for(let i=0;i<vals.length&&result.length<8;i++){
-        const v=vals[i];
-        const s=String(v||"").trim();
-        // Skip empty and text-only columns
-        if(s===""||s===null) { if(started) result.push(0); continue; }
-        const isNum=typeof v==="number"||(!isNaN(parseFloat(s.replace(/[$,%\s,()/]/g,""))));
-        if(isNum&&!isNaN(parseFloat(s.replace(/[$,%\s,()/]/g,"")))){
-          const n=parseFloat(s.replace(/[$,%\s,]/g,"").replace("(","-").replace(")",""));
-          result.push(isNaN(n)?0:n);
-          started=true;
-        } else if(started){
-          result.push(0);
-        }
-      }
-      while(result.length<8) result.push(0);
-      return result.slice(0,8);
-    }
- 
-    // ── P&L tab ───────────────────────────────────────────────
-    const gpRow    = findRow(pnl,"Gross Profit");
-    const dcRow    = findRow(pnl,"Direct Costs");
-    const gmRow    = findRow(pnl,"Gross Margin");
-    const ohRow    = findRow(pnl,"Overheads");
-    const ebitRow  = findRow(pnl,"EBIT");
-    const intRow   = findRow(pnl,"Interest");
-    const npRow    = findRow(pnl,"Net Profit");
-    const dseRow   = findRow(pnl,"DSE");
- 
-    // ── KPI's tab ─────────────────────────────────────────────
-    const gmPctRow = findRow(kpis,"Gross Margin");
-    const ohPctRow = findRow(kpis,"OH Ratio");
-    const expRow   = findRow(kpis,"Expense Ratio");
-    const roamRow  = findRow(kpis,"Return On Assets");
-    const roeRow   = findRow(kpis,"Return on Equity");
-    const gmdseRow = findRow(kpis,"GM/DSE");
-    const icRow    = findRow(kpis,"Interest Cover");
-    const iaGPRow  = findRow(kpis,"Interest as % GP");
- 
-    // ── 2026 Cashflow tab ─────────────────────────────────────
-    const cafdsRow = cf ? findRow(cf,"Cash Available for Debt Service") : null;
-    const cadsRow  = cf ? findRow(cf,"Cash After Debt Service") : null;
- 
-    // ── Balance Sheet tab ─────────────────────────────────────
-    const assetsRow = bs ? findRow(bs,"Total Assets") : null;
-    const liabRow   = bs ? findRow(bs,"Total Liabilities") : null;
-    const equityRow = bs ? findRow(bs,"Equity") : null;
-    const nab1Row   = bs ? findRow(bs,"NAB Loan") : null;
-    // NAB Loan 2 = find second NAB loan row
-    let nab2Row = null;
-    if(bs){
-      const nabRows=bs.filter(r=>String(Object.values(r)[0]||"").toLowerCase().includes("nab loan"));
-      if(nabRows.length>=2) nab2Row=nabRows[1];
-      else nab2Row=nabRows[0]||null;
-    }
- 
-    // ── Build result ──────────────────────────────────────────
-    const result={
-      months:        FALLBACK.months,
-      monthsShort:   FALLBACK.monthsShort,
-      grossProfit:   getMonths(gpRow),
-      directCosts:   getMonths(dcRow),
-      grossMargin:   getMonths(gmRow),
-      overheads:     getMonths(ohRow),
-      ebit:          getMonths(ebitRow),
-      interest:      getMonths(intRow),
-      netProfit:     getMonths(npRow),
-      dse:           getMonths(dseRow),
-      grossMarginPct:getMonths(gmPctRow),
-      ohRatio:       getMonths(ohPctRow),
-      expenseRatio:  getMonths(expRow),
-      roam:          getMonths(roamRow),
-      roe:           getMonths(roeRow),
-      gmDse:         getMonths(gmdseRow),
-      interestCover: getMonths(icRow),
-      interestAsGP:  getMonths(iaGPRow),
-      cafds:         cafdsRow  ? getMonths(cafdsRow)  : FALLBACK.cafds,
-      cashAfterDS:   cadsRow   ? getMonths(cadsRow)   : FALLBACK.cashAfterDS,
-      totalAssets:   assetsRow ? getMonths(assetsRow) : FALLBACK.totalAssets,
-      totalLiab:     liabRow   ? getMonths(liabRow)   : FALLBACK.totalLiab,
-      equity:        equityRow ? getMonths(equityRow) : FALLBACK.equity,
-      nab1:          nab1Row   ? getMonths(nab1Row)   : FALLBACK.nab1,
-      nab2:          nab2Row   ? getMonths(nab2Row)   : FALLBACK.nab2,
-      eyci:          FALLBACK.eyci,
-    };
- 
-    // ── Parse Budget tab (2026 Cash Flow Budget) ─────────────────────────────
-    // Columns: col_1=Jan26, col_2=Feb26, col_3=Mar26 ... col_12=Dec26
-    // We show forecast for Mar26→Dec26 (months not yet in actuals)
-    let B = null;
-    if(budget) {
-      const budgetCols = ["col_1","col_2","col_3","col_4","col_5","col_6","col_7","col_8","col_9","col_10","col_11","col_12"];
-      const budgetMonths = ["Jan 26","Feb 26","Mar 26","Apr 26","May 26","Jun 26","Jul 26","Aug 26","Sep 26","Oct 26","Nov 26","Dec 26"];
- 
-      const getBudgetRow = (label) => {
-        return budget.find(r => {
-          const first = String(Object.values(r)[0]||"").trim();
-          return first.toLowerCase() === label.toLowerCase();
-        }) || null;
-      };
- 
-      const getBudgetMonths = (row, cols) => {
-        if(!row) return cols.map(()=>0);
-        return cols.map(c => {
-          const v = row[c];
-          if(v===""||v===null||v===undefined) return 0;
-          const n = parseFloat(String(v).replace(/[$,%\s,]/g,"").replace("(","-").replace(")",""));
-          return isNaN(n) ? 0 : n;
-        });
-      };
- 
-      const bGP    = getBudgetRow("Gross Profit");
-      const bOpSurplus = getBudgetRow("Operating Surplus");  // ~EBIT
-      const bTotalSurplus = getBudgetRow("Total Surplus");   // ~Net Profit
-      const bDirCosts = getBudgetRow("Livestock Direct Costs Total");
-      const bOpExp = getBudgetRow("Operating Expenses");     // overheads
-      const bIntProp = getBudgetRow("Interest Repayment - Property");
-      const bIntMach = getBudgetRow("Interest Repayment - Machinery & Infrastructure");
-      const bClosing = getBudgetRow("Closing Balance");
- 
-      // Combine interest sub-rows
-      const bIntPropVals = getBudgetMonths(bIntProp, budgetCols);
-      const bIntMachVals = getBudgetMonths(bIntMach, budgetCols);
-      const bInterest    = budgetCols.map((_,i) => bIntPropVals[i] + bIntMachVals[i]);
- 
-      // Calculate budget gross margin pct = (GP - DirectCosts) / GP * 100
-      const bGPVals  = getBudgetMonths(bGP, budgetCols);
-      const bDCVals  = getBudgetMonths(bDirCosts, budgetCols);
-      const bGMPct   = bGPVals.map((gp,i) => gp > 0 ? ((gp - bDCVals[i]) / gp * 100) : 0);
- 
-      B = {
-        months:       budgetMonths,
-        monthsShort:  ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
-        grossProfit:  bGPVals,
-        directCosts:  bDCVals,
-        grossMargin:  bGPVals.map((gp,i) => gp - bDCVals[i]),
-        overheads:    getBudgetMonths(bOpExp, budgetCols),
-        ebit:         getBudgetMonths(bOpSurplus, budgetCols),
-        netProfit:    getBudgetMonths(bTotalSurplus, budgetCols),
-        interest:     bInterest,
-        cashClosing:  getBudgetMonths(bClosing, budgetCols),
-        grossMarginPct: bGMPct,
-      };
-    }
-    result.budget = B;
- 
-    // Sanity check — gross profit should be > $100k
-    if(result.grossProfit.every(v=>Math.abs(v)<100000)){
-      console.warn("parseLiveData: GP values look wrong, using fallback",result.grossProfit);
-      return null;
-    }
- 
-    // Fix percentage values stored as decimals (0.84 → 84%)
-    const fixPct=arr=>arr.map(v=>Math.abs(v)>0&&Math.abs(v)<=2?v*100:v);
-    result.grossMarginPct = fixPct(result.grossMarginPct);
-    result.expenseRatio   = fixPct(result.expenseRatio);
-    result.ohRatio        = fixPct(result.ohRatio);
-    result.roam           = fixPct(result.roam);
-    result.roe            = fixPct(result.roe);
-    result.interestAsGP   = fixPct(result.interestAsGP);
- 
-    console.log("parseLiveData success:",{
-      gp: result.grossProfit,
-      ic: result.interestCover,
-      gm: result.grossMarginPct,
-    });
- 
-    return result;
-  }catch(e){
-    console.error("parseLiveData error:",e);
-    return null;
-  }
-}
  
 // CHART HELPERS
 function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
