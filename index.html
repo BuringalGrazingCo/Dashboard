@@ -773,41 +773,60 @@ function parseLiveData(raw){
  
  
 // ── Parse Figured forecast into budget format for charts ────
-// Replaces the Google Sheets '2026 Cash Flow Budget' tab
-// Forecast months: Mar26-Jun26 (4 months) from Figured
+// Maps Figured cashflow sections to the same structure as the P&L tab:
+//   income           → Gross Profit (row 2)
+//   income - gp      → Direct Costs (row 4)
+//   gp               → Gross Margin (row 6)
+//   opEx             → Overheads (row 8)
+//   ebit             → EBIT (row 11)
+//   nonOpEx          → Interest (row 13)
+//   netProfit        → Net Profit (row 15)
+// Forecast months: Mar26-Jun26 (4 months)
 function parseFiguredBudget(forecast) {
   try {
     if (!forecast?.length) return null;
  
     const MONTH_NAMES = ["","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
  
-    const months = forecast.map(m => {
+    const months      = forecast.map(m => {
       const [y, mo] = m.month.split("-");
       return MONTH_NAMES[parseInt(mo)] + " " + y.slice(2);
     });
     const monthsShort = forecast.map(m => MONTH_NAMES[parseInt(m.month.split("-")[1])]);
  
-    const get = (key) => forecast.map(m => m[key] || 0);
- 
-    const grossProfit = get("income");
-    const grossMargin = get("gp");
+    const grossProfit = forecast.map(m => m.income    || 0);  // total revenue
+    const grossMargin = forecast.map(m => m.gp        || 0);  // after direct costs
     const directCosts = forecast.map(m => Math.max(0, (m.income||0) - (m.gp||0)));
-    const overheads   = get("opEx");
-    const ebit        = get("ebit");
-    const netProfit   = get("netProfit");
-    const interest    = get("nonOpEx");
-    const cashClosing = get("closing");
+    const overheads   = forecast.map(m => m.opEx      || 0);
+    const ebit        = forecast.map(m => m.ebit      || 0);  // operating_surplus
+    const interest    = forecast.map(m => m.nonOpEx   || 0);  // non_operating_expenses
+    const netProfit   = forecast.map(m => m.netProfit || 0);  // total_surplus
+    const cashClosing = forecast.map(m => m.closing   || 0);
+ 
+    // Calculate KPI ratios matching the KPI's tab formulas
     const grossMarginPct = forecast.map(m =>
-      m.income > 0 ? Math.round((m.gp||0) / m.income * 1000) / 10 : 0
+      (m.income||0) > 0 ? Math.round((m.gp||0) / m.income * 10000) / 100 : 0
+    );
+    const expenseRatio = forecast.map(m =>
+      (m.income||0) > 0 ? Math.round(((m.opEx||0) + (m.income||0) - (m.gp||0)) / m.income * 10000) / 100 : 0
+    );
+    const interestCover = forecast.map(m =>
+      (m.nonOpEx||0) > 0 ? Math.round((m.ebit||0) / m.nonOpEx * 100) / 100 : 0
     );
  
     console.log("parseFiguredBudget:", {
-      months, grossProfit: grossProfit.map(v=>Math.round(v/1000)+"k"),
-      ebit: ebit.map(v=>Math.round(v/1000)+"k"),
+      months,
+      grossProfit: grossProfit.map(v => Math.round(v/1000)+"k"),
+      ebit:        ebit.map(v => Math.round(v/1000)+"k"),
+      netProfit:   netProfit.map(v => Math.round(v/1000)+"k"),
     });
  
-    return { months, monthsShort, grossProfit, grossMargin, directCosts,
-             overheads, ebit, netProfit, interest, cashClosing, grossMarginPct };
+    return {
+      months, monthsShort,
+      grossProfit, directCosts, grossMargin,
+      overheads, ebit, interest, netProfit, cashClosing,
+      grossMarginPct, expenseRatio, interestCover,
+    };
   } catch(e) {
     console.error("parseFiguredBudget error:", e);
     return null;
@@ -836,144 +855,104 @@ const BASE={
  
 function makePnLCharts(){
   destroyChart("gp");destroyChart("ebit");destroyChart("margins");
-  const B      = D.budget;
-  const actLen = D.monthsShort.length; // 8 (Jul25-Feb26)
+  const B      = D.budget;  // Figured forecast: Mar-Jun 26 (4 months)
+  const MS     = D.monthsShort;  // Actuals: Jul25-Feb26 (8 months)
+  const actLen = MS.length;  // 8
  
-  // Budget forecast months: Mar26..Dec26 = B.grossProfit[2..11]
-  const budgetLabels = B ? ["Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] : [];
-  const allLabels    = [...D.monthsShort, ...budgetLabels];
-  const budLen       = budgetLabels.length; // 10
- 
-  // Build single continuous array: 8 actuals + 10 forecast
-  // For line charts: actuals[0..7] then budget[2..11]
-  const concat = (actuals, bArr, bStart=2) =>
-    B ? [...actuals, ...bArr.slice(bStart)] : actuals;
+  // Budget is exactly 4 months: Mar, Apr, May, Jun
+  const budLabels = B ? (B.monthsShort || ["Mar","Apr","May","Jun"]) : [];
+  const budLen    = budLabels.length;  // 4
+  const allLabels = [...MS, ...budLabels];  // 12 total
  
   // Segment styling: solid for actuals, dashed for forecast
-  // p1DataIndex < actLen = still in actuals section
-  const seg = (solidColor, dashColor) => ({
-    borderColor: ctx => ctx.p1DataIndex <= actLen ? solidColor : dashColor,
-    borderDash:  ctx => ctx.p1DataIndex <= actLen ? [] : [6,4],
-  });
+  const seg = {
+    borderDash: ctx => ctx.p1DataIndex >= actLen ? [6,4] : [],
+  };
  
-  const ptStyle = (len, solidColor, dashColor) =>
-    Array.from({length: len}, (_,i) => i < actLen ? solidColor : "transparent");
+  // Build continuous arrays: 8 actuals + 4 forecast
+  const concat = (actual, forecast) =>
+    B ? [...actual, ...(forecast||[])] : actual;
  
-  const ptBorder = (len) =>
-    Array.from({length: len}, (_,i) => i < actLen ? "#fff" : CHART_COLORS.forest);
+  // Point styles: filled for actuals, hollow for forecast
+  const ptBg = (actual, color) =>
+    [...actual.map(()=>color), ...(B ? budLabels.map(()=>"transparent") : [])];
+  const ptBorder = (actual, color) =>
+    [...actual.map(()=>"#fff"), ...(B ? budLabels.map(()=>color) : [])];
+  const ptRadius = (actual) =>
+    [...actual.map(()=>4), ...(B ? budLabels.map(()=>3) : [])];
  
-  // ── Gross Profit / Costs chart ─────────────────────────────
-  // Bar chart: actuals as solid bars, forecast as lighter same-colour bars
-  const gpAll = concat(D.grossProfit, B?.grossProfit||[]);
-  const dcAll = concat(D.directCosts, B?.directCosts||[]);
-  const ohAll = concat(D.overheads,   B?.overheads||[]);
+  // ── Gross Profit / Costs bar chart ─────────────────────────
+  const gpData  = concat(D.grossProfit, B?.grossProfit);
+  const dcData  = concat(D.directCosts, B?.directCosts);
+  const ohData  = concat(D.overheads,   B?.overheads);
  
-  const isActual = (_,i) => i < actLen;
-  const isForecast = (_,i) => i >= actLen;
- 
-  charts.gp = new Chart(document.getElementById("chart-gp"), {type:"bar",
+  charts.gp = new Chart(document.getElementById("chart-gp"),{type:"bar",
     data:{labels:allLabels, datasets:[
-      {label:"Gross Profit",      data:gpAll,
-       backgroundColor: gpAll.map((_,i)=>i<actLen?CHART_COLORS.greenLight:"rgba(34,197,94,0.2)"),
-       borderColor:      gpAll.map((_,i)=>i<actLen?CHART_COLORS.green:CHART_COLORS.green),
-       borderWidth:2, borderRadius:3,
-       borderDash: gpAll.map((_,i)=>i<actLen?[]:[3,2])},
-      {label:"Direct Costs",      data:dcAll,
-       backgroundColor: dcAll.map((_,i)=>i<actLen?"rgba(220,38,38,.12)":"rgba(220,38,38,.07)"),
-       borderColor:      dcAll.map((_,i)=>i<actLen?CHART_COLORS.red:CHART_COLORS.red),
-       borderWidth:2, borderRadius:3},
-      {label:"Overheads",         data:ohAll,
-       backgroundColor: ohAll.map((_,i)=>i<actLen?"rgba(59,130,246,.12)":"rgba(59,130,246,.07)"),
-       borderColor:      ohAll.map((_,i)=>i<actLen?CHART_COLORS.blue:CHART_COLORS.blue),
-       borderWidth:2, borderRadius:3},
+      {label:"Gross Profit", data:gpData,
+       backgroundColor:gpData.map((_,i)=>i<actLen?CHART_COLORS.greenLight:"rgba(34,197,94,0.18)"),
+       borderColor:CHART_COLORS.green, borderWidth:2, borderRadius:3},
+      {label:"Direct Costs", data:dcData,
+       backgroundColor:dcData.map((_,i)=>i<actLen?"rgba(220,38,38,.12)":"rgba(220,38,38,.07)"),
+       borderColor:CHART_COLORS.red, borderWidth:2, borderRadius:3},
+      {label:"Overheads", data:ohData,
+       backgroundColor:ohData.map((_,i)=>i<actLen?"rgba(59,130,246,.12)":"rgba(59,130,246,.07)"),
+       borderColor:CHART_COLORS.blue, borderWidth:2, borderRadius:3},
     ]},
-    options:{...BASE,
-      plugins:{...BASE.plugins,
-        tooltip:{...BASE.plugins?.tooltip,
-          callbacks:{...(BASE.plugins?.tooltip?.callbacks||{}),
-            title: ctx => allLabels[ctx[0].dataIndex] + (ctx[0].dataIndex>=actLen?" (Budget)":"")}},
-      },
-      scales:{x:{...BASE.scales.x,grid:{display:false}},
-        y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},
+      y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
   });
  
-  // ── EBIT & Net Profit — single seamless line per metric ────
-  const ebitAll = concat(D.ebit,      B?.ebit||[]);
-  const npAll   = concat(D.netProfit, B?.netProfit||[]);
-  const n = ebitAll.length;
+  // ── EBIT & Net Profit line chart ────────────────────────────
+  const ebitAll = concat(D.ebit,      B?.ebit);
+  const npAll   = concat(D.netProfit, B?.netProfit);
  
-  charts.ebit = new Chart(document.getElementById("chart-ebit"), {type:"line",
+  charts.ebit = new Chart(document.getElementById("chart-ebit"),{type:"line",
     data:{labels:allLabels, datasets:[
-      {label:"EBIT",
-       data:ebitAll,
-       borderColor:CHART_COLORS.forest,
-       backgroundColor:CHART_COLORS.forestLight,
+      {label:"EBIT", data:ebitAll,
+       borderColor:CHART_COLORS.forest, backgroundColor:CHART_COLORS.forestLight,
        fill:true, tension:.35, borderWidth:2.5,
-       pointRadius:    ebitAll.map((_,i)=>i<actLen?4:3),
-       pointStyle:     ebitAll.map((_,i)=>i<actLen?"circle":"circle"),
-       pointBackgroundColor: ebitAll.map((_,i)=>i<actLen?CHART_COLORS.forest:"transparent"),
-       pointBorderColor:     ebitAll.map((_,i)=>i<actLen?"#fff":CHART_COLORS.forest),
-       pointBorderWidth:     ebitAll.map((_,i)=>i<actLen?2:1.5),
-       segment:{
-         borderDash:  ctx => ctx.p1DataIndex > actLen ? [6,4] : [],
-         borderColor: ctx => CHART_COLORS.forest,
-       }},
-      {label:"Net Profit",
-       data:npAll,
-       borderColor:CHART_COLORS.blue,
-       backgroundColor:"transparent",
+       pointRadius:ptRadius(D.ebit),
+       pointBackgroundColor:ptBg(D.ebit, CHART_COLORS.forest),
+       pointBorderColor:ptBorder(D.ebit, CHART_COLORS.forest),
+       pointBorderWidth:ebitAll.map((_,i)=>i<actLen?2:1.5),
+       segment:{borderDash: ctx=>ctx.p1DataIndex>=actLen?[6,4]:[]}},
+      {label:"Net Profit", data:npAll,
+       borderColor:CHART_COLORS.blue, backgroundColor:"transparent",
        fill:false, tension:.35, borderWidth:2.5,
-       pointRadius:    npAll.map((_,i)=>i<actLen?4:3),
-       pointBackgroundColor: npAll.map((v,i)=>i<actLen?(v<0?CHART_COLORS.red:CHART_COLORS.blue):"transparent"),
-       pointBorderColor:     npAll.map((_,i)=>i<actLen?"#fff":CHART_COLORS.blue),
-       pointBorderWidth:     npAll.map((_,i)=>i<actLen?2:1.5),
-       segment:{
-         borderDash:  ctx => ctx.p1DataIndex > actLen ? [6,4] : [],
-         borderColor: ctx => CHART_COLORS.blue,
-       }},
+       pointRadius:ptRadius(D.netProfit),
+       pointBackgroundColor:D.netProfit.map((v,i)=>i<actLen?(v<0?CHART_COLORS.red:CHART_COLORS.blue):"transparent"),
+       pointBorderColor:ptBorder(D.netProfit, CHART_COLORS.blue),
+       pointBorderWidth:npAll.map((_,i)=>i<actLen?2:1.5),
+       segment:{borderDash: ctx=>ctx.p1DataIndex>=actLen?[6,4]:[]}},
     ]},
-    options:{...BASE,
-      plugins:{...BASE.plugins,
-        tooltip:{...BASE.plugins?.tooltip,
-          callbacks:{...(BASE.plugins?.tooltip?.callbacks||{}),
-            title: ctx => allLabels[ctx[0].dataIndex]+(ctx[0].dataIndex>=actLen?" (Budget)":"")}}},
-      scales:{x:{...BASE.scales.x,grid:{display:false}},
-        y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},
+      y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>fmtK(v)}}}}
   });
  
-  // ── Gross Margin % — single seamless line ──────────────────
-  const gmAll = concat(D.grossMarginPct, B?.grossMarginPct||[]);
-  const erAll = concat(D.expenseRatio,   []);  // no budget expense ratio calc
+  // ── Gross Margin % line chart ───────────────────────────────
+  const gmAll = concat(D.grossMarginPct, B?.grossMarginPct);
+  const erAll = D.expenseRatio;  // actuals only
  
-  charts.margins = new Chart(document.getElementById("chart-margins"), {type:"line",
+  charts.margins = new Chart(document.getElementById("chart-margins"),{type:"line",
     data:{labels:allLabels, datasets:[
-      {label:"Gross Margin %",
-       data:gmAll,
-       borderColor:CHART_COLORS.green,
-       backgroundColor:"transparent",
+      {label:"Gross Margin %", data:gmAll,
+       borderColor:CHART_COLORS.green, backgroundColor:"transparent",
        fill:false, tension:.35, borderWidth:2.5,
-       pointRadius:    gmAll.map((_,i)=>i<actLen?4:3),
-       pointBackgroundColor: gmAll.map((_,i)=>i<actLen?CHART_COLORS.green:"transparent"),
-       pointBorderColor:     gmAll.map((_,i)=>i<actLen?"#fff":CHART_COLORS.green),
-       pointBorderWidth:     gmAll.map((_,i)=>i<actLen?2:1.5),
-       segment:{
-         borderDash:  ctx => ctx.p1DataIndex > actLen ? [6,4] : [],
-         borderColor: ctx => CHART_COLORS.green,
-       }},
-      {label:"Expense Ratio %",
-       data:erAll,
-       borderColor:CHART_COLORS.red,
-       backgroundColor:"transparent",
+       pointRadius:ptRadius(D.grossMarginPct),
+       pointBackgroundColor:ptBg(D.grossMarginPct, CHART_COLORS.green),
+       pointBorderColor:ptBorder(D.grossMarginPct, CHART_COLORS.green),
+       pointBorderWidth:gmAll.map((_,i)=>i<actLen?2:1.5),
+       segment:{borderDash: ctx=>ctx.p1DataIndex>=actLen?[6,4]:[]}},
+      {label:"Expense Ratio %", data:[...erAll,...(B?budLabels.map(()=>null):[])],
+       borderColor:CHART_COLORS.red, backgroundColor:"transparent",
        fill:false, tension:.35, borderWidth:2.5,
        pointRadius:4, pointBackgroundColor:CHART_COLORS.red,
        pointBorderColor:"#fff", pointBorderWidth:2},
-      {label:"70% Benchmark",
-       data:Array(allLabels.length).fill(70),
+      {label:"70% Benchmark", data:Array(allLabels.length).fill(70),
        borderColor:"#94a3b8", borderDash:[5,5], borderWidth:1.5, pointRadius:0, fill:false},
     ]},
-    options:{...BASE,
-      scales:{x:{...BASE.scales.x,grid:{display:false}},
-        y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}%`},min:0,max:120}}}
+    options:{...BASE,scales:{x:{...BASE.scales.x,grid:{display:false}},
+      y:{...BASE.scales.y,ticks:{...BASE.scales.y.ticks,callback:v=>`${v}%`},min:0,max:120}}}
   });
 }
  
@@ -1141,10 +1120,10 @@ function makeRatioChart(){
   const MS     = D.monthsShort;
   const B      = D.budget;
   const actLen = MS.length;
-  const budgetLabels = B ? ["Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] : [];
+  const budgetLabels = B ? (B.monthsShort || ["Mar","Apr","May","Jun"]) : [];
   const allLabels    = [...MS, ...budgetLabels];
  
-  const gmAll = B ? [...D.grossMarginPct, ...B.grossMarginPct.slice(2)] : D.grossMarginPct;
+  const gmAll = B ? [...D.grossMarginPct, ...(B.grossMarginPct||[])] : D.grossMarginPct;
  
   charts.ratios = new Chart(document.getElementById("chart-ratios"), {type:"line",
     data:{labels:allLabels, datasets:[
@@ -3635,4 +3614,4 @@ function switchWeatherModel(model) {
 init();
 </script>
 </body>
-</html>
+</html> 
