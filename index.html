@@ -5955,9 +5955,7 @@ async function buildAIWeatherOutlook() {
     });
     const data = await res.json();
     const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
-    el.innerHTML = text.split(/
-
-+/).filter(p => p.trim()).map(p =>
+    el.innerHTML = text.split(/\n\n+/).filter(p => p.trim()).map(p =>
       `<p style="font-size:10.5px;color:var(--t1);line-height:1.75;margin-bottom:12px;margin-top:0">${p.trim()}</p>`
     ).join('');
   } catch(e) {
