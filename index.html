@@ -1711,254 +1711,48 @@ input:focus-visible,
    Each card: label · value · sparkline · benchmark arc · delta
    ───────────────────────────────────────────────────────── */
 .bkpi-strip{
-  display:flex;
-  align-items:stretch;
-  padding:0;
-  background:var(--s1);
-  border-bottom:1px solid var(--b1);
-  overflow-x:auto;
-  overflow-y:visible;
-  flex-shrink:0;
-  height:auto
+  display:flex;align-items:stretch;
+  background:var(--s1);border-bottom:1px solid var(--b1);
+  overflow-x:auto;overflow-y:visible;flex-shrink:0;height:auto
 }
 .bkpi-strip::-webkit-scrollbar{height:0}
-
-/* Each KPI is now a full card */
 .bkpi-item{
-  display:flex;
-  flex-direction:column;
-  padding:14px 20px 12px;
-  border-right:1px solid var(--b1);
-  flex-shrink:0;
-  min-width:148px;
-  position:relative;
-  cursor:default;
-  transition:background var(--fast)
+  display:flex;flex-direction:column;padding:14px 18px 12px;
+  border-right:1px solid var(--b1);flex-shrink:0;min-width:148px;
+  cursor:default;transition:background var(--fast)
 }
 .bkpi-item:hover{background:rgba(255,255,255,.015)}
 .bkpi-item:last-child{border-right:none}
-.bkpi-item.bkpi-critical{min-width:168px}
-
-/* Top row: label + status dot */
-.bkpi-top{
-  display:flex;align-items:center;gap:5px;
-  margin-bottom:8px
-}
-.bkpi-lbl{
-  font-size:9px;font-weight:500;
-  color:var(--t3);
-  letter-spacing:.05em;
-  line-height:1;white-space:nowrap;
-  text-transform:uppercase;flex:1
-}
-/* Status dot — red/amber/green */
-.bkpi-status{
-  width:5px;height:5px;border-radius:50%;
-  flex-shrink:0
-}
+.bkpi-item.bkpi-critical{min-width:164px}
+.bkpi-top{display:flex;align-items:center;gap:5px;margin-bottom:8px}
+.bkpi-lbl{font-size:9px;font-weight:500;color:var(--t3);letter-spacing:.05em;line-height:1;white-space:nowrap;text-transform:uppercase;flex:1}
+.bkpi-status{width:5px;height:5px;border-radius:50%;flex-shrink:0}
 .bkpi-status.ok{background:rgba(34,197,94,.7)}
-.bkpi-status.warn{background:rgba(251,191,36,.8)}
-.bkpi-status.crit{background:var(--red-b);box-shadow:0 0 6px rgba(244,63,94,.4)}
-
-/* Middle row: value + sparkline side by side */
-.bkpi-mid{
-  display:flex;align-items:flex-end;gap:8px;
-  margin-bottom:6px
-}
-.bkpi-val{
-  font-family:var(--m);font-size:22px;font-weight:200;
-  line-height:1;letter-spacing:-.04em;
-  color:var(--t0)
-}
+.bkpi-status.warn{background:rgba(251,191,36,.85)}
+.bkpi-status.crit{background:var(--red-b);box-shadow:0 0 6px rgba(244,63,94,.5)}
+.bkpi-mid{display:flex;align-items:flex-end;gap:8px;margin-bottom:7px}
+.bkpi-val{font-family:var(--m);font-size:22px;font-weight:200;line-height:1;letter-spacing:-.04em;color:var(--t0)}
+.bkpi-item.bkpi-critical .bkpi-val{font-size:26px}
 .bkpi-val.crit{color:var(--red-b)}
 .bkpi-val.warn{color:rgba(251,191,36,.95)}
-.bkpi-val.ok-v{color:rgba(255,255,255,.75)}
+.bkpi-val.ok-v{color:rgba(255,255,255,.7)}
 .bkpi-val.blue{color:var(--blue-b)}
-/* Critical items slightly larger */
-.bkpi-item.bkpi-critical .bkpi-val{font-size:26px}
-
-.bkpi-spark-wrap{
-  flex:1;display:flex;flex-direction:column;
-  align-items:flex-end;padding-bottom:3px
-}
-
-/* Bottom row: benchmark progress + delta */
-.bkpi-bench{
-  display:flex;align-items:center;gap:6px;
-  margin-top:2px
-}
-/* The benchmark track */
-.bkpi-track{
-  flex:1;height:2px;
-  background:rgba(255,255,255,.07);
-  border-radius:1px;overflow:visible;
-  position:relative
-}
-.bkpi-fill{
-  height:100%;border-radius:1px;
-  transition:width 1.2s cubic-bezier(.22,1,.36,1)
-}
+.bkpi-spark-wrap{flex:1;display:flex;flex-direction:column;align-items:flex-end;padding-bottom:2px}
+.bkpi-bench{display:flex;align-items:center;gap:6px;margin-top:2px}
+.bkpi-track{flex:1;height:2px;background:rgba(255,255,255,.07);border-radius:1px;overflow:visible;position:relative}
+.bkpi-fill{height:100%;border-radius:1px;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
 .bkpi-fill.ok{background:rgba(34,197,94,.6)}
 .bkpi-fill.warn{background:rgba(251,191,36,.7)}
 .bkpi-fill.crit{background:rgba(244,63,94,.7)}
-/* Benchmark target tick mark */
-.bkpi-target-tick{
-  position:absolute;top:-3px;
-  width:1.5px;height:8px;
-  background:rgba(255,255,255,.25);
-  border-radius:1px;
-  transform:translateX(-50%)
-}
-
-/* Delta from benchmark */
-.bkpi-delta{
-  font-size:8.5px;font-weight:600;
-  white-space:nowrap;font-family:var(--m);
-  letter-spacing:-.01em
-}
+.bkpi-fill.blue-f{background:var(--blue);opacity:.5}
+.bkpi-target-tick{position:absolute;top:-3px;width:1.5px;height:8px;background:rgba(255,255,255,.3);border-radius:1px;transform:translateX(-50%)}
+.bkpi-delta{font-size:8.5px;font-weight:600;white-space:nowrap;font-family:var(--m);letter-spacing:-.01em}
 .bkpi-delta.ok{color:rgba(34,197,94,.7)}
 .bkpi-delta.warn{color:rgba(251,191,36,.7)}
 .bkpi-delta.crit{color:rgba(244,63,94,.7)}
 .bkpi-delta.blue{color:var(--blue-b);opacity:.8}
-
-/* Separator — legacy, now unused but keep for compat */
 .bkpi-sep{display:none}
 .bkpi-arrow{display:none}
-
-/* ── STRATEGIC INTELLIGENCE ─────────────────────────────── */
-.si-panel{background:var(--s0)}
-.si-header{
-  display:flex;align-items:center;gap:12px;
-  padding:16px 28px 14px;
-  border-bottom:1px solid var(--b1)
-}
-.si-title{
-  font-size:12px;font-weight:600;color:var(--t0);
-  letter-spacing:-.01em
-}
-.si-subtitle{font-size:9px;color:var(--t3);margin-top:2px;letter-spacing:.01em}
-.si-badge{display:none}
-.si-refresh-btn{
-  margin-left:auto;display:flex;align-items:center;gap:5px;
-  height:28px;padding:0 12px;border-radius:6px;
-  background:transparent;border:1px solid var(--b1);
-  color:var(--t2);font-size:9px;font-weight:500;
-  cursor:pointer;transition:all var(--fast);letter-spacing:.02em
-}
-.si-refresh-btn:hover{border-color:var(--b2);color:var(--t0);background:var(--s3)}
-.si-refresh-btn:disabled{opacity:.35;cursor:default}
-
-.si-grid{
-  display:grid;grid-template-columns:repeat(5,1fr);
-  border-bottom:1px solid var(--b1)
-}
-.si-card{
-  padding:18px 20px;
-  border-right:1px solid var(--b1);
-  position:relative;overflow:hidden;
-  transition:background var(--fast)
-}
-.si-card:hover{background:rgba(255,255,255,.012)}
-.si-card:last-child{border-right:none}
-.si-card::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px
-}
-.si-card.red::before{background:var(--red);opacity:.7}
-.si-card.amber::before{background:rgba(245,158,11,.8)}
-.si-card.blue::before{background:var(--blue);opacity:.7}
-.si-card.grey::before{background:rgba(255,255,255,.1)}
-.si-card.green::before{background:rgba(34,197,94,.6)}
-
-.si-card-priority{
-  font-size:8px;font-weight:700;text-transform:uppercase;
-  letter-spacing:.14em;margin-bottom:8px;
-  display:flex;align-items:center;gap:5px
-}
-.si-card.red .si-card-priority{color:var(--red-b)}
-.si-card.amber .si-card-priority{color:rgba(245,158,11,.85)}
-.si-card.blue .si-card-priority{color:var(--blue-b)}
-.si-card.grey .si-card-priority{color:var(--t2)}
-.si-card.green .si-card-priority{color:rgba(34,197,94,.8)}
-
-.si-card-icon{font-size:14px;flex-shrink:0}
-.si-card-label{
-  font-size:12px;font-weight:600;color:var(--t0);
-  margin-bottom:8px;line-height:1.3;letter-spacing:-.01em
-}
-.si-card-action{
-  font-size:10.5px;color:var(--t1);line-height:1.65;margin-bottom:8px
-}
-.si-card-rationale{
-  font-size:9.5px;color:var(--t3);line-height:1.55;
-  padding-top:8px;border-top:1px solid var(--b0)
-}
-.si-card-checklist{font-size:8px;font-family:var(--m);color:var(--t3);margin-top:6px}
-
-/* SI card nav link */
-.si-card-link{
-  display:inline-flex;align-items:center;gap:4px;
-  margin-top:8px;font-size:8.5px;font-weight:600;
-  color:var(--blue-b);opacity:.7;cursor:pointer;
-  transition:opacity var(--fast)
-}
-.si-card-link:hover{opacity:1}
-
-.si-loading{
-  display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding:0
-}
-.si-skel-card{padding:18px 20px;border-right:1px solid var(--b1)}
-.si-skel-card:last-child{border-right:none}
-.si-skel-line{
-  height:8px;border-radius:3px;margin-bottom:8px;
-  background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);
-  background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite
-}
-
-.si-bottom{
-  display:grid;grid-template-columns:1fr 360px;
-  border-top:1px solid var(--b1)
-}
-.si-news-col{padding:18px 24px;border-right:1px solid var(--b1)}
-.si-news-title{
-  font-size:9px;font-weight:600;color:var(--t2);
-  text-transform:uppercase;letter-spacing:.08em;
-  display:flex;align-items:center;gap:7px;margin-bottom:12px
-}
-.si-news-dot{
-  width:5px;height:5px;border-radius:50%;
-  background:var(--blue-b);flex-shrink:0;opacity:.8
-}
-.si-news-item{
-  display:flex;gap:8px;padding:7px 0;
-  border-bottom:1px solid var(--b0);font-size:10.5px
-}
-.si-news-item:last-child{border-bottom:none}
-.si-news-bullet{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:6px}
-.si-news-bullet.pos{background:rgba(255,255,255,.35)}
-.si-news-bullet.neg{background:rgba(244,63,94,.7)}
-.si-news-bullet.neu{background:var(--blue-b);opacity:.7}
-
-.si-plan-col{padding:18px 20px}
-.si-plan-title{
-  font-size:9px;font-weight:600;color:var(--t2);
-  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px
-}
-.si-plan-item{
-  display:flex;align-items:flex-start;gap:8px;
-  padding:7px 0;border-bottom:1px solid var(--b0);
-  font-size:10px;color:var(--t2);line-height:1.55
-}
-.si-plan-item:last-child{border-bottom:none}
-.si-plan-icon{flex-shrink:0;font-size:10px;margin-top:2px;opacity:.7}
-.si-plan-text strong{color:var(--t1);font-size:10.5px;font-weight:600}
-
-@media(max-width:900px){
-  .bkpi-strip{flex-wrap:nowrap}
-  .si-grid,.si-loading{grid-template-columns:1fr 1fr}
-  .si-bottom{grid-template-columns:1fr}
-  .si-card{padding:14px 16px}
-}
-.hero{display:none}
 
 /* ── COMMAND CENTRE ────────────────────────────────────────
    Two equal columns. No decorative borders inside cards.
@@ -3951,79 +3745,128 @@ input:focus-visible,
 </div>
 
 <!-- ══ WEATHER PAGE ══════════════════════════════════════════ -->
-<div id="page-weather" class="pv pg"><div id="wb-weather" style="display:none"></div>
+<div id="page-weather" class="pv pg">
+  <div id="wb-weather" style="display:none"></div>
   <div class="pg-hero">
     <div class="pg-hero-grid">
       <div>
         <div class="pg-badge"><svg width="10" height="10"><use href="#i-weather"/></svg>BOM · Open-Meteo · Live</div>
-        <div class="pg-title">Weather</div>
-        <div class="pg-sub">Nundle &amp; Topdale stations · 3-day forecast + seasonal outlook · Critical for pasture planning</div>
-        <div class="pg-kpis" id="wx-kpis">
+        <div class="pg-title">Weather &amp; Climate</div>
+        <div class="pg-sub">Nundle &amp; Topdale · 14-day forecast · 12-month rainfall history · AI seasonal outlook</div>
+        <div class="pg-kpis">
           <div class="pg-kpi"><div class="pg-kpi-val" id="wx-today-hi">–°</div><div class="pg-kpi-lbl">Today High</div></div>
           <div class="pg-kpi"><div class="pg-kpi-val" id="wx-today-lo">–°</div><div class="pg-kpi-lbl">Today Low</div></div>
           <div class="pg-kpi"><div class="pg-kpi-val" id="wx-today-rain">–mm</div><div class="pg-kpi-lbl">Today Rain</div></div>
-          <div class="pg-kpi"><div class="pg-kpi-val">NSW</div><div class="pg-kpi-lbl">Region</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" id="wx-14d-total">–mm</div><div class="pg-kpi-lbl">14-Day Total</div></div>
         </div>
       </div>
       <div class="pg-actions">
-        <button class="pg-btn" onclick="fetchWeather()">↻ Refresh</button>
+        <button class="pg-btn" onclick="buildWeatherPage()">↻ Refresh</button>
         <button class="pg-btn primary" onclick="nav('pasture',null)">🌿 Pasture Budget →</button>
       </div>
     </div>
   </div>
-  <div class="pg-body">
-    <div class="grid">
-      <!-- 3-day forecast cards -->
-      <div class="card g8">
-        <div class="chead"><div><div class="ctitle">3-Day Forecast — Nundle NSW</div><div class="csub">Open-Meteo · −31.464°S 151.113°E · Updates every 30 minutes</div></div></div>
-        <div class="cbody">
-          <div id="wx-3day" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
-            <!-- Populated by fetchWeatherPage() -->
-            <div style="padding:16px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
-              <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Today</div>
-              <div style="font-size:32px;margin-bottom:8px">⋯</div>
-              <div style="font-family:var(--m);font-size:18px;color:var(--t0)">–°/–°</div>
-              <div style="font-size:10px;color:var(--blue-b);margin-top:4px">–mm</div>
-            </div>
-            <div style="padding:16px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
-              <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Tomorrow</div>
-              <div style="font-size:32px;margin-bottom:8px">⋯</div>
-              <div style="font-family:var(--m);font-size:18px;color:var(--t0)">–°/–°</div>
-              <div style="font-size:10px;color:var(--blue-b);margin-top:4px">–mm</div>
-            </div>
-            <div style="padding:16px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
-              <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Day +2</div>
-              <div style="font-size:32px;margin-bottom:8px">⋯</div>
-              <div style="font-family:var(--m);font-size:18px;color:var(--t0)">–°/–°</div>
-              <div style="font-size:10px;color:var(--blue-b);margin-top:4px">–mm</div>
-            </div>
+
+  <div class="pg-body" style="padding:20px 24px 40px">
+
+    <!-- ── 14-DAY FORECAST ─────────────────────────────────── -->
+    <div style="margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <div style="font-size:10px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.08em">14-Day Forecast — Nundle NSW</div>
+        <div style="font-size:8.5px;color:var(--t3);font-family:var(--m)">−31.464°S 151.113°E · Open-Meteo · Updates hourly</div>
+        <div style="flex:1;height:1px;background:var(--b1)"></div>
+      </div>
+      <div id="wx-14day" style="display:grid;grid-template-columns:repeat(14,1fr);gap:5px">
+        <div style="grid-column:1/-1;padding:20px;text-align:center;font-size:9px;color:var(--t3)">Loading 14-day forecast…</div>
+      </div>
+    </div>
+
+    <!-- ── RAINFALL COMPARISON ─────────────────────────────── -->
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:16px;margin-bottom:24px">
+
+      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:18px">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
+          <div style="font-size:10px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.08em">12-Month Rainfall — Nundle vs Topdale</div>
+          <div style="flex:1;height:1px;background:var(--b0)"></div>
+          <div style="display:flex;gap:10px;align-items:center;flex-shrink:0">
+            <span style="display:flex;align-items:center;gap:4px">
+              <span style="width:8px;height:8px;border-radius:2px;background:var(--blue);display:inline-block"></span>
+              <span style="font-size:8.5px;color:var(--t2)">Nundle</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:4px">
+              <span style="width:8px;height:8px;border-radius:2px;background:rgba(14,165,233,.3);display:inline-block"></span>
+              <span style="font-size:8.5px;color:var(--t2)">Topdale</span>
+            </span>
+            <span style="display:flex;align-items:center;gap:4px">
+              <span style="width:10px;height:2px;background:rgba(255,255,255,.25);display:inline-block"></span>
+              <span style="font-size:8.5px;color:var(--t2)">LTA avg</span>
+            </span>
           </div>
         </div>
+        <div id="wx-rainfall-comp" style="display:flex;gap:4px;align-items:flex-end;height:72px">
+          <div style="font-size:9px;color:var(--t3)">Loading…</div>
+        </div>
       </div>
-      <!-- Seasonal context -->
-      <div class="card g4">
-        <div class="chead"><div><div class="ctitle">Seasonal Outlook</div><div class="csub">New England Tablelands · BOM</div></div></div>
-        <div class="cbody">
-          <div style="display:flex;flex-direction:column;gap:8px">
-            <div style="padding:10px;background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.12);border-radius:8px">
-              <div style="font-size:8.5px;font-weight:700;color:var(--red-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Autumn Outlook — Drier</div>
-              <div style="font-size:10px;color:var(--t1);line-height:1.65">BOM seasonal outlook suggests below-median rainfall Mar–May for New England. Combined with current DSE load — pasture budget tight from April.</div>
-            </div>
-            <div style="padding:10px;background:rgba(14,165,233,.05);border:1px solid var(--blue-r);border-radius:8px">
-              <div style="font-size:8.5px;font-weight:700;color:var(--blue-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Winter Frost Risk</div>
-              <div style="font-size:10px;color:var(--t1);line-height:1.65">New England typically sees frosts Jun–Aug above 900m. Pasture growth slows significantly. Supplement or destock before June to avoid high feed costs.</div>
-            </div>
-            <div style="padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--b0);border-radius:8px">
-              <div style="font-size:8.5px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Best Action</div>
-              <div style="font-size:10px;color:var(--t1);line-height:1.65">Sell into current EYCI strength (897¢) to reduce DSE load before autumn dryness. Aligns with IC recovery strategy.</div>
-            </div>
-          </div>
+
+      <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:18px;display:flex;flex-direction:column;gap:14px">
+        <div style="font-size:10px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.08em;border-bottom:1px solid var(--b0);padding-bottom:10px">Annual Summary</div>
+        <div>
+          <div style="font-size:8.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Nundle YTD</div>
+          <div id="wx-ytd-nundle" style="font-family:var(--m);font-size:18px;font-weight:300;color:var(--t0)">–</div>
+        </div>
+        <div>
+          <div style="font-size:8.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Topdale YTD</div>
+          <div id="wx-ytd-topdale" style="font-family:var(--m);font-size:18px;font-weight:300;color:var(--t0)">–</div>
+        </div>
+        <div style="padding:10px;background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.12);border-radius:8px">
+          <div style="font-size:8.5px;font-weight:700;color:var(--red-b);margin-bottom:3px">⚠ Autumn — Drier Outlook</div>
+          <div style="font-size:9.5px;color:var(--t2);line-height:1.6">BOM: below-median probability for New England Mar–May 2026.</div>
+        </div>
+        <div style="padding:10px;background:rgba(255,255,255,.02);border:1px solid var(--b0);border-radius:8px">
+          <div style="font-size:8.5px;font-weight:700;color:var(--t2);margin-bottom:3px">Winter Frost Risk</div>
+          <div style="font-size:9.5px;color:var(--t2);line-height:1.6">Frosts Jun–Aug above 900m. Pasture slows significantly from June.</div>
         </div>
       </div>
     </div>
+
+    <!-- ── AI SEASONAL OUTLOOK ─────────────────────────────── -->
+    <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;overflow:hidden;margin-bottom:24px">
+      <div style="display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--b0)">
+        <div style="width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,#0369a1,#4338ca);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 010 20M12 2a15.3 15.3 0 000 20"/></svg>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:600;color:var(--t0)">AI Seasonal Climate Outlook</div>
+          <div style="font-size:9px;color:var(--t3);margin-top:1px">Claude · Live BOM seasonal forecasts · ENSO/IOD · Stocking implications for Nundle</div>
+        </div>
+        <button onclick="buildAIWeatherOutlook()" style="margin-left:auto;height:28px;padding:0 12px;border-radius:6px;background:transparent;border:1px solid var(--b1);color:var(--t2);font-size:9px;font-weight:500;cursor:pointer;transition:all .15s" onmouseover="this.style.color='var(--t0)';this.style.borderColor='var(--b2)'" onmouseout="this.style.color='var(--t2)';this.style.borderColor='var(--b1)'">↻ Refresh Outlook</button>
+      </div>
+      <div id="wx-ai-outlook" style="padding:20px 22px">
+        <div style="font-size:9.5px;color:var(--t3)">Click <strong style="color:var(--t2)">Refresh Outlook</strong> to fetch the latest BOM seasonal forecast and ENSO/IOD analysis for Nundle &amp; Topdale.</div>
+      </div>
+    </div>
+
+    <!-- ── LONG-TERM AVERAGES TABLE ────────────────────────── -->
+    <div style="background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:18px">
+      <div style="font-size:10px;font-weight:700;color:var(--t1);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px">Nundle Long-Term Monthly Averages — BOM Station 055024</div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse;font-size:10px">
+          <thead>
+            <tr>
+              <th style="text-align:left;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 8px 10px 0">Month</th>
+              <th style="text-align:right;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 10px 10px">Avg Rain</th>
+              <th style="text-align:right;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 10px 10px">Avg Max</th>
+              <th style="text-align:right;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 10px 10px">Avg Min</th>
+              <th style="text-align:left;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;padding:0 0 10px 10px">Pasture Note</th>
+            </tr>
+          </thead>
+          <tbody><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Jan</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">83mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">28°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">15°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Summer growth — peak carrying capacity</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Feb</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">74mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">28°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">15°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Late summer — monitor soil moisture</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Mar</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">72mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">26°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">13°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Autumn flush — key selling window</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Apr</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">61mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">22°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">9°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Pasture slowing — plan DSE reduction</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">May</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">56mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">18°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">6°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Slow growth — frost risk begins</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Jun</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">61mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">14°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">2°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Frost — dormant pasture, lowest capacity</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Jul</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">59mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">13°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">1°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Frost — lowest carrying capacity of year</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Aug</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">52mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">15°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">2°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Late winter — spring prep, first green pick</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Sep</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">48mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">18°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">5°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Spring flush starting — trading buy window</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Oct</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">60mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">22°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">8°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Peak spring growth — maximum carrying capacity</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Nov</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">70mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">25°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">11°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Pre-summer — strong finishing conditions</td></tr><tr style="border-top:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1);font-weight:600;white-space:nowrap">Dec</td><td style="padding:6px 10px;color:var(--blue-b);font-family:var(--m);text-align:right;white-space:nowrap">83mm</td><td style="padding:6px 10px;color:var(--t1);font-family:var(--m);text-align:right;white-space:nowrap">27°</td><td style="padding:6px 10px;color:var(--t2);font-family:var(--m);text-align:right;white-space:nowrap">13°</td><td style="padding:6px 0 6px 10px;color:var(--t2);font-size:9.5px">Summer — monitor heat stress and water points</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div>
 </div>
-
 
 
 
@@ -4502,26 +4345,17 @@ function drawHeroSpark(){
 function drawStatSparks(){
   const d=dark();
   const B=d?'#38bdf8':'#0284c7';
-  const W=d?'rgba(255,255,255,.6)':'rgba(0,0,0,.55)';
+  const G=d?'rgba(34,197,94,.75)':'rgba(22,163,74,.75)';
   const R=d?'#fb7185':'#e11d48';
-  const A=d?'rgba(251,191,36,.9)':'rgba(217,119,6,.9)';
-  const G=d?'rgba(34,197,94,.7)':'rgba(22,163,74,.7)';
-  /* IC — critically low, flat near zero */
-  drawSparkSVG(document.getElementById('sp-ic'),[0.08,0.07,0.09,0.08,0.07,0.06,0.06,0.06],64,22,R,true);
-  /* GM/DSE — declining */
-  drawSparkSVG(document.getElementById('sp-gm'),[48,45,42,44,40,38,37,36.58],56,20,R,true);
-  /* DSE — declining (planned, use blue) */
-  drawSparkSVG(document.getElementById('sp-dse'),[26618,25100,23800,22900,22100,21400,20900,20538],56,20,B,true);
-  /* Equity — rising */
-  drawSparkSVG(document.getElementById('sp-eq'),[87.1,87.4,87.8,88.2,88.5,88.8,89.0,89.2],56,20,G,true);
-  /* GP — rising */
-  drawSparkSVG(document.getElementById('sp-gp'),[0.82,0.95,1.04,1.08,1.14,1.19,1.23,1.27],56,20,G,true);
-  /* Cash — positive and growing */
-  drawSparkSVG(document.getElementById('sp-cash'),[120,155,188,220,265,310,345,378],56,20,G,true);
-  /* Debt — flat high (bad), needs to fall */
-  drawSparkSVG(document.getElementById('sp-debt'),[3200,3180,3150,3120,3110,3100,3100,3100],56,20,A,true);
-  /* EYCI sparkline redrawn at new dimensions */
-  drawSparkSVG(document.getElementById('hero-spark'),EYCI_30D,64,22,B,true);
+  const A=d?'rgba(251,191,36,.85)':'rgba(217,119,6,.85)';
+  drawSparkSVG(document.getElementById('sp-ic'),[0.08,0.07,0.09,0.08,0.07,0.06,0.06,0.06],60,22,R,true);
+  drawSparkSVG(document.getElementById('hero-spark'),EYCI_30D,60,22,B,true);
+  drawSparkSVG(document.getElementById('sp-gp'),[0.82,0.95,1.04,1.08,1.14,1.19,1.23,1.27],52,20,G,true);
+  drawSparkSVG(document.getElementById('sp-gm'),[48,45,42,44,40,38,37,36.58],52,20,R,true);
+  drawSparkSVG(document.getElementById('sp-dse'),[26618,25100,23800,22900,22100,21400,20900,20538],52,20,B,true);
+  drawSparkSVG(document.getElementById('sp-cash'),[120,155,188,220,265,310,345,378],52,20,G,true);
+  drawSparkSVG(document.getElementById('sp-eq'),[87.1,87.4,87.8,88.2,88.5,88.8,89.0,89.2],52,20,G,true);
+  drawSparkSVG(document.getElementById('sp-debt'),[3200,3180,3150,3120,3110,3100,3100,3100],52,20,A,true);
 }
 
 function drawSidebarSpark(){
@@ -5335,40 +5169,8 @@ function buildMktSparkLg(){
 
 /* Weather page — populate the 3-day cards + hero KPIs */
 function buildWeatherPage(){
-  const container=document.getElementById('wb-weather');
-  /* Reuse data already fetched by fetchWeather() which populates sb-weather */
-  /* Fetch fresh data for the page specifically */
-  fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.464&longitude=151.113&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Australia%2FSydney&forecast_days=3')
-    .then(r=>r.json())
-    .then(d=>{
-      const days=['Today','Tomorrow','Day +2'];
-      const icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌧',63:'🌧',65:'🌧',80:'🌦',81:'🌧',82:'⛈️',95:'⛈️'};
-      const el3=document.getElementById('wx-3day');
-      if(el3){
-        el3.innerHTML=days.map((nm,i)=>{
-          const code=d.daily.weathercode[i]||0;
-          const hi=Math.round(d.daily.temperature_2m_max[i]||20);
-          const lo=Math.round(d.daily.temperature_2m_min[i]||10);
-          const rain=(d.daily.precipitation_sum[i]||0);
-          const ic=icons[code]||'⛅';
-          const rainCol=rain>5?'var(--blue-b)':rain>0?'var(--t2)':'var(--t3)';
-          return `<div style="padding:20px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
-            <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">${nm}</div>
-            <div style="font-size:40px;margin-bottom:10px">${ic}</div>
-            <div style="font-family:var(--m);font-size:20px;color:var(--t0);margin-bottom:4px">${hi}°<span style="color:var(--t2);font-size:15px">/${lo}°</span></div>
-            <div style="font-size:11px;color:${rainCol};margin-top:4px">${rain>0?rain.toFixed(1)+'mm rain':'No rain'}</div>
-          </div>`;
-        }).join('');
-      }
-      /* Update hero KPIs */
-      const hi=Math.round(d.daily.temperature_2m_max[0]||'–');
-      const lo=Math.round(d.daily.temperature_2m_min[0]||'–');
-      const rain=(d.daily.precipitation_sum[0]||0);
-      const kHi=document.getElementById('wx-today-hi');if(kHi)kHi.textContent=hi+'°';
-      const kLo=document.getElementById('wx-today-lo');if(kLo)kLo.textContent=lo+'°';
-      const kRain=document.getElementById('wx-today-rain');if(kRain)kRain.textContent=rain>0?rain.toFixed(1)+'mm':'0mm';
-    })
-    .catch(()=>{});
+  build14DayForecast();
+  buildRainfallComparison();
 }
 
 
@@ -6011,13 +5813,157 @@ async
 })();
 
 
-/* ══════════════════════════════════════════════════════════════════
-   14-DAY WEATHER (replaces 3-day buildWeatherPage)
-   — Full 2-week forecast for pasture planning
-   — Shows temp range, rain probability, daily summary
-══════════════════════════════════════════════════════════════════ */
-async 
+/* ═══════════════════════════════════════════════════════════════
+   WEATHER — 14-day forecast + 12-month rainfall + AI outlook
+   Nundle: -31.464, 151.113  |  Topdale: -31.60, 151.20
+═══════════════════════════════════════════════════════════════ */
 
+async function build14DayForecast() {
+  const container = document.getElementById('wx-14day');
+  if (!container) return;
+  container.innerHTML = '<div style="grid-column:1/-1;padding:20px;text-align:center;font-size:9px;color:var(--t3)">Loading 14-day forecast…</div>';
+  try {
+    const r = await fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.464&longitude=151.113&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,windspeed_10m_max&timezone=Australia%2FSydney&forecast_days=14');
+    const d = await r.json();
+    const ICONS = {0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌧',63:'🌧',65:'🌧',80:'🌦',81:'🌧',82:'⛈',95:'⛈',96:'⛈',99:'⛈'};
+    const DAY_NAMES = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+    const days = d.daily.time;
+    const hi   = d.daily.temperature_2m_max;
+    const lo   = d.daily.temperature_2m_min;
+    const rain = d.daily.precipitation_sum;
+    const prob = d.daily.precipitation_probability_max;
+    const code = d.daily.weathercode;
+    let totalRain = 0; rain.forEach(v => totalRain += (v||0));
+
+    // Update hero KPIs
+    const kHi = document.getElementById('wx-today-hi');    if(kHi)   kHi.textContent   = Math.round(hi[0]||0)+'°';
+    const kLo = document.getElementById('wx-today-lo');    if(kLo)   kLo.textContent   = Math.round(lo[0]||0)+'°';
+    const kR  = document.getElementById('wx-today-rain');  if(kR)    kR.textContent    = (rain[0]||0).toFixed(1)+'mm';
+    const k14 = document.getElementById('wx-14d-total');   if(k14)   k14.textContent   = totalRain.toFixed(0)+'mm';
+
+    const minT = Math.min(...lo), maxT = Math.max(...hi), tRange = (maxT - minT) || 1;
+
+    container.innerHTML = days.map((dateStr, i) => {
+      const dt = new Date(dateStr + 'T00:00:00');
+      const isToday = i === 0, isTomorrow = i === 1;
+      const dName  = isToday ? 'Today' : isTomorrow ? 'Tomorrow' : DAY_NAMES[dt.getDay()];
+      const dLabel = dt.toLocaleDateString('en-AU', {day:'numeric', month:'short'});
+      const ic     = ICONS[code[i]] || '⛅';
+      const r      = (rain[i]||0), p = (prob[i]||0);
+      const rColor = r > 10 ? 'var(--blue-b)' : r > 2 ? 'rgba(14,165,233,.7)' : 'var(--t3)';
+      const bg     = isToday ? 'var(--s4)' : 'var(--s3)';
+      const bdr    = isToday ? '1px solid var(--b2)' : '1px solid var(--b0)';
+      const barL   = ((lo[i] - minT) / tRange * 100).toFixed(0);
+      const barW   = ((hi[i] - lo[i]) / tRange * 100).toFixed(0);
+      return `<div style="background:${bg};border:${bdr};border-radius:10px;padding:12px 8px;display:flex;flex-direction:column;align-items:center;gap:5px;min-width:0">
+        <div style="font-size:8px;font-weight:700;color:${isToday?'var(--blue-b)':'var(--t2)'};text-transform:uppercase;letter-spacing:.05em;white-space:nowrap">${dName}</div>
+        <div style="font-size:8px;color:var(--t3);white-space:nowrap">${dLabel}</div>
+        <div style="font-size:24px;line-height:1">${ic}</div>
+        <div style="font-family:var(--m);font-size:13px;color:var(--t0);font-weight:300;white-space:nowrap">${Math.round(hi[i]||0)}°<span style="color:var(--t3);font-size:10px">/${Math.round(lo[i]||0)}°</span></div>
+        <div style="width:100%;height:3px;background:rgba(255,255,255,.06);border-radius:2px;position:relative">
+          <div style="position:absolute;left:${barL}%;width:${barW}%;height:100%;background:var(--blue);border-radius:2px;opacity:.55"></div>
+        </div>
+        <div style="font-size:9px;color:${rColor};font-family:var(--m);white-space:nowrap">${r > 0 ? r.toFixed(1)+'mm' : '–'}</div>
+        ${p > 20 ? `<div style="font-size:8px;color:var(--t3)">${p}%</div>` : '<div style="height:12px"></div>'}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    const c = document.getElementById('wx-14day');
+    if(c) c.innerHTML = '<div style="grid-column:1/-1;padding:16px;text-align:center;font-size:9px;color:var(--t3)">Forecast unavailable — check connection</div>';
+  }
+}
+
+async function buildRainfallComparison() {
+  const el = document.getElementById('wx-rainfall-comp');
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:9px;color:var(--t3)">Loading rainfall data…</div>';
+
+  const endDate   = new Date();
+  const startDate = new Date(endDate); startDate.setMonth(startDate.getMonth() - 12);
+  const fmt = d => d.toISOString().split('T')[0];
+
+  // BOM Station 055024 long-term monthly averages for Nundle
+  const LTA_NUNDLE  = [83,74,72,61,56,61,59,52,48,60,70,83];
+  const LTA_TOPDALE = [79,70,68,58,52,58,56,49,45,57,66,79];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  try {
+    const [rN, rT] = await Promise.all([
+      fetch(`https://api.open-meteo.com/v1/archive?latitude=-31.464&longitude=151.113&start_date=${fmt(startDate)}&end_date=${fmt(endDate)}&daily=precipitation_sum&timezone=Australia%2FSydney`).then(r=>r.json()),
+      fetch(`https://api.open-meteo.com/v1/archive?latitude=-31.60&longitude=151.20&start_date=${fmt(startDate)}&end_date=${fmt(endDate)}&daily=precipitation_sum&timezone=Australia%2FSydney`).then(r=>r.json())
+    ]);
+
+    function aggregate(data) {
+      const monthly = new Array(12).fill(0);
+      (data.daily?.time || []).forEach((ds, i) => {
+        const m = new Date(ds).getMonth();
+        monthly[m] += (data.daily.precipitation_sum[i] || 0);
+      });
+      return monthly;
+    }
+    const nA = aggregate(rN);
+    const tA = aggregate(rT);
+    const max = Math.max(...nA, ...tA, ...LTA_NUNDLE, 100);
+    const startMonth = startDate.getMonth();
+
+    el.innerHTML = Array.from({length:12}, (_, i) => {
+      const mIdx  = (startMonth + 1 + i) % 12;
+      const n     = nA[mIdx], t = tA[mIdx], lta = LTA_NUNDLE[mIdx];
+      const nPct  = (n / max * 100).toFixed(0);
+      const tPct  = (t / max * 100).toFixed(0);
+      const ltaPct = (lta / max * 100).toFixed(0);
+      const isBelow = n < lta * 0.8;
+      return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:2px">
+        <div style="font-size:7.5px;color:var(--t3);font-family:var(--m)">${n.toFixed(0)}</div>
+        <div style="width:100%;display:flex;gap:1px;align-items:flex-end;height:60px">
+          <div style="flex:1;background:${isBelow?'rgba(244,63,94,.55)':'var(--blue)'};border-radius:2px 2px 0 0;height:${nPct}%;min-height:2px;transition:height 1s"></div>
+          <div style="flex:1;background:rgba(14,165,233,.3);border-radius:2px 2px 0 0;height:${tPct}%;min-height:2px;transition:height 1s"></div>
+        </div>
+        <div style="width:100%;height:2px;background:rgba(255,255,255,.07);border-radius:1px">
+          <div style="width:${ltaPct}%;height:100%;background:rgba(255,255,255,.28);border-radius:1px"></div>
+        </div>
+        <div style="font-size:7px;color:var(--t3)">${MONTHS[mIdx]}</div>
+      </div>`;
+    }).join('');
+
+    const ytdN   = nA.reduce((a,b)=>a+b,0);
+    const ytdT   = tA.reduce((a,b)=>a+b,0);
+    const ltaSum = LTA_NUNDLE.reduce((a,b)=>a+b,0);
+    const eN = document.getElementById('wx-ytd-nundle');   if(eN) eN.textContent = ytdN.toFixed(0)+'mm (LTA '+ltaSum+'mm)';
+    const eT = document.getElementById('wx-ytd-topdale'); if(eT) eT.textContent = ytdT.toFixed(0)+'mm';
+
+  } catch(e) {
+    if(el) el.innerHTML = '<div style="font-size:9px;color:var(--t3)">Rainfall data unavailable</div>';
+  }
+}
+
+async function buildAIWeatherOutlook() {
+  const el = document.getElementById('wx-ai-outlook');
+  if (!el) return;
+  el.innerHTML = '<div style="font-size:9px;color:var(--t3);padding:4px 0">Fetching AI climate outlook…</div>';
+  try {
+    const res = await fetch(WORKER, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 700,
+        tools: [{type:'web_search_20250305', name:'web_search'}],
+        system: 'You are a pasture and climate advisor for Buringal Grazing Co at Nundle NSW, New England Tablelands, elevation ~900m. Be concise, specific and practical. No markdown headers or bullet points — write in clear paragraphs.',
+        messages: [{role:'user', content:'Search for: (1) Current BOM seasonal rainfall outlook for New England NSW / Northern Tablelands for the next 3 months with probability percentages. (2) Current ENSO status (La Nina/El Nino/Neutral) and IOD status. Write exactly 3 short paragraphs: first on BOM seasonal outlook with specific probabilities, second on ENSO/IOD and what it means for Nundle rainfall, third with a practical cattle stocking recommendation for Nundle specifically given the outlook.'}]
+      })
+    });
+    const data = await res.json();
+    const text = (data.content || []).filter(b => b.type === 'text').map(b => b.text).join('').trim();
+    el.innerHTML = text.split(/
+
++/).filter(p => p.trim()).map(p =>
+      `<p style="font-size:10.5px;color:var(--t1);line-height:1.75;margin-bottom:12px;margin-top:0">${p.trim()}</p>`
+    ).join('');
+  } catch(e) {
+    if(el) el.innerHTML = '<div style="font-size:9px;color:var(--t3)">Climate outlook unavailable — check API connection</div>';
+  }
+}
 
 
 /* ══════════════════════════════════════════════════════════════════
@@ -6446,6 +6392,8 @@ setTimeout(()=>{
 ═══════════════════════════════════════════════════════════════════ */
 
 let siFetched = false;
+let newsLastFetched = 0;
+const NEWS_CACHE_MS = 5 * 60 * 1000; // 5 min cache
 
 async function fetchStrategicIntelligence() {
   const btn     = document.getElementById('si-refresh-btn');
@@ -6712,6 +6660,7 @@ Return ONLY this JSON array, no markdown, no other text:
     }
 
     if (ts) ts.textContent = 'Updated ' + new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',timeZone:'Australia/Sydney'});
+    newsLastFetched = Date.now();
 
   } catch(e) {
     renderSIError('Network error — ' + e.message);
@@ -7261,5 +7210,5 @@ function animateKPIBars(){
 }
 setTimeout(animateKPIBars,300);
 </script>
-</body> 
-</html>
+</body>
+</html> 
