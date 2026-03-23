@@ -21,82 +21,82 @@
   --s4:#141f30;  /* hover surface */
   --s5:#1a2840;  /* active */
   --s6:#1f3048;  /* accent surface */
- 
+
   /* Borders — 3 levels */
   --b0:rgba(255,255,255,.04);
   --b1:rgba(255,255,255,.08);
   --b2:rgba(255,255,255,.16);
- 
+
   /* Text — 4 levels, strict hierarchy */
   --t0:#f4f9ff;  /* headlines, critical numbers */
   --t1:#9db4cc;  /* labels, supporting */
   --t2:#4a6480;  /* muted, timestamps */
   --t3:#243345;  /* ghost, decorative */
- 
+
   /* THE TWO COLOURS — and only these */
   --blue:  #0ea5e9;
   --blue-d:#0284c7;
   --blue-b:#38bdf8;
   --blue-g:rgba(14,165,233,.10);
   --blue-r:rgba(14,165,233,.22);
- 
+
   --red:   #f43f5e;
   --red-d: #e11d48;
   --red-b: #fb7185;
   --red-g: rgba(244,63,94,.08);
   --red-r: rgba(244,63,94,.22);
- 
+
   /* Everything else = contextual grey */
   --ok:  rgba(255,255,255,.55);  /* passing/good */
   --warn:rgba(255,255,255,.35);  /* watch */
   --dim: rgba(255,255,255,.15);  /* low priority */
- 
+
   /* Fonts */
   --f:'Inter',system-ui,sans-serif;
   --m:'DM Mono',monospace;
- 
+
   /* Elevation */
   --e1:0 0 0 1px var(--b0);
   --e2:0 0 0 1px var(--b1),0 6px 24px rgba(0,0,0,.5);
   --e3:0 0 0 1px var(--b2),0 12px 48px rgba(0,0,0,.7);
   --e-blue:0 0 0 1px var(--blue-r),0 8px 40px rgba(14,165,233,.12);
   --e-red: 0 0 0 1px var(--red-r), 0 8px 40px rgba(244,63,94,.15);
- 
+
   /* Spacing */
   --sp2:2px;--sp4:4px;--sp8:8px;--sp12:12px;
   --sp16:16px;--sp20:20px;--sp24:24px;--sp32:32px;
- 
+
   /* Radius */
   --r6:6px;--r8:8px;--r10:10px;--r12:12px;--r16:16px;
- 
+
   /* Easing */
   --ease:cubic-bezier(.22,1,.36,1);
   --fast:.1s;--base:.2s;--slow:.35s;
 }
- 
+
 /* ── LIGHT MODE ─────────────────────────────────── */
 [data-theme="light"] {
   --s0:#edeae2; --s1:#f5f2ea; --s2:#fefcf8;
   --s3:#f8f6f1; --s4:#eeebe2; --s5:#e5e0d4; --s6:#ddd8ca;
- 
+
   --b0:rgba(0,0,0,.05); --b1:rgba(0,0,0,.09); --b2:rgba(0,0,0,.16);
   --t0:#080c14; --t1:#3a5268; --t2:#7a96b0; --t3:#b0c4d4;
- 
+
   --blue:  #0284c7; --blue-d:#0369a1; --blue-b:#0ea5e9;
   --blue-g:rgba(2,132,199,.07); --blue-r:rgba(2,132,199,.2);
- 
+
   --red:   #e11d48; --red-d:#be123c; --red-b:#f43f5e;
   --red-g: rgba(225,29,72,.06); --red-r:rgba(225,29,72,.2);
- 
+
   --ok:  rgba(0,0,0,.55); --warn:rgba(0,0,0,.4); --dim:rgba(0,0,0,.18);
- 
+
   --e1:0 1px 4px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
   --e2:0 4px 20px rgba(0,0,0,.1),0 2px 6px rgba(0,0,0,.05);
   --e3:0 8px 40px rgba(0,0,0,.14),0 4px 10px rgba(0,0,0,.06);
   --e-blue:0 0 0 1px var(--blue-r),0 4px 24px rgba(2,132,199,.12);
   --e-red: 0 0 0 1px var(--red-r), 0 4px 24px rgba(225,29,72,.12);
 }
- 
+
 /* ── RESET ──────────────────────────────────────── */
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{height:100%;scroll-behavior:smooth}
@@ -111,11 +111,11 @@ body{
 button{font-family:var(--f);cursor:pointer;border:none;background:none;color:inherit}
 svg{display:block;flex-shrink:0}
 input{font-family:var(--f)}
- 
+
 /* ── CANVAS BG ──────────────────────────────────── */
 #bg{position:fixed;inset:0;z-index:0;pointer-events:none;opacity:.85}
 [data-theme="light"] #bg{opacity:.15}
- 
+
 /* Grain texture — premium material feel */
 body::before{
   content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
@@ -123,7 +123,7 @@ body::before{
   background-size:200px
 }
 [data-theme="light"] body::before{opacity:.015}
- 
+
 /* Fine dot grid */
 body::after{
   content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.28;
@@ -134,7 +134,7 @@ body::after{
 [data-theme="light"] body::after{
   background-image:radial-gradient(circle,rgba(0,0,0,.07) 1px,transparent 1px);opacity:.22
 }
- 
+
 /* ── SHELL ──────────────────────────────────────── */
 #shell{
   position:relative;z-index:2;display:grid;
@@ -145,7 +145,7 @@ body::after{
 }
 #shell.collapsed{grid-template-columns:0px 1fr}
 #shell.mobile   {grid-template-columns:1fr}
- 
+
 /* ── TOPBAR ─────────────────────────────────────── */
 #topbar{
   grid-column:1/-1;height:48px;
@@ -159,7 +159,7 @@ body::after{
   transition:background var(--base)
 }
 [data-theme="light"] #topbar{background:rgba(252,250,246,.94)}
- 
+
 /* Topbar scanning line */
 #topbar::after{
   content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
@@ -167,7 +167,7 @@ body::after{
   background-size:200%;opacity:.45;animation:scan 10s linear infinite
 }
 @keyframes scan{to{background-position:-200% 0}}
- 
+
 /* Brand */
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:auto}
 .bmark{
@@ -177,7 +177,7 @@ body::after{
 }
 .bname{font-size:11px;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--t0);line-height:1.2}
 .bsub{font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--t3);margin-top:2px}
- 
+
 /* Live indicator */
 .lpill{
   display:flex;align-items:center;gap:6px;
@@ -195,7 +195,7 @@ body::after{
 [data-theme="light"] .ldot{background:#16a34a}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.3)}50%{box-shadow:0 0 0 3px rgba(34,197,94,.0)}}
 .sync-ago{font-size:9px;color:var(--t3);font-family:var(--m);white-space:nowrap}
- 
+
 /* Topbar button system — ONE style */
 .tbtn{
   display:flex;align-items:center;gap:6px;
@@ -217,7 +217,7 @@ body::after{
 .tbtn.busy{opacity:.55;cursor:default;pointer-events:none}
 .tbtn.busy .spin{animation:rot 1s linear infinite}
 @keyframes rot{to{transform:rotate(360deg)}}
- 
+
 .vseg{
   display:flex;gap:1px;background:var(--s3);
   border:1px solid var(--b1);border-radius:var(--r6);padding:2px
@@ -229,7 +229,7 @@ body::after{
 }
 .vseg-btn:hover{color:var(--t1)}
 .vseg-btn.on{background:var(--blue-g);color:var(--blue-b);border:1px solid var(--blue-r)}
- 
+
 .tog-track{
   width:26px;height:14px;border-radius:7px;background:var(--s5);
   position:relative;flex-shrink:0;transition:.28s
@@ -241,14 +241,14 @@ body::after{
 }
 [data-theme="light"] .tog-track{background:var(--blue-g);border:1px solid var(--blue-r)}
 [data-theme="light"] .tog-thumb{transform:translateX(12px);background:var(--blue)}
- 
+
 .tav{
   width:20px;height:20px;border-radius:5px;
   background:linear-gradient(135deg,#0369a1,#6366f1);
   display:flex;align-items:center;justify-content:center;
   font-size:8px;font-weight:800;color:#fff;flex-shrink:0
 }
- 
+
 /* ── SIDEBAR ────────────────────────────────────── */
 #sidebar{
   background:var(--s1);border-right:1px solid var(--b0);
@@ -261,7 +261,7 @@ body::after{
 #sidebar::-webkit-scrollbar{display:none}
 #shell.collapsed #sidebar{width:0;opacity:0;pointer-events:none}
 #shell.mobile    #sidebar{display:none}
- 
+
 .sbitem{
   display:flex;align-items:center;gap:var(--sp8);
   padding:7px var(--sp16);
@@ -291,7 +291,7 @@ body::after{
   padding:1px 4px;opacity:0;transition:opacity var(--fast);flex-shrink:0
 }
 .sbitem:hover .sb-kbd,.sbitem.on .sb-kbd{opacity:.6}
- 
+
 /* Sidebar ticker */
 .sbticker{
   margin:var(--sp8) var(--sp8) 0;
@@ -328,15 +328,15 @@ body::after{
 .sbt-vl.tick-dn{color:var(--red-b);animation:tickf .5s ease}
 [data-theme="light"] .sbt-vl.tick-up{color:#16a34a}
 @keyframes tickf{0%{transform:scale(1.1)}100%{transform:scale(1)}}
- 
+
 /* ── MAIN ───────────────────────────────────────── */
 #main{overflow-y:auto;overflow-x:hidden;position:relative}
 #shell.mobile #main{padding-bottom:56px}
- 
+
 /* ── PAGE SYSTEM ────────────────────────────────── */
 .pv{display:none}
 .pv.active{display:block}
- 
+
 /* ══════════════════════════════════════════════════
    OVERVIEW PAGE LAYOUT
    Concept: CINEMATIC
@@ -344,7 +344,7 @@ body::after{
    Below it: two columns — primary data left, signals right.
    Nothing competes with the hero number.
 ══════════════════════════════════════════════════ */
- 
+
 /* ── HERO — full bleed, cinematic ──────────────── */
 .hero{
   padding:44px var(--sp24) 40px;
@@ -362,7 +362,7 @@ body::after{
   background-size:56px 56px;
   mask-image:radial-gradient(ellipse 120% 120% at 0% 0%,black 5%,transparent 65%)
 }
- 
+
 /* Hero splits: left (number), right (alarm + stats) */
 .hero-layout{
   display:grid;
@@ -372,7 +372,7 @@ body::after{
   position:relative;z-index:1;
   max-width:1400px
 }
- 
+
 /* Eyebrow */
 .hero-eyebrow{
   display:flex;align-items:center;gap:10px;
@@ -385,7 +385,7 @@ body::after{
   background:linear-gradient(90deg,var(--blue),transparent);
   flex-shrink:0
 }
- 
+
 /* THE NUMBER — the entire reason this page exists */
 .hero-num{
   font-family:var(--m);
@@ -406,17 +406,17 @@ body::after{
 }
 .hero-unit{font-size:28px;font-weight:200;letter-spacing:-.03em}
 [data-theme="light"] .hero-num{background:linear-gradient(150deg,#080c14 0%,#0369a1 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
- 
+
 .hero-caption{
   font-size:12.5px;color:var(--t2);
   line-height:1.65;max-width:440px;
   letter-spacing:.01em;margin-bottom:0
 }
 .hero-caption strong{color:var(--t1);font-weight:500}
- 
+
 /* 30-day sparkline */
 .hero-spark-wrap{margin:var(--sp16) 0 var(--sp24)}
- 
+
 /* Supporting stats — small, below the number */
 .hero-stats{
   display:flex;gap:0;flex-wrap:wrap
@@ -432,13 +432,13 @@ body::after{
 }
 .hslbl{font-size:8px;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
 .hs-spark{display:block;margin:3px 0 1px;overflow:visible}
- 
+
 /* ── ALARM COLUMN ───────────────────────────────── */
 .hero-right{
   display:flex;flex-direction:column;gap:var(--sp8);
   padding-top:4px
 }
- 
+
 /* IC ALARM — the most important card on the page */
 .alarm{
   background:linear-gradient(145deg,rgba(244,63,94,.16) 0%,rgba(244,63,94,.06) 60%,rgba(244,63,94,.02) 100%);
@@ -500,7 +500,7 @@ body::after{
   padding:7px 10px;background:rgba(244,63,94,.06);
   border-radius:6px;border:1px solid rgba(244,63,94,.12)
 }
- 
+
 /* Small stat rows below alarm */
 .hrow{
   display:flex;align-items:center;justify-content:space-between;
@@ -519,7 +519,7 @@ body::after{
 }
 .hrow-urgency-text{font-size:10px;color:var(--t1);line-height:1.5;flex:1}
 .hrow-urgency-text strong{color:var(--blue-b);font-weight:600}
- 
+
 /* ── SELL DECISION CALCULATOR ───────────────────── */
 /* The hero interactive feature — unique in the industry */
 .sell-calc{
@@ -568,7 +568,7 @@ input[type=range]::-webkit-slider-thumb{
   background:var(--blue-b);border:2px solid var(--s2);
   box-shadow:0 0 0 3px rgba(14,165,233,.22)
 }
- 
+
 /* The output — big number, editorial */
 .scc-decision-label{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.12em;margin-bottom:var(--sp8)}
 .scc-decision-num{
@@ -590,10 +590,10 @@ input[type=range]::-webkit-slider-thumb{
 .scc-delta{font-size:8px;font-weight:600;margin-top:2px}
 .scc-delta.up{color:#22c55e}.scc-delta.dn{color:var(--red-b)}.scc-delta.ne{color:var(--t3)}
 [data-theme="light"] .scc-delta.up{color:#16a34a}
- 
+
 /* ── CONTENT GRID ───────────────────────────────── */
 .content{padding:var(--sp20) var(--sp24) var(--sp32);max-width:1600px}
- 
+
 /* Section headers — minimal, editorial */
 .sec{
   display:flex;align-items:center;gap:12px;
@@ -605,7 +605,7 @@ input[type=range]::-webkit-slider-thumb{
 .sec-label{font-size:10px;font-weight:700;color:var(--t1);letter-spacing:.1em;text-transform:uppercase}
 .sec-count{font-size:8.5px;color:var(--t3);background:var(--s3);border:1px solid var(--b0);border-radius:4px;padding:2px 6px;font-family:var(--m)}
 .sec-line{flex:1;height:1px;background:linear-gradient(90deg,var(--b1),transparent)}
- 
+
 /* 12-col grid */
 .grid{display:grid;grid-template-columns:repeat(12,1fr);gap:8px;margin-bottom:8px}.grid+.grid{margin-top:8px}
 .g3{grid-column:span 3}.g4{grid-column:span 4}.g5{grid-column:span 5}
@@ -619,7 +619,7 @@ input[type=range]::-webkit-slider-thumb{
   .grid{grid-template-columns:1fr}
   .g3,.g4,.g5,.g6,.g7,.g8,.g9,.g12{grid-column:span 1}.r2{grid-row:span 1}
 }
- 
+
 /* ── CARD SYSTEM ────────────────────────────────── */
 .card{
   background:var(--s2);border-radius:var(--r12);overflow:hidden;
@@ -641,12 +641,12 @@ input[type=range]::-webkit-slider-thumb{
 }
 .card-float:not(.nolift):hover{box-shadow:0 0 0 1px var(--blue-r),0 20px 70px rgba(14,165,233,.18),0 0 80px rgba(14,165,233,.06);transform:translateY(-3px)}
 .card-float::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 5%,rgba(56,189,248,.35) 35%,rgba(56,189,248,.5) 50%,rgba(56,189,248,.35) 65%,transparent 95%);pointer-events:none;z-index:1}
- 
+
 .chead{display:flex;align-items:flex-start;justify-content:space-between;padding:var(--sp16) var(--sp16) 0;gap:10px}
 .cbody{padding:var(--sp12) var(--sp16) var(--sp16)}
 .ctitle{font-size:11px;font-weight:700;color:var(--t0);letter-spacing:-.01em}
 .csub{font-size:9px;color:var(--t3);margin-top:3px;line-height:1.4}
- 
+
 /* ── BADGES ─────────────────────────────────────── */
 .bdg{
   display:inline-flex;align-items:center;gap:3px;
@@ -658,10 +658,10 @@ input[type=range]::-webkit-slider-thumb{
 .bdg-n{background:var(--s4);color:var(--t2);border-color:var(--b0)}
 .bdg-ok{background:rgba(255,255,255,.05);color:rgba(255,255,255,.55);border-color:rgba(255,255,255,.1)}
 [data-theme="light"] .bdg-ok{background:rgba(0,0,0,.04);color:rgba(0,0,0,.45);border-color:rgba(0,0,0,.1)}
- 
+
 /* ── CUSTOM CHART CANVAS ────────────────────────── */
 .chart-svg{display:block;width:100%;overflow:visible}
- 
+
 /* ── SIGNAL LIST ────────────────────────────────── */
 .siglist{display:flex;flex-direction:column}
 .sigrow{
@@ -681,7 +681,7 @@ input[type=range]::-webkit-slider-thumb{
 .sigarr:hover{opacity:1}
 .sigst{font-size:9px;font-weight:700;white-space:nowrap}
 .sigst.G{color:var(--ok)}.sigst.A{color:var(--warn)}.sigst.R{color:var(--red-b)}
- 
+
 /* ── DECISION LIST ──────────────────────────────── */
 .delist{display:flex;flex-direction:column}
 .derow{
@@ -707,7 +707,7 @@ input[type=range]::-webkit-slider-thumb{
   transition:background var(--fast)
 }
 .syref:hover{background:rgba(14,165,233,.16)}
- 
+
 /* ── SALEYARDS ──────────────────────────────────── */
 .syhd{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:var(--sp12)}
 .syn{font-size:11px;font-weight:700;color:var(--t0);letter-spacing:-.01em}
@@ -724,7 +724,7 @@ input[type=range]::-webkit-slider-thumb{
 .sycc{font-size:9px;font-weight:600;margin-top:1px}
 .sycc.up{color:var(--ok)}.sycc.dn{color:var(--red-b)}
 .sy-hint{font-size:8.5px;color:var(--t3);text-align:center;margin-top:var(--sp8)}
- 
+
 /* ── AI CURRENT POSITION ANALYSIS CARD ──────────── */
 /* Integrated design — same language as chart cards */
 .ai-card{
@@ -776,7 +776,7 @@ input[type=range]::-webkit-slider-thumb{
 }
 .ai-gen-btn:hover{background:rgba(14,165,233,.18);border-color:var(--blue-b)}
 .ai-gen-btn:disabled{opacity:.45;cursor:default;pointer-events:none}
- 
+
 /* Three-column body: sections side by side */
 .ai-body{
   display:grid;
@@ -804,7 +804,7 @@ input[type=range]::-webkit-slider-thumb{
   min-height:56px
 }
 .ai-sect-text strong{color:var(--t0);font-weight:600}
- 
+
 /* Empty state — before generation */
 .ai-empty{
   grid-column:1/-1;
@@ -820,7 +820,7 @@ input[type=range]::-webkit-slider-thumb{
 }
 .ai-empty-text{font-size:12px;color:var(--t2);max-width:320px;line-height:1.65}
 .ai-empty-hint{font-size:10px;color:var(--t3)}
- 
+
 /* Streaming skeleton lines */
 .ai-skel{height:10px;border-radius:3px;background:var(--s3);margin-bottom:6px}
 .ai-skel:last-child{width:70%;margin-bottom:0}
@@ -829,7 +829,7 @@ input[type=range]::-webkit-slider-thumb{
   background-size:200% 100%;animation:skel-shimmer 1.4s ease infinite
 }
 @keyframes skel-shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
- 
+
 .ai-footer{
   padding:var(--sp8) var(--sp20);
   border-top:1px solid var(--b0);
@@ -837,7 +837,7 @@ input[type=range]::-webkit-slider-thumb{
 }
 .ai-footer-ctx{font-size:9px;color:var(--t3);margin-left:auto;font-family:var(--m)}
 .ai-ts{font-size:8.5px;color:var(--t3);font-family:var(--m)}
- 
+
 /* Cursor blink in body */
 .ai-cursor{
   display:inline-block;width:2px;height:12px;
@@ -845,7 +845,7 @@ input[type=range]::-webkit-slider-thumb{
   vertical-align:middle;animation:blink .8s ease infinite
 }
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
- 
+
 /* ── RATIO ROWS ─────────────────────────────────── */
 .rrows{display:flex;flex-direction:column}
 .rrow{display:flex;align-items:center;gap:var(--sp8);padding:7px 0;border-bottom:1px solid var(--b0)}
@@ -855,7 +855,7 @@ input[type=range]::-webkit-slider-thumb{
 .rthr{font-size:8.5px;color:var(--t3);width:44px;text-align:right}
 .rbar{width:48px;height:2px;background:var(--s4);border-radius:1px;overflow:hidden}
 .rbf{height:100%;border-radius:1px;transition:width 1s var(--ease)}
- 
+
 /* ── COVENANT TABLE ─────────────────────────────── */
 .covt{width:100%;border-collapse:collapse;font-size:10px}
 .covt th{font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;padding:0 var(--sp8) var(--sp8);text-align:left;white-space:nowrap}
@@ -871,7 +871,7 @@ input[type=range]::-webkit-slider-thumb{
 .csc.m{background:rgba(255,255,255,.06);color:rgba(255,255,255,.5)}
 [data-theme="light"] .csc.m{background:rgba(0,0,0,.06);color:rgba(0,0,0,.5)}
 .csc.u{background:var(--blue-g);color:var(--blue-b)}
- 
+
 /* ── PASTURE ────────────────────────────────────── */
 .pbrows{display:flex;flex-direction:column;gap:7px}
 .pbrow{display:flex;align-items:center;gap:var(--sp8)}
@@ -881,7 +881,7 @@ input[type=range]::-webkit-slider-thumb{
 .pbfill{height:100%;border-radius:3px;display:flex;align-items:center;padding:0 7px;font-family:var(--m);font-size:8px;font-weight:500;transition:width 1s var(--ease)}
 .pbcap{font-family:var(--m);font-size:9.5px;color:var(--t1);width:32px;text-align:right;flex-shrink:0}
 .pbbal{font-family:var(--m);font-size:9.5px;font-weight:700;width:42px;text-align:right;flex-shrink:0}
- 
+
 /* ── SKELETON PAGES ─────────────────────────────── */
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .sk-block{
@@ -909,7 +909,7 @@ input[type=range]::-webkit-slider-thumb{
 .sk-pos{position:relative}
 .sk-overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
 .sk-lbl{font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
- 
+
 /* ── MOBILE NAV ─────────────────────────────────── */
 #mobnav{
   display:none;position:fixed;bottom:0;left:0;right:0;z-index:200;
@@ -924,7 +924,7 @@ input[type=range]::-webkit-slider-thumb{
 .mnitem:hover,.mnitem.on{background:var(--blue-g)}
 .mnlbl{font-size:7.5px;font-weight:600;color:var(--t2)}
 .mnitem.on .mnlbl{color:var(--blue-b)}
- 
+
 /* ── MOBILE OVERRIDES ───────────────────────────── */
 #shell.mobile .hero{padding:var(--sp20) var(--sp16);min-height:auto}
 #shell.mobile .hero-layout{grid-template-columns:1fr;gap:var(--sp16)}
@@ -945,7 +945,7 @@ input[type=range]::-webkit-slider-thumb{
   transition:background var(--fast)
 }
 #shell.mobile .mexpbtn{display:block}
- 
+
 /* ── COMMAND PALETTE ────────────────────────────── */
 #cmd-overlay{
   position:fixed;inset:0;z-index:9999;
@@ -1000,23 +1000,23 @@ input[type=range]::-webkit-slider-thumb{
   border-radius:3px;padding:1px 5px;font-size:8.5px;
   font-family:var(--m);color:var(--t2)
 }
- 
+
 /* ── RESPONSIVE ─────────────────────────────────── */
 @media(max-width:900px){#shell:not(.mobile){grid-template-columns:1fr}#sidebar,.tsb-wrap{display:none}}
 @media(max-width:600px){.bsub,.lpill{display:none}.sell-calc-body{grid-template-columns:1fr}}
- 
+
 /* ── ANIMATIONS ─────────────────────────────────── */
 .fade{animation:fup .4s var(--ease) both}
 @keyframes fup{from{opacity:0;transform:translateY(8px)}}
 .d1{animation-delay:.04s}.d2{animation-delay:.09s}.d3{animation-delay:.14s}
 .d4{animation-delay:.19s}.d5{animation-delay:.24s}
- 
+
 /* Colours for hero stats */
 .c-blue{color:var(--blue-b)}.c-red{color:var(--red-b)}
 .c-ok{color:var(--ok)}.c-warn{color:var(--warn)}.c-dim{color:var(--t2)}
 .c-up{color:rgba(255,255,255,.6)}.c-dn{color:var(--red-b)}
 [data-theme="light"] .c-up{color:rgba(0,0,0,.55)}
- 
+
 /* Preview pill */
 .pvpill{
   position:fixed;bottom:var(--sp16);right:var(--sp16);z-index:999;
@@ -1027,7 +1027,7 @@ input[type=range]::-webkit-slider-thumb{
   letter-spacing:.07em;text-transform:uppercase;box-shadow:var(--e2)
 }
 #shell.mobile~.pvpill{bottom:64px}
- 
+
 /* ── LIVE PULSE INDICATORS ───────────────────────── */
 @keyframes val-pulse{
   0%,100%{opacity:.35}
@@ -1039,8 +1039,8 @@ input[type=range]::-webkit-slider-thumb{
   animation:val-pulse 2.8s ease infinite
 }
 .live-dot-sm.alarm{background:var(--red-b)}
- 
- 
+
+
 /* ── URGENCY BAND — connects hero to content ─────── */
 .urgency-band{
   display:flex;align-items:center;gap:12px;
@@ -1071,8 +1071,8 @@ input[type=range]::-webkit-slider-thumb{
 .ub-chip-n{background:rgba(255,255,255,.04);color:var(--t2);border-color:var(--b0)}
 [data-theme="light"] .urgency-band{background:linear-gradient(90deg,rgba(225,29,72,.06),transparent)}
 [data-theme="light"] .urgency-band::before{opacity:.5}
- 
- 
+
+
 /* ── AI CARD MOBILE ──────────────────────────────── */
 @media(max-width:900px){
   .ai-body{grid-template-columns:1fr}
@@ -1081,8 +1081,8 @@ input[type=range]::-webkit-slider-thumb{
 }
 #shell.mobile .ai-body{grid-template-columns:1fr}
 #shell.mobile .ai-section{border-right:none;border-bottom:1px solid var(--b0)}
- 
- 
+
+
 /* ── SELL CALC UPGRADES ──────────────────────────── */
 .scc-output{
   padding:var(--sp20);
@@ -1107,8 +1107,8 @@ input[type=range]::-webkit-slider-thumb{
   100%{transform:scale(1);opacity:1}
 }
 .scc-decision-num.pop{animation:num-pop .35s var(--ease) both}
- 
- 
+
+
 /* ── WEATHER WIDGET ──────────────────────────────── */
 .sbweather{
   margin:var(--sp8) var(--sp8) 0;
@@ -1132,8 +1132,8 @@ input[type=range]::-webkit-slider-thumb{
 .wday-tmp{font-family:var(--m);font-size:9.5px;color:var(--t1)}
 .wday-rain{font-family:var(--m);font-size:8.5px;color:var(--blue-b);margin-left:auto}
 .wday-rain.low{color:var(--t3)}
- 
- 
+
+
 /* ── AI CHAT INPUT ───────────────────────────────── */
 .ai-chat{
   padding:var(--sp12) var(--sp20);
@@ -1166,8 +1166,8 @@ input[type=range]::-webkit-slider-thumb{
 .ai-chat-q{font-size:10px;color:var(--t3);font-family:var(--m);margin-bottom:6px}
 .ai-chat-a{font-size:12px;color:var(--t1);line-height:1.7}
 .ai-chat-a strong{color:var(--t0)}
- 
- 
+
+
 /* ── BANK REPORT PRINT ───────────────────────────── */
 @media print {
   #bg,body::before,body::after,
@@ -1195,12 +1195,230 @@ input[type=range]::-webkit-slider-thumb{
 }
 #print-header h1{font-size:16pt;font-weight:700;margin-bottom:4px}
 #print-header p{font-size:10pt;color:#666}
- 
+
+
+/* ── STANDALONE PAGES ───────────────────────────── */
+.pg{padding:0}
+.pg-hero{
+  padding:32px 28px 28px;
+  border-bottom:1px solid var(--b0);
+  background:linear-gradient(160deg,rgba(14,165,233,.02) 0%,transparent 50%);
+  position:relative;
+}
+.pg-hero::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(var(--b0) 1px,transparent 1px),linear-gradient(90deg,var(--b0) 1px,transparent 1px);
+  background-size:48px 48px;
+  mask-image:radial-gradient(ellipse 80% 80% at 0 0,black,transparent 70%);
+}
+.pg-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:8.5px;font-weight:700;color:var(--blue-b);
+  text-transform:uppercase;letter-spacing:.14em;margin-bottom:10px;
+  background:var(--blue-g);border:1px solid var(--blue-r);
+  border-radius:20px;padding:3px 10px
+}
+.pg-badge.red{color:var(--red-b);background:var(--red-g);border-color:var(--red-r)}
+.pg-title{
+  font-size:28px;font-weight:200;color:var(--t0);
+  letter-spacing:-.03em;margin-bottom:6px;line-height:1.1
+}
+.pg-sub{font-size:12px;color:var(--t2);line-height:1.6;max-width:600px}
+.pg-hero-grid{
+  display:grid;grid-template-columns:1fr auto;gap:24px;align-items:start;position:relative;z-index:1
+}
+.pg-kpis{display:flex;gap:0;flex-wrap:wrap;margin-top:20px}
+.pg-kpi{padding-right:24px;margin-right:24px;border-right:1px solid var(--b0)}
+.pg-kpi:last-child{border-right:none;padding-right:0;margin-right:0}
+.pg-kpi-val{font-family:var(--m);font-size:22px;font-weight:200;letter-spacing:-.04em;line-height:1;margin-bottom:3px}
+.pg-kpi-lbl{font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em}
+.pg-body{padding:20px 28px 40px}
+.pg-actions{display:flex;gap:8px;flex-shrink:0}
+/* Page-specific action button */
+.pg-btn{
+  height:32px;padding:0 14px;border-radius:8px;
+  background:var(--s3);border:1px solid var(--b1);
+  color:var(--t1);font-size:10px;font-weight:600;
+  cursor:pointer;transition:all var(--fast);
+  display:flex;align-items:center;gap:6px;white-space:nowrap
+}
+.pg-btn:hover{background:var(--s4);border-color:var(--b2);color:var(--t0)}
+.pg-btn.primary{
+  background:linear-gradient(135deg,#0369a1,#4338ca);
+  border-color:transparent;color:#fff;
+  box-shadow:0 2px 10px rgba(3,105,161,.35)
+}
+.pg-btn.primary:hover{box-shadow:0 4px 18px rgba(3,105,161,.5);transform:translateY(-1px)}
+
+
+/* ── PRICE ALERT SYSTEM ──────────────────────────── */
+.alert-trigger-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:8px 12px;
+  background:var(--s3);border:1px solid var(--b1);
+  border-radius:var(--r8);margin-top:8px
+}
+.alert-trigger-label{font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap}
+.alert-trigger-input{
+  width:80px;background:var(--s2);border:1px solid var(--b1);
+  border-radius:6px;padding:4px 8px;font-family:var(--m);
+  font-size:12px;color:var(--t0);outline:none;text-align:center;
+  transition:border-color var(--fast)
+}
+.alert-trigger-input:focus{border-color:var(--blue-r)}
+.alert-active{border-color:var(--blue-r);background:var(--blue-g)}
+.alert-btn{
+  height:26px;padding:0 10px;border-radius:6px;
+  background:var(--blue-g);border:1px solid var(--blue-r);
+  color:var(--blue-b);font-size:9px;font-weight:700;cursor:pointer;
+  transition:background var(--fast)
+}
+.alert-btn:hover{background:rgba(14,165,233,.18)}
+.alert-status{font-size:9px;color:var(--t3);font-family:var(--m)}
+.alert-status.armed{color:var(--blue-b)}
+.alert-status.fired{color:#22c55e;font-weight:700}
+
+/* Toast notification */
+#toast-container{
+  position:fixed;top:56px;right:16px;z-index:99999;
+  display:flex;flex-direction:column;gap:8px;pointer-events:none
+}
+.toast{
+  display:flex;align-items:center;gap:10px;
+  padding:12px 16px;border-radius:10px;
+  background:var(--s3);border:1px solid var(--b2);
+  box-shadow:var(--e3);
+  font-size:12px;color:var(--t0);
+  pointer-events:all;cursor:pointer;
+  animation:toastIn .3s var(--ease) both;
+  max-width:320px
+}
+.toast.green{border-color:rgba(34,197,94,.35);background:rgba(34,197,94,.1)}
+.toast.blue{border-color:var(--blue-r);background:var(--blue-g)}
+.toast.red{border-color:var(--red-r);background:var(--red-g)}
+.toast-icon{font-size:16px;flex-shrink:0}
+.toast-title{font-weight:700;font-size:11px;margin-bottom:2px}
+.toast-msg{font-size:10px;color:var(--t2)}
+.toast-close{margin-left:auto;opacity:.5;font-size:16px;cursor:pointer;flex-shrink:0}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px)}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px)}}
+
+
+/* ── DECISION JOURNAL ────────────────────────────── */
+.journal-bar{
+  display:flex;align-items:center;gap:8px;
+  padding:10px 20px;
+  border-bottom:1px solid var(--b0);
+  background:var(--s1)
+}
+.journal-input{
+  flex:1;background:var(--s2);border:1px solid var(--b1);
+  border-radius:8px;padding:7px 12px;
+  font-size:12px;color:var(--t0);outline:none;
+  font-family:var(--f);transition:border-color var(--fast)
+}
+.journal-input::placeholder{color:var(--t3)}
+.journal-input:focus{border-color:var(--blue-r)}
+.journal-submit{
+  height:32px;padding:0 14px;border-radius:8px;
+  background:var(--s3);border:1px solid var(--b1);
+  color:var(--t2);font-size:10px;font-weight:700;
+  cursor:pointer;transition:all var(--fast);flex-shrink:0
+}
+.journal-submit:hover{background:var(--s4);border-color:var(--b2);color:var(--t0)}
+.journal-feed{
+  max-height:160px;overflow-y:auto;
+  border-bottom:1px solid var(--b0)
+}
+.journal-feed::-webkit-scrollbar{width:2px}
+.journal-entry{
+  display:flex;align-items:flex-start;gap:10px;
+  padding:8px 20px;border-bottom:1px solid var(--b0);
+  transition:background var(--fast)
+}
+.journal-entry:last-child{border-bottom:none}
+.journal-entry:hover{background:rgba(255,255,255,.01)}
+.journal-ts{font-family:var(--m);font-size:8.5px;color:var(--t3);white-space:nowrap;flex-shrink:0;margin-top:1px}
+.journal-text{font-size:11px;color:var(--t1);flex:1;line-height:1.5}
+.journal-del{
+  font-size:14px;color:var(--t3);cursor:pointer;opacity:0;
+  transition:opacity var(--fast);flex-shrink:0
+}
+.journal-entry:hover .journal-del{opacity:.6}
+.journal-empty{
+  padding:16px 20px;
+  font-size:11px;color:var(--t3);
+  font-style:italic
+}
+
+
+/* ── HERD INVENTORY ──────────────────────────────── */
+.herd-table{width:100%;border-collapse:collapse;font-size:11px}
+.herd-table th{
+  font-size:8px;font-weight:700;color:var(--t3);
+  text-transform:uppercase;letter-spacing:.1em;
+  padding:0 8px 8px;text-align:left
+}
+.herd-table td{padding:6px 8px;border-top:1px solid var(--b0)}
+.herd-table tr:hover td{background:rgba(255,255,255,.01)}
+.herd-edit{
+  background:none;border:none;border-bottom:1px solid transparent;
+  font-family:var(--m);font-size:12px;color:var(--t0);
+  width:70px;padding:1px 2px;cursor:pointer;
+  transition:border-color var(--fast);outline:none
+}
+.herd-edit:hover{border-bottom-color:var(--b2)}
+.herd-edit:focus{border-bottom-color:var(--blue-r);color:var(--blue-b)}
+.herd-total-row td{border-top:1px solid var(--b1);font-weight:700}
+.herd-add-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  margin-top:8px;height:26px;padding:0 10px;
+  background:var(--s3);border:1px solid var(--b0);
+  border-radius:6px;font-size:9px;color:var(--t2);
+  cursor:pointer;transition:all var(--fast)
+}
+.herd-add-btn:hover{border-color:var(--b2);color:var(--t0)}
+
+/* CSV export button */
+.csv-btn{
+  display:inline-flex;align-items:center;gap:5px;
+  height:26px;padding:0 10px;
+  background:var(--s3);border:1px solid var(--b0);
+  border-radius:6px;font-size:9px;color:var(--t2);
+  cursor:pointer;transition:all var(--fast)
+}
+.csv-btn:hover{border-color:var(--b2);color:var(--t0)}
+
+
+/* ── RAINFALL CHART ──────────────────────────────── */
+.rainfall-chart{position:relative;overflow:visible}
+.rf-bar-wrap{display:flex;align-items:flex-end;gap:3px;height:80px}
+.rf-bar{
+  flex:1;border-radius:2px 2px 0 0;
+  transition:height .6s var(--ease),background .3s;
+  min-height:2px;cursor:pointer;position:relative
+}
+.rf-bar:hover::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 4px);left:50%;
+  transform:translateX(-50%);
+  background:var(--s3);border:1px solid var(--b2);
+  border-radius:5px;padding:3px 7px;
+  font-size:9px;color:var(--t0);white-space:nowrap;
+  font-family:var(--m);z-index:10;pointer-events:none
+}
+.rf-bar.above{background:var(--blue)}
+.rf-bar.below{background:rgba(244,63,94,.6)}
+.rf-bar.lta{background:rgba(255,255,255,.12)}
+.rf-labels{display:flex;gap:3px;margin-top:4px}
+.rf-lbl{flex:1;text-align:center;font-size:7.5px;color:var(--t3);font-family:var(--m)}
+
 </style>
 </head>
 <body>
 <canvas id="bg"></canvas>
- 
+<div id="toast-container"></div>
+
 <!-- SVG symbols — thin, consistent, 1.6px stroke on 24px viewBox -->
 <svg style="display:none">
   <symbol id="i-home"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></symbol>
@@ -1221,9 +1439,9 @@ input[type=range]::-webkit-slider-thumb{
   <symbol id="i-sync"    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/></symbol>
   <symbol id="i-alert"   viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></symbol>
 </svg>
- 
+
 <div id="shell">
- 
+
 <!-- ══ TOPBAR ════════════════════════════════════════ -->
 <header id="topbar">
   <div class="brand">
@@ -1236,30 +1454,30 @@ input[type=range]::-webkit-slider-thumb{
             <stop offset="1" stop-color="#0d1228"/>
           </linearGradient>
         </defs>
- 
+
         <!-- Base plate: deep ink -->
         <rect width="34" height="34" rx="8" fill="url(#bm-bg)"/>
         <!-- Hairline edge: premium engraved feel -->
         <rect x=".5" y=".5" width="33" height="33" rx="7.5"
               stroke="rgba(255,255,255,.1)" stroke-width=".5" fill="none"/>
- 
+
         <!-- THE MARK: Diamond bisected diagonally
              Diamond centred at (17,17), half-width 10px
              Vertices: top(17,7) right(27,17) bottom(17,27) left(7,17)
              Diagonal cut: from top-right area to bottom-left area
              Left-white triangle + right-blue triangle = split diamond -->
- 
+
         <!-- White half: left + top triangles of diamond
              Points: top(17,7), left(7,17), bottom(17,27), then cut back via top -->
         <polygon points="17,7 7,17 17,27" fill="white" opacity=".92"/>
- 
+
         <!-- Blue half: right triangle
              Points: top(17,7), right(27,17), bottom(17,27) -->
         <polygon points="17,7 27,17 17,27" fill="#38bdf8" opacity=".88"/>
- 
+
         <!-- Dividing line: the cut — crisp, intentional -->
         <line x1="17" y1="7" x2="17" y2="27" stroke="#080c1a" stroke-width="1.2"/>
- 
+
         <!-- Inner highlight: tiny white dot at top apex — the crown -->
         <circle cx="17" cy="7" r="1.2" fill="white" opacity=".9"/>
         <!-- Bottom apex: blue dot -->
@@ -1271,13 +1489,13 @@ input[type=range]::-webkit-slider-thumb{
       <div class="bsub">Wombramurra Angus &nbsp;/&nbsp; FY 2025–26</div>
     </div>
   </div>
- 
+
   <div style="display:flex;align-items:center;gap:8px">
     <div class="lpill"><div class="ldot"></div><span id="live-time">Live</span></div>
     <span class="sync-ago" id="sync-ago"></span>
     <span style="font-size:8.5px;color:var(--t3);font-family:var(--m);display:none" id="mla-ts" class="mla-ts">MLA next-day data</span>
   </div>
- 
+
   <div style="display:flex;align-items:center;gap:6px">
     <!-- Sidebar toggle — subtle icon only -->
     <button class="tbtn sq tsb-wrap" id="sbbtn" onclick="toggleSb()" title="Toggle sidebar (⌘\)">
@@ -1304,7 +1522,7 @@ input[type=range]::-webkit-slider-thumb{
     </button>
   </div>
 </header>
- 
+
 <!-- ══ SIDEBAR ════════════════════════════════════════ -->
 <aside id="sidebar">
   <div style="margin-bottom:var(--sp8)">
@@ -1368,7 +1586,7 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </div>
 </aside>
- 
+
 <!-- ══ MAIN ════════════════════════════════════════════ -->
 <main id="main">
 <!-- Print header (hidden on screen, shown on print) -->
@@ -1376,14 +1594,14 @@ input[type=range]::-webkit-slider-thumb{
   <h1>Buringal Grazing Co — Wombramurra Angus</h1>
   <p>Operations &amp; Financial Position Report · FY 2025–26 · Prepared for NAB · <span id="print-date"></span></p>
 </div>
- 
+
 <!-- ░░ OVERVIEW ░░ -->
 <div id="page-overview" class="pv active">
- 
+
   <!-- HERO — full bleed, the number commands the page -->
   <section class="hero fade">
     <div class="hero-layout">
- 
+
       <!-- LEFT: THE NUMBER -->
       <div>
         <div class="hero-eyebrow">
@@ -1409,7 +1627,7 @@ input[type=range]::-webkit-slider-thumb{
             <span style="color:var(--t2)">BE <strong style="color:var(--t1)">482¢</strong></span>
           </div>
         </div>
- 
+
         <!-- 30-day sparkline inline -->
         <div class="hero-spark-wrap">
           <svg id="hero-spark" width="260" height="36" viewBox="0 0 260 36" style="display:block;overflow:visible"></svg>
@@ -1418,8 +1636,18 @@ input[type=range]::-webkit-slider-thumb{
             <span id="spark-range" style="font-size:9px;color:var(--t3)"></span>
             <span style="font-size:9px;color:var(--t3)">30-day EYCI</span>
           </div>
+          <!-- Price alert trigger -->
+          <div class="alert-trigger-bar" id="alert-bar">
+            <span class="alert-trigger-label">🔔 Alert when EYCI ≥</span>
+            <input class="alert-trigger-input" id="alert-price" type="number" value="920" min="400" max="1500" step="5"
+              onchange="setAlert()" title="Notify me when EYCI reaches this price"/>
+            <span style="font-size:10px;color:var(--t2);font-family:var(--m)">¢</span>
+            <button class="alert-btn" onclick="setAlert()" id="alert-arm-btn">Arm Alert</button>
+            <span class="alert-status" id="alert-status">Not armed</span>
+            <span style="margin-left:auto;font-size:8.5px;color:var(--t3)">Browser notifications required</span>
+          </div>
         </div>
- 
+
         <!-- Supporting KPIs -->
         <div class="hero-stats">
           <div class="hstat">
@@ -1444,7 +1672,7 @@ input[type=range]::-webkit-slider-thumb{
           </div>
         </div>
       </div>
- 
+
       <!-- RIGHT: ALARM + STATUS -->
       <div class="hero-right">
         <!-- THE ALARM -->
@@ -1512,7 +1740,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
   </section>
- 
+
   <!-- URGENCY BAND — situational context, connects hero to content -->
   <div class="urgency-band">
     <span class="ub-label">⚡ Action Required</span>
@@ -1526,7 +1754,20 @@ input[type=range]::-webkit-slider-thumb{
       <span class="ub-chip ub-chip-n">Sell Window Open</span>
     </div>
   </div>
- 
+
+  <!-- DECISION JOURNAL — operational log for Ryan -->
+  <div class="journal-bar">
+    <input class="journal-input" id="journal-input"
+      placeholder="Log a decision… e.g. &quot;Sold 80 steers at Tamworth 498¢ — 18 Mar 2026&quot;"
+      maxlength="280"
+      onkeydown="if(event.key==='Enter'){event.preventDefault();addJournalEntry();}"/>
+    <button class="journal-submit" onclick="addJournalEntry()">+ Log</button>
+    <span style="font-size:9px;color:var(--t3);font-family:var(--m);white-space:nowrap">Decision journal</span>
+  </div>
+  <div class="journal-feed" id="journal-feed">
+    <div class="journal-empty" id="journal-empty">No entries yet — log sales, decisions and key events above.</div>
+  </div>
+
   <!-- SELL DECISION CALCULATOR — the unique feature -->
   <div class="sell-calc fade d1">
     <div class="sell-calc-header">
@@ -1611,9 +1852,9 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
   </div>
- 
+
   <div class="content">
- 
+
     <!-- FINANCIAL PERFORMANCE -->
     <div class="sec fade d2">
       <div class="sec-bar" style="background:linear-gradient(180deg,var(--blue),var(--blue-b))"></div>
@@ -1644,7 +1885,7 @@ input[type=range]::-webkit-slider-thumb{
         </div>
       </div>
     </div>
- 
+
     <!-- Row 2: AI Current Position Analysis — full width, integrated -->
     <div class="grid fade d2" style="margin-top:0">
       <div class="ai-card g12">
@@ -1674,7 +1915,7 @@ input[type=range]::-webkit-slider-thumb{
             </button>
           </div>
         </div>
- 
+
         <!-- Content area: empty state or 3-column sections -->
         <div id="ai-body" class="ai-body">
           <!-- Empty state shown before first generation -->
@@ -1688,7 +1929,7 @@ input[type=range]::-webkit-slider-thumb{
             <div class="ai-empty-hint">Powered by Claude · Uses live EYCI, IC, DSE, and P&amp;L data from this dashboard</div>
           </div>
         </div>
- 
+
         <!-- AI Chat: ask follow-up questions -->
         <div class="ai-chat" id="ai-chat-row">
           <input class="ai-chat-input" id="ai-chat-input"
@@ -1704,7 +1945,7 @@ input[type=range]::-webkit-slider-thumb{
         </div>
       </div>
     </div>
- 
+
     <!-- Row 3: Saleyards -->
     <div class="grid fade d2" style="margin-top:0">
       <div class="card g6">
@@ -1731,7 +1972,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
     </div>
- 
+
     <!-- TRADE INTELLIGENCE -->
     <div class="sec fade d3" style="margin-top:var(--sp24)">
       <div class="sec-bar" style="background:linear-gradient(180deg,#f43f5e,#fb7185);height:20px;width:3px"></div>
@@ -1789,7 +2030,7 @@ input[type=range]::-webkit-slider-thumb{
       </div>
     </div>
     </div>
- 
+
     <!-- KPI + COVENANTS -->
     <div class="sec fade d4">
       <div class="sec-bar"></div>
@@ -1832,7 +2073,7 @@ input[type=range]::-webkit-slider-thumb{
         </div>
       </div>
     </div>
- 
+
     <!-- PASTURE -->
     <div class="sec fade d5">
       <div class="sec-bar"></div>
@@ -1850,6 +2091,648 @@ input[type=range]::-webkit-slider-thumb{
             <span style="font-size:8px;color:var(--t3);width:40px;text-align:right">Balance</span>
           </div>
           <div class="pbrows">
+            <div class="pbrow"><span class="pbmo">Mar</span><span class="pbsea">Autumn<<!-- ░░ STANDALONE PAGES — each a complete operational tool ░░ -->
+
+<!-- ══ P&L PAGE ══════════════════════════════════════════ -->
+<div id="page-pl" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge"><svg width="10" height="10"><use href="#i-chart"/></svg>FY 2025–26 · YTD to Feb</div>
+        <div class="pg-title">Profit &amp; Loss</div>
+        <div class="pg-sub">Wombramurra Angus · Nundle &amp; Topdale · Google Sheets actuals + Figured forecast</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val">$2.17M</div><div class="pg-kpi-lbl">Revenue YTD</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$1.27M</div><div class="pg-kpi-lbl">Gross Profit</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">58.4%</div><div class="pg-kpi-lbl">GM Ratio</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">–$165k</div><div class="pg-kpi-lbl">Feb Net Profit</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$378k</div><div class="pg-kpi-lbl">Net Profit YTD</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="printReport()">📄 Export for NAB</button>
+        <button class="pg-btn" onclick="doSync()">Sync Sheets</button>
+        <button class="csv-btn" onclick="exportTableCSV('pl-table','pl_fy26.csv')">⬇ CSV</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- Status chips row -->
+      <div class="g12" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:4px">
+        <span class="bdg" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.55);border-color:var(--b1)">Revenue +12% vs budget</span>
+        <span class="bdg bdg-r">Expense ratio 106% — target &lt;70%</span>
+        <span class="bdg" style="background:rgba(255,255,255,.04);color:var(--t2);border-color:var(--b0)">8 months YTD Aug–Feb</span>
+      </div>
+      <!-- EBIT + NP chart -->
+      <div class="card-float g8">
+        <div class="chead"><div><div class="ctitle">EBIT &amp; Net Profit — Monthly</div><div class="csub">Actuals Aug–Feb · Figured forecast Mar–Jul · Feb loss annotated</div></div><span class="bdg bdg-r">–$165k Feb</span></div>
+        <div class="cbody"><div class="chart-wrap"><svg id="pl-chart-ep" class="chart-svg" height="200" viewBox="0 0 600 200" onmousemove="chartHover(event,'ep')" onmouseleave="chartLeave('ep')"></svg><div class="chart-tooltip" id="tt-ep-pl"></div></div></div>
+      </div>
+      <!-- Expense breakdown -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Expense Breakdown YTD</div><div class="csub">Aug–Feb actuals</div></div></div>
+        <div class="cbody">
+          <div class="rrows">
+            <div class="rrow"><span class="rlbl">Labour</span><span class="rval">$320k</span><span class="rthr">37%</span><div class="rbar"><div class="rbf" style="width:85%;background:var(--warn)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Finance (NAB)</span><span class="rval" style="color:var(--red-b)">$202k</span><span class="rthr">23%</span><div class="rbar"><div class="rbf" style="width:60%;background:var(--red)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Property &amp; Maint.</span><span class="rval">$210k</span><span class="rthr">24%</span><div class="rbar"><div class="rbf" style="width:64%;background:var(--warn)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Admin &amp; Other</span><span class="rval">$160k</span><span class="rthr">18%</span><div class="rbar"><div class="rbf" style="width:48%;background:var(--ok)"></div></div></div>
+            <div class="rrow" style="border-bottom:none"><span class="rlbl" style="font-weight:700;color:var(--t0)">Total Overheads</span><span class="rval" style="font-weight:700">$892k</span><span class="rthr">106%</span><div class="rbar"><div class="rbf" style="width:100%;background:var(--red)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Full P&L table -->
+    <div class="card g12 nolift" style="margin-top:0">
+      <div class="chead"><div><div class="ctitle">Income Statement — FY2025-26</div><div class="csub">Aug 2025 – Feb 2026 · 8 months YTD · Unaudited</div></div></div>
+      <div class="cbody" style="padding-top:8px">
+        <table id="pl-table" style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="border-bottom:1px solid var(--b1)">
+            <th style="text-align:left;padding:0 8px 8px 0;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Category</th>
+            <th style="text-align:right;padding:0 8px 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">YTD Actual</th>
+            <th style="text-align:right;padding:0 8px 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Budget</th>
+            <th style="text-align:right;padding:0 0 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Variance</th>
+          </tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Cattle Sales</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">$1,980,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$1,760,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$220k</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Agistment &amp; Other</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">$190,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$180,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$10k</td></tr>
+            <tr style="border-bottom:1px solid var(--b1)"><td style="padding:7px 8px 7px 0;font-weight:600;color:var(--t0)">Total Revenue</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);font-weight:600">$2,170,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$1,940,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$230k</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Direct Costs (livestock)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($ 900,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($830,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$70k</td></tr>
+            <tr style="border-bottom:1px solid var(--b1)"><td style="padding:8px 8px 8px 0;font-weight:700;color:var(--t0)">Gross Profit</td><td style="text-align:right;padding:8px 8px;font-family:var(--m);font-weight:700">$1,270,000</td><td style="text-align:right;padding:8px 8px;font-family:var(--m);color:var(--t2)">$1,110,000</td><td style="text-align:right;padding:8px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$160k</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Labour</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($320,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($290,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$30k</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Finance / NAB Interest</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($201,500)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($196,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$5k</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Property &amp; Maintenance</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($210,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($185,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$25k</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Admin &amp; Other</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($160,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($145,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$15k</td></tr>
+            <tr><td style="padding:9px 8px 4px 0;font-weight:700;color:var(--t0);font-size:12px">Net Profit YTD</td><td style="text-align:right;padding:9px 8px 4px;font-family:var(--m);font-weight:700;color:rgba(255,255,255,.55);font-size:13px">$378,500</td><td style="text-align:right;padding:9px 8px 4px;font-family:var(--m);color:var(--t2)">$294,000</td><td style="text-align:right;padding:9px 0 4px;font-family:var(--m);color:rgba(255,255,255,.55)">+$84k</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;font-size:9px;color:var(--t3)">Source: Google Sheets actuals Aug–Feb 2026 · Figured budget · Figures unaudited</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CASHFLOW PAGE ══════════════════════════════════════ -->
+<div id="page-cashflow" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge"><svg width="10" height="10"><use href="#i-cash"/></svg>FY 2025–26 · Rolling 12-month</div>
+        <div class="pg-title">Cashflow</div>
+        <div class="pg-sub">Cash receipts, payments and net position · Actuals Aug–Feb · Figured forecast Mar–Jul</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val">$2.17M</div><div class="pg-kpi-lbl">Cash In YTD</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">$1.79M</div><div class="pg-kpi-lbl">Cash Out YTD</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$378k</div><div class="pg-kpi-lbl">Net Cash YTD</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">–$165k</div><div class="pg-kpi-lbl">Feb (worst month)</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">+$84k</div><div class="pg-kpi-lbl">Ahead of budget</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="printReport()">📄 Export</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- GP chart reused -->
+      <div class="card-float g8">
+        <div class="chead"><div><div class="ctitle">Monthly Cash Position — FY2025-26</div><div class="csub">Net cash per month · Feb loss month · Forecast dashed from Mar</div></div></div>
+        <div class="cbody"><div class="chart-wrap"><svg id="cf-chart-gp" class="chart-svg" height="200" viewBox="0 0 600 200" onmousemove="chartHover(event,'gp')" onmouseleave="chartLeave('gp-cf')"></svg><div class="chart-tooltip" id="tt-gp-cf"></div></div></div>
+      </div>
+      <!-- Cash waterfall summary -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Cash Waterfall YTD</div><div class="csub">Aug–Feb cumulative</div></div></div>
+        <div class="cbody">
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid var(--b0)">
+              <span style="font-size:10px;color:var(--t1)">Cattle Sales</span>
+              <span style="font-family:var(--m);font-size:13px">+$1.98M</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid var(--b0)">
+              <span style="font-size:10px;color:var(--t1)">Other Income</span>
+              <span style="font-family:var(--m);font-size:13px">+$190k</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(244,63,94,.06);border-radius:8px;border:1px solid rgba(244,63,94,.15)">
+              <span style="font-size:10px;color:var(--t1)">Livestock Costs</span>
+              <span style="font-family:var(--m);font-size:13px;color:var(--red-b)">–$900k</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(244,63,94,.06);border-radius:8px;border:1px solid rgba(244,63,94,.15)">
+              <span style="font-size:10px;color:var(--t1)">Operating Costs</span>
+              <span style="font-family:var(--m);font-size:13px;color:var(--red-b)">–$892k</span>
+            </div>
+            <div style="height:1px;background:var(--b1)"></div>
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:var(--s3);border-radius:8px;border:1px solid var(--b1)">
+              <span style="font-size:11px;font-weight:700;color:var(--t0)">Net Cash YTD</span>
+              <span style="font-family:var(--m);font-size:15px;font-weight:500">+$378k</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Monthly table -->
+    <div class="card g12 nolift" style="margin-top:0">
+      <div class="chead"><div><div class="ctitle">Monthly Cashflow Detail</div><div class="csub">FY2025-26 · Aug–Jul · Actuals + Figured forecast</div></div></div>
+      <div class="cbody" style="padding-top:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="border-bottom:1px solid var(--b1)">
+            <th style="text-align:left;padding:0 8px 8px 0;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Month</th>
+            <th style="text-align:right;padding:0 8px 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Cash In</th>
+            <th style="text-align:right;padding:0 8px 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Cash Out</th>
+            <th style="text-align:right;padding:0 8px 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Net</th>
+            <th style="text-align:right;padding:0 0 8px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Cumulative</th>
+          </tr></thead>
+          <tbody id="cf-table-body">
+            <!-- Rendered by JS -->
+          </tbody>
+        </table>
+        <div style="margin-top:10px;font-size:9px;color:var(--t3)">Actuals: Google Sheets Aug–Feb · Forecast: Figured Mar–Jul 2026 · Unaudited</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ BALANCE SHEET PAGE ══════════════════════════════════ -->
+<div id="page-balance" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge"><svg width="10" height="10"><use href="#i-sheet"/></svg>As at February 2026</div>
+        <div class="pg-title">Balance Sheet</div>
+        <div class="pg-sub">Assets, liabilities and equity position · Wombramurra Angus · Nundle &amp; Topdale</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val">$32.78M</div><div class="pg-kpi-lbl">Total Assets</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$29.23M</div><div class="pg-kpi-lbl">Equity</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">89.2%</div><div class="pg-kpi-lbl">Equity Ratio</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$3.1M</div><div class="pg-kpi-lbl">NAB Debt</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">10.8%</div><div class="pg-kpi-lbl">LVR</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="printReport()">📄 Export for NAB</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- Assets -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Assets</div><div class="csub">Total $32.78M</div></div><span class="bdg bdg-b">$32.78M</span></div>
+        <div class="cbody">
+          <div class="rrows">
+            <div class="rrow"><span class="rlbl">Land — Nundle &amp; Topdale</span><span class="rval">$21.4M</span><div class="rbar"><div class="rbf" style="width:100%;background:var(--blue)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Livestock (Angus herd)</span><span class="rval">$7.8M</span><div class="rbar"><div class="rbf" style="width:66%;background:var(--blue)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Plant &amp; Equipment</span><span class="rval">$2.1M</span><div class="rbar"><div class="rbf" style="width:18%;background:var(--blue)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Working Capital</span><span class="rval">$1.48M</span><div class="rbar"><div class="rbf" style="width:13%;background:var(--blue)"></div></div></div>
+            <div class="rrow" style="border-bottom:none"><span class="rlbl" style="font-weight:700;color:var(--t0)">Total Assets</span><span class="rval" style="font-weight:700">$32.78M</span><div class="rbar"><div class="rbf" style="width:100%;background:var(--blue-b)"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Liabilities -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Liabilities</div><div class="csub">Total $3.55M</div></div><span class="bdg" style="background:rgba(255,255,255,.05);color:var(--t2);border-color:var(--b0)">$3.55M</span></div>
+        <div class="cbody">
+          <div class="rrows">
+            <div class="rrow"><span class="rlbl">NAB Term Loan</span><span class="rval" style="color:var(--red-b)">$3.10M</span><div class="rbar"><div class="rbf" style="width:87%;background:var(--red)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Trade Creditors</span><span class="rval">$280k</span><div class="rbar"><div class="rbf" style="width:8%;background:var(--warn)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Accrued Expenses</span><span class="rval">$170k</span><div class="rbar"><div class="rbf" style="width:5%;background:var(--warn)"></div></div></div>
+            <div class="rrow" style="border-bottom:none"><span class="rlbl" style="font-weight:700;color:var(--t0)">Total Liabilities</span><span class="rval" style="font-weight:700">$3.55M</span><div class="rbar"><div class="rbf" style="width:100%;background:var(--warn)"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- Equity + LVR -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Equity Position</div><div class="csub">Strong — well above NAB threshold</div></div><span class="bdg bdg-b" style="background:rgba(255,255,255,.06);color:rgba(255,255,255,.6);border-color:var(--b1)">89.2%</span></div>
+        <div class="cbody">
+          <div style="font-family:var(--m);font-size:40px;font-weight:200;letter-spacing:-.05em;color:var(--t0);margin-bottom:4px">$29.23M</div>
+          <div style="font-size:9px;color:var(--t2);margin-bottom:16px">Net equity · Assets minus liabilities</div>
+          <div style="display:flex;flex-direction:column;gap:6px">
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:9px;color:var(--t2)">LVR</span><span style="font-family:var(--m);font-size:9px;color:var(--ok)">10.8%</span></div><div style="height:5px;background:var(--s4);border-radius:3px;overflow:hidden"><div style="width:10.8%;height:100%;background:var(--ok);border-radius:3px"></div></div><div style="font-size:7.5px;color:var(--t3);margin-top:2px">NAB covenant &lt;65%</div></div>
+            <div><div style="display:flex;justify-content:space-between;margin-bottom:4px"><span style="font-size:9px;color:var(--t2)">Equity ratio</span><span style="font-family:var(--m);font-size:9px;color:var(--ok)">89.2%</span></div><div style="height:5px;background:var(--s4);border-radius:3px;overflow:hidden"><div style="width:89.2%;height:100%;background:var(--ok);border-radius:3px"></div></div><div style="font-size:7.5px;color:var(--t3);margin-top:2px">NAB covenant &gt;35%</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Debt schedule -->
+    <div class="card g12 nolift" style="margin-top:0">
+      <div class="chead"><div><div class="ctitle">NAB Debt Schedule</div><div class="csub">Term loan · 6.5% p.a. · Next review Mar 2026</div></div><button class="pg-btn" style="height:24px;font-size:9px" onclick="printReport()">📄 Bank Statement</button></div>
+      <div class="cbody" style="padding-top:8px">
+        <table style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead><tr style="border-bottom:1px solid var(--b1)"><th style="text-align:left;padding:0 8px 7px 0;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Facility</th><th style="text-align:right;padding:0 8px 7px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Balance</th><th style="text-align:right;padding:0 8px 7px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Rate</th><th style="text-align:right;padding:0 8px 7px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Monthly Repayment</th><th style="text-align:right;padding:0 0 7px;font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em">Maturity</th></tr></thead>
+          <tbody>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:8px 8px 8px 0;color:var(--t1)">NAB Agri Term Loan — Nundle</td><td style="text-align:right;padding:8px;font-family:var(--m)">$2,100,000</td><td style="text-align:right;padding:8px;font-family:var(--m);color:var(--red-b)">6.5%</td><td style="text-align:right;padding:8px;font-family:var(--m)">$11,375/mo</td><td style="text-align:right;padding:8px 0;font-family:var(--m);color:var(--t2)">Jun 2028</td></tr>
+            <tr style="border-bottom:1px solid var(--b0)"><td style="padding:8px 8px 8px 0;color:var(--t1)">NAB Agri Term Loan — Topdale</td><td style="text-align:right;padding:8px;font-family:var(--m)">$1,000,000</td><td style="text-align:right;padding:8px;font-family:var(--m);color:var(--red-b)">6.5%</td><td style="text-align:right;padding:8px;font-family:var(--m)">$5,417/mo</td><td style="text-align:right;padding:8px 0;font-family:var(--m);color:var(--t2)">Jun 2028</td></tr>
+            <tr><td style="padding:9px 8px 4px 0;font-weight:700;color:var(--t0)">Total Debt</td><td style="text-align:right;padding:9px 8px 4px;font-family:var(--m);font-weight:700">$3,100,000</td><td style="text-align:right;padding:9px 8px 4px;font-family:var(--m)">6.5% avg</td><td style="text-align:right;padding:9px 8px 4px;font-family:var(--m);font-weight:700">$16,792/mo</td><td style="text-align:right;padding:9px 0 4px;font-family:var(--m);color:var(--t2)">—</td></tr>
+          </tbody>
+        </table>
+        <div style="margin-top:10px;padding:10px 12px;background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.15);border-radius:8px;font-size:10px;color:var(--t1);line-height:1.6">
+          <strong style="color:var(--red-b)">Interest Cover Alert:</strong> Current IC ratio 0.06x is critically below NAB minimum of 1.25x. Annual interest of $201,500 against EBIT of $12,600 (annualised from YTD). Immediate action required — see Overview page.
+        </div>
+      </div>
+    </div>
+    <!-- NAB COVENANT SIMULATOR -->
+    <div class="grid" style="margin-top:0">
+      <div class="card g12 nolift">
+        <div class="chead"><div><div class="ctitle">🏦 NAB Covenant Simulator</div><div class="csub">What happens to your covenants if you sell cattle now? Adjust sliders to model.</div></div><span class="bdg bdg-r" id="sim-ic-badge">IC 0.06x → simulating</span></div>
+        <div class="cbody">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px">
+            <div>
+              <div style="margin-bottom:16px">
+                <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Head to sell</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <input type="range" id="sim-head" min="0" max="400" value="140" step="10" oninput="runSim()">
+                  <span style="font-family:var(--m);font-size:13px;color:var(--blue-b);min-width:52px" id="sim-head-v">140 hd</span>
+                </div>
+              </div>
+              <div style="margin-bottom:16px">
+                <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Sale price (EYCI ¢/kg)</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <input type="range" id="sim-price" min="500" max="1100" value="897" step="5" oninput="runSim()">
+                  <span style="font-family:var(--m);font-size:13px;color:var(--blue-b);min-width:52px" id="sim-price-v">897¢</span>
+                </div>
+              </div>
+              <div>
+                <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Months of revenue increase retained</div>
+                <div style="display:flex;align-items:center;gap:10px">
+                  <input type="range" id="sim-months" min="0" max="12" value="6" step="1" oninput="runSim()">
+                  <span style="font-family:var(--m);font-size:13px;color:var(--blue-b);min-width:52px" id="sim-months-v">6 mo</span>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex;flex-direction:column;gap:10px" id="sim-results">
+              <!-- populated by runSim() -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ KPI RATIOS PAGE ══════════════════════════════════════ -->
+<div id="page-kpi" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge red"><svg width="10" height="10"><use href="#i-kpi"/></svg>4 of 5 KPIs below target</div>
+        <div class="pg-title">KPI Ratios</div>
+        <div class="pg-sub">Key performance indicators vs MLA benchmarks and NAB covenant thresholds · Feb 2026</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">0.06x</div><div class="pg-kpi-lbl">Interest Cover</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--warn)">58.4%</div><div class="pg-kpi-lbl">GM Ratio</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">$36.58</div><div class="pg-kpi-lbl">GM / DSE</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">89.2%</div><div class="pg-kpi-lbl">Equity Ratio</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">0.03%</div><div class="pg-kpi-lbl">ROAM</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="printReport()">📄 Bank Report</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- Ratio detail cards -->
+      <div class="card g6">
+        <div class="chead"><div><div class="ctitle">Operational KPIs</div><div class="csub">vs MLA top-quartile benchmarks</div></div></div>
+        <div class="cbody">
+          <div class="rrows">
+            <div class="rrow"><span class="rlbl">Gross Margin Ratio</span><span class="rval c-warn">58.4%</span><span class="rthr">&gt;60%</span><div class="rbar"><div class="rbf" style="width:78%;background:var(--warn)"></div></div></div>
+            <div class="rrow"><span class="rlbl">GM per DSE</span><span class="rval c-red">$36.58</span><span class="rthr">&gt;$65</span><div class="rbar"><div class="rbf" style="width:40%;background:var(--red)"></div></div></div>
+            <div class="rrow"><span class="rlbl">ROAM (Return on Assets)</span><span class="rval c-red">0.03%</span><span class="rthr">&gt;4%</span><div class="rbar"><div class="rbf" style="width:2%;background:var(--red)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Expense Ratio</span><span class="rval c-red">106%</span><span class="rthr">&lt;70%</span><div class="rbar"><div class="rbf" style="width:80%;background:var(--red)"></div></div></div>
+            <div class="rrow"><span class="rlbl">DSE Load</span><span class="rval c-blue">20,538</span><span class="rthr">↓ from 26,618</span><div class="rbar"><div class="rbf" style="width:77%;background:var(--blue)"></div></div></div>
+          </div>
+        </div>
+      </div>
+      <!-- NAB covenants -->
+      <div class="card g6">
+        <div class="chead"><div><div class="ctitle">NAB Covenant Monitor</div><div class="csub">Live vs thresholds · Bear / Base / Bull scenarios</div></div><span class="bdg bdg-ok">4/5 Met</span></div>
+        <div class="cbody">
+          <table class="covt">
+            <thead><tr><th>Covenant</th><th>Current</th><th>Threshold</th><th>Progress</th><th>Scenarios</th></tr></thead>
+            <tbody>
+              <tr><td class="covnm">Loan to Value</td><td class="covvl c-ok">10.8%</td><td class="covth">&lt;65%</td><td><div class="covmini"><div class="covminif" style="width:83%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">11.3</span><span class="csc m">10.9</span><span class="csc u">10.5</span></div></td></tr>
+              <tr><td class="covnm">Debt Service Cover</td><td class="covvl c-red">0.06x</td><td class="covth">&gt;1.25x</td><td><div class="covmini"><div class="covminif" style="width:5%;background:var(--red)"></div></div></td><td><div class="covscrow"><span class="csc b">.04</span><span class="csc m">.07</span><span class="csc u">.11</span></div></td></tr>
+              <tr><td class="covnm">Equity Ratio</td><td class="covvl c-ok">89.2%</td><td class="covth">&gt;35%</td><td><div class="covmini"><div class="covminif" style="width:100%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">88.5</span><span class="csc m">89.1</span><span class="csc u">89.6</span></div></td></tr>
+              <tr><td class="covnm">Interest Coverage</td><td class="covvl c-ok">1.51x</td><td class="covth">&gt;1.25x</td><td><div class="covmini"><div class="covminif" style="width:75%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">.91</span><span class="csc m">1.51</span><span class="csc u">2.12</span></div></td></tr>
+              <tr><td class="covnm">Net Debt / EBIT</td><td class="covvl c-ok">1.4x</td><td class="covth">&lt;5x</td><td><div class="covmini"><div class="covminif" style="width:72%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">2.0</span><span class="csc m">1.4</span><span class="csc u">1.0</span></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <!-- Improvement roadmap -->
+      <div class="card g12 nolift" style="margin-top:0">
+        <div class="chead"><div><div class="ctitle">KPI Improvement Roadmap</div><div class="csub">Actions required to reach target ratios</div></div></div>
+        <div class="cbody">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="padding:12px;background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.15);border-radius:10px">
+              <div style="font-size:8.5px;font-weight:700;color:var(--red-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">🔴 Interest Cover — 0.06x → 1.75x</div>
+              <div style="font-size:10.5px;color:var(--t1);line-height:1.65">Sell 140 head at EYCI 897¢ → +$127k revenue → IC improves to ~0.31x. Requires multiple sales cycles to reach 1.75x. Priority action this week.</div>
+            </div>
+            <div style="padding:12px;background:rgba(245,158,11,.05);border:1px solid rgba(245,158,11,.15);border-radius:10px">
+              <div style="font-size:8.5px;font-weight:700;color:rgba(245,158,11,.9);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">🟡 GM per DSE — $36.58 → $65</div>
+              <div style="font-size:10.5px;color:var(--t1);line-height:1.65">At 20,538 DSE, need $1.34M gross profit. With EYCI at 897¢ and current herd composition, achievable via improved turn-off rate and Angus premium capture.</div>
+            </div>
+            <div style="padding:12px;background:rgba(255,255,255,.03);border:1px solid var(--b0);border-radius:10px">
+              <div style="font-size:8.5px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">🟡 Expense Ratio — 106% → &lt;70%</div>
+              <div style="font-size:10.5px;color:var(--t1);line-height:1.65">Revenue scaling is the primary lever — cost base relatively fixed. Achieving $4M+ revenue at current cost structure targets sub-70% expense ratio.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- HERD INVENTORY -->
+    <div class="grid" style="margin-top:0">
+      <div class="card g12 nolift">
+        <div class="chead">
+          <div><div class="ctitle">🐄 Herd Inventory</div><div class="csub">Live count by class · Click any number to edit · Auto-saved</div></div>
+          <div style="display:flex;gap:6px">
+            <button class="csv-btn" onclick="exportHerdCSV()">⬇ Export CSV</button>
+            <button class="herd-add-btn" onclick="addHerdClass()">+ Add Class</button>
+          </div>
+        </div>
+        <div class="cbody" style="padding-top:8px">
+          <table class="herd-table" id="herd-table">
+            <thead><tr>
+              <th>Class</th>
+              <th>Count (head)</th>
+              <th>Est. Weight (kg)</th>
+              <th>Target Price (¢)</th>
+              <th>Sale Date</th>
+              <th>Est. Revenue</th>
+              <th></th>
+            </tr></thead>
+            <tbody id="herd-body"><!-- rendered by JS --></tbody>
+            <tfoot><tr class="herd-total-row" id="herd-total"><!-- rendered by JS --></tr></tfoot>
+          </table>
+          <div style="margin-top:10px;font-size:9px;color:var(--t3)">Click any cell to edit · Changes auto-saved to this device · Revenue = count × weight × price × dress%</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ LIVESTOCK MARKETS PAGE ══════════════════════════════ -->
+<div id="page-markets" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge"><svg width="10" height="10"><use href="#i-cattle"/></svg>MLA Live · Updated daily</div>
+        <div class="pg-title">Livestock Markets</div>
+        <div class="pg-sub">EYCI, saleyard results, processor competition · New England Tablelands focus · MLA data</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val c-blue" id="mkt-eyci">897¢</div><div class="pg-kpi-lbl">EYCI</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">482¢</div><div class="pg-kpi-lbl">Feeder Steer</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">374¢</div><div class="pg-kpi-lbl">Processor Cow</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">+8.4%</div><div class="pg-kpi-lbl">vs 5yr avg</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$0.633</div><div class="pg-kpi-lbl">AUD/USD</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn" onclick="fetchMLA();doSync()">↻ Refresh Prices</button>
+        <button class="pg-btn primary" onclick="nav('trade',null)">⚡ Trade Intelligence →</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- EYCI 30-day chart -->
+      <div class="card-float g8">
+        <div class="chead"><div><div class="ctitle">EYCI — 30 Day Trend</div><div class="csub">Eastern Young Cattle Indicator · MLA National · ¢/kg cwt</div></div><span class="bdg bdg-b">+8.4% vs 5yr avg</span></div>
+        <div class="cbody">
+          <svg id="mkt-spark-lg" width="100%" height="120" style="display:block;overflow:visible" viewBox="0 0 600 120" preserveAspectRatio="none"></svg>
+          <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:8.5px;color:var(--t3);font-family:var(--m)">
+            <span>30 days ago: 782¢</span>
+            <span style="color:var(--t2)">Range: 782–897¢</span>
+            <span>Today: 897¢</span>
+          </div>
+        </div>
+      </div>
+      <!-- Market context -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Market Context</div><div class="csub">vs benchmarks</div></div></div>
+        <div class="cbody">
+          <div class="rrows">
+            <div class="rrow"><span class="rlbl">EYCI today</span><span class="rval c-blue">897¢</span><div class="rbar"><div class="rbf" style="width:82%;background:var(--blue)"></div></div></div>
+            <div class="rrow"><span class="rlbl">5-year March avg</span><span class="rval">827¢</span><div class="rbar"><div class="rbf" style="width:75%;background:var(--ok)"></div></div></div>
+            <div class="rrow"><span class="rlbl">Breakeven (Buringal)</span><span class="rval">482¢</span><div class="rbar"><div class="rbf" style="width:44%;background:var(--warn)"></div></div></div>
+            <div class="rrow"><span class="rlbl">5-year high</span><span class="rval">1,100¢</span><div class="rbar"><div class="rbf" style="width:100%;background:var(--t3)"></div></div></div>
+            <div class="rrow" style="border-bottom:none"><span class="rlbl">5-year low</span><span class="rval">480¢</span><div class="rbar"><div class="rbf" style="width:44%;background:var(--t3)"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Saleyard grid -->
+    <div class="grid" style="margin-top:0">
+      <div class="card g4">
+        <div class="cbody">
+          <div class="syhd"><div><div class="syn">Tamworth (TRLX)</div><div class="sym">18 Mar · 4,820 hd · ↑ Firm</div></div><span class="bdg bdg-b">Live</span></div>
+          <div class="syg">
+            <div class="syc" onclick="scen(498);nav('overview',null)"><div class="sycl">Feeder</div><div class="sycv">498¢</div><div class="sycc up">▲+12</div></div>
+            <div class="syc" onclick="scen(512);nav('overview',null)"><div class="sycl">Restocker</div><div class="sycv">512¢</div><div class="sycc up">▲+8</div></div>
+            <div class="syc" onclick="scen(374);nav('overview',null)"><div class="sycl">Proc Cow</div><div class="sycv">374¢</div><div class="sycc up">▲+5</div></div>
+          </div>
+          <div class="sy-hint">Tap price → model in Sell Calculator (Overview)</div>
+        </div>
+      </div>
+      <div class="card g4">
+        <div class="cbody">
+          <div class="syhd"><div><div class="syn">Armidale (ARM)</div><div class="sym">14 Mar · 2,140 hd · → Steady</div></div><span class="bdg bdg-n">Updated</span></div>
+          <div class="syg">
+            <div class="syc" onclick="scen(484);nav('overview',null)"><div class="sycl">Feeder</div><div class="sycv">484¢</div><div class="sycc up">▲+4</div></div>
+            <div class="syc" onclick="scen(496);nav('overview',null)"><div class="sycl">Restocker</div><div class="sycv">496¢</div><div class="sycc up">▲+2</div></div>
+            <div class="syc" onclick="scen(368);nav('overview',null)"><div class="sycl">Proc Cow</div><div class="sycv">368¢</div><div class="sycc dn">▼–3</div></div>
+          </div>
+          <div class="sy-hint">Tap price → model in Sell Calculator (Overview)</div>
+        </div>
+      </div>
+      <div class="card g4">
+        <div class="cbody">
+          <div class="syhd"><div><div class="syn">Inverell (IRLX)</div><div class="sym">15 Mar · 1,890 hd · ↑ Firm</div></div><span class="bdg bdg-n">Updated</span></div>
+          <div class="syg">
+            <div class="syc" onclick="scen(490)"><div class="sycl">Feeder</div><div class="sycv">490¢</div><div class="sycc up">▲+6</div></div>
+            <div class="syc" onclick="scen(505)"><div class="sycl">Restocker</div><div class="sycv">505¢</div><div class="sycc up">▲+3</div></div>
+            <div class="syc" onclick="scen(370)"><div class="sycl">Proc Cow</div><div class="sycv">370¢</div><div class="sycc up">▲+2</div></div>
+          </div>
+          <div class="sy-hint">Tap price → model in Sell Calculator</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ TRADE INTELLIGENCE PAGE ════════════════════════════ -->
+<div id="page-trade" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge red"><svg width="10" height="10"><use href="#i-trade"/></svg>3 urgent signals</div>
+        <div class="pg-title">Trade Intelligence</div>
+        <div class="pg-sub">Decision engine, buy/sell signals, market sentiment and Sell Calculator · Wombramurra Angus</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val c-blue">897¢</div><div class="pg-kpi-lbl">EYCI Today</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">482¢</div><div class="pg-kpi-lbl">Breakeven</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">86%</div><div class="pg-kpi-lbl">Above BE</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val c-blue">68</div><div class="pg-kpi-lbl">Greed Index</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">Sell</div><div class="pg-kpi-lbl">Signal</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="nav('overview',null)">⚡ Sell Calculator →</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- Decision Engine -->
+      <div class="card g5">
+        <div class="chead"><div><div class="ctitle">⚡ Decision Engine</div><div class="csub">AI-ranked · BE ~482¢ · Saleyard-linked</div></div></div>
+        <div class="delist">
+          <div class="derow"><div class="denum" style="background:var(--red)">1</div><div style="flex:1"><div class="det">Sell cattle — address IC immediately</div><div class="ded">IC at 0.06x is critical. 140 hd at 897¢ = ~$127k gross. IC improves 0.06x → ~0.31x post-sale. Every week of delay costs ~$18k in carry.</div><div class="dei">↑ IC: 0.06x → ~0.31x · ~$127k revenue · $18k/week carry cost avoided</div><div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap"><span class="syref" onclick="scen(498);nav('overview',null)">TRLX Feeder 498¢</span><span class="syref" onclick="scen(512);nav('overview',null)">TRLX Restocker 512¢</span></div></div></div>
+          <div class="derow"><div class="denum" style="background:rgba(255,255,255,.35)">2</div><div><div class="det">Bring sales forward — seasonal softening ahead</div><div class="ded">MLA forward indicators: EYCI softens Apr–May historically. 8.4% above avg now. Acting today vs 30 days protects ~$94k on 100hd.</div><div class="dei">Protects ~$94k vs waiting 30 days</div></div></div>
+          <div class="derow"><div class="denum" style="background:rgba(255,255,255,.2)">3</div><div><div class="det">Cull cows — processor competition firm at 374¢</div><div class="ded">374¢ well above 320¢ breakeven threshold. Weak AUD/USD boosts processor margins — competition likely firm 4-6 more weeks.</div><div class="dei">Strong processor window · above threshold</div><div style="margin-top:5px"><span class="syref" onclick="scen(374);nav('overview',null)">TRLX Proc Cow 374¢</span></div></div></div>
+        </div>
+      </div>
+      <!-- Buy/Sell Signals -->
+      <div class="card g3">
+        <div class="chead"><div><div class="ctitle">Buy / Sell Signals</div><div class="csub">Live · Tap price → model in calculator</div></div></div>
+        <div class="siglist">
+          <div class="sigrow"><div class="sig-indicator G"></div><div class="signm">Sell Finished Steers</div><div class="sigdt" onclick="scen(897);nav('overview',null)" style="cursor:pointer">897¢</div><span class="sigarr" onclick="scen(897);nav('overview',null)">↗</span><div class="sigst G">86% above BE</div></div>
+          <div class="sigrow"><div class="sig-indicator A"></div><div class="signm">Buy Restockers</div><div class="sigdt">at parity</div><div class="sigst A">Selective</div></div>
+          <div class="sigrow"><div class="sig-indicator G"></div><div class="signm">Sell Cull Cows</div><div class="sigdt" onclick="scen(374);nav('overview',null)" style="cursor:pointer">374¢</div><span class="sigarr" onclick="scen(374);nav('overview',null)">↗</span><div class="sigst G">Strong</div></div>
+          <div class="sigrow"><div class="sig-indicator R"></div><div class="signm">Cash Flow / IC</div><div class="sigdt">0.06x IC</div><div class="sigst R">Critical</div></div>
+          <div class="sigrow"><div class="sig-indicator G"></div><div class="signm">Forward Contract</div><div class="sigdt">+8.4% vs avg</div><div class="sigst G">Lock in</div></div>
+        </div>
+      </div>
+      <!-- Sentiment gauge -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Market Sentiment</div><div class="csub">Composite fear/greed index</div></div><span class="bdg bdg-n">68 · Greed</span></div>
+        <div class="cbody">
+          <div style="display:flex;gap:16px;align-items:center;margin-bottom:12px">
+            <div style="flex-shrink:0;text-align:center">
+              <svg width="88" height="52" viewBox="0 0 88 52" style="overflow:visible">
+                <path d="M 6,50 A 38,38 0 0,1 82,50" fill="none" stroke="var(--s4)" stroke-width="5.5" stroke-linecap="round"/>
+                <path d="M 6,50 A 38,38 0 0,1 82,50" fill="none" stroke="var(--blue)" stroke-width="5.5" stroke-linecap="round" stroke-dasharray="119.4" stroke-dashoffset="38.2" opacity=".8"/>
+                <text x="44" y="44" text-anchor="middle" font-family="DM Mono,monospace" font-size="20" font-weight="300" fill="var(--blue-b)">68</text>
+              </svg>
+              <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--t3);margin-top:3px;font-family:var(--m)"><span>Fear</span><span>Greed</span></div>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;gap:5px">
+              <div style="font-size:10px;color:var(--t1);line-height:1.5;margin-bottom:4px">Good selling window. EYCI at 14-month high — don't wait for perfection.</div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">Price Level</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:72%;height:100%;background:var(--ok);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">72</span></div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">vs 5yr Avg</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:84%;height:100%;background:var(--ok);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">84</span></div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">Momentum</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:65%;height:100%;background:var(--warn);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">65</span></div>
+              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">Processor</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:78%;height:100%;background:var(--ok);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">78</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ MARKET OUTLOOK PAGE ══════════════════════════════════ -->
+<div id="page-outlook" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge"><svg width="10" height="10"><use href="#i-scope"/></svg>Forward indicators · Mar 2026</div>
+        <div class="pg-title">Market Outlook</div>
+        <div class="pg-sub">Seasonal forecasts, AUD/USD sensitivity, supply/demand indicators · MLA + BOM + RBA</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--warn)">Neutral</div><div class="pg-kpi-lbl">Apr–Jun Outlook</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">$0.633</div><div class="pg-kpi-lbl">AUD/USD</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">Firm</div><div class="pg-kpi-lbl">Processor Demand</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--warn)">↓ Softening</div><div class="pg-kpi-lbl">EYCI Apr–May</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="nav('trade',null)">⚡ Trade Signals →</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- Bear/Base/Bull scenarios -->
+      <div class="card g12 nolift">
+        <div class="chead"><div><div class="ctitle">EYCI Scenario Analysis — Next 6 Months</div><div class="csub">Bear / Base / Bull · Revenue impact on Buringal at 100 head sold per month</div></div></div>
+        <div class="cbody">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">
+            <div style="padding:16px;background:rgba(244,63,94,.07);border:1px solid rgba(244,63,94,.2);border-radius:12px">
+              <div style="font-size:9px;font-weight:700;color:var(--red-b);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px">🐻 Bear Case — EYCI 720¢</div>
+              <div style="font-family:var(--m);font-size:32px;font-weight:200;color:var(--red-b);margin-bottom:4px">720¢</div>
+              <div style="font-size:9px;color:var(--t2);margin-bottom:12px">–$37k/month vs today at 100hd sold</div>
+              <div class="rrows">
+                <div class="rrow" style="padding:5px 0"><span class="rlbl" style="font-size:9px">Monthly revenue (100hd)</span><span class="rval" style="font-size:11px;color:var(--red-b)">$119k</span></div>
+                <div class="rrow" style="padding:5px 0;border-bottom:none"><span class="rlbl" style="font-size:9px">IC after 140hd sale</span><span class="rval" style="font-size:11px;color:var(--red-b)">0.25x</span></div>
+              </div>
+              <button class="pg-btn" style="width:100%;margin-top:10px;justify-content:center" onclick="scen(720);nav('overview',null)">Model this scenario →</button>
+            </div>
+            <div style="padding:16px;background:var(--blue-g);border:1px solid var(--blue-r);border-radius:12px">
+              <div style="font-size:9px;font-weight:700;color:var(--blue-b);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px">📊 Base Case — EYCI 897¢ <span style="background:var(--blue-g);padding:1px 6px;border-radius:10px;font-size:8px">Current</span></div>
+              <div style="font-family:var(--m);font-size:32px;font-weight:200;color:var(--blue-b);margin-bottom:4px">897¢</div>
+              <div style="font-size:9px;color:var(--t2);margin-bottom:12px">14-month high · 8.4% above 5yr March avg</div>
+              <div class="rrows">
+                <div class="rrow" style="padding:5px 0"><span class="rlbl" style="font-size:9px">Monthly revenue (100hd)</span><span class="rval" style="font-size:11px">$148k</span></div>
+                <div class="rrow" style="padding:5px 0;border-bottom:none"><span class="rlbl" style="font-size:9px">IC after 140hd sale</span><span class="rval" style="font-size:11px">0.31x</span></div>
+              </div>
+              <button class="pg-btn primary" style="width:100%;margin-top:10px;justify-content:center" onclick="scen(897);nav('overview',null)">Model this scenario →</button>
+            </div>
+            <div style="padding:16px;background:rgba(255,255,255,.03);border:1px solid var(--b1);border-radius:12px">
+              <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.5);text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px">🐂 Bull Case — EYCI 1050¢</div>
+              <div style="font-family:var(--m);font-size:32px;font-weight:200;color:rgba(255,255,255,.6);margin-bottom:4px">1050¢</div>
+              <div style="font-size:9px;color:var(--t2);margin-bottom:12px">+$25k/month vs today at 100hd sold</div>
+              <div class="rrows">
+                <div class="rrow" style="padding:5px 0"><span class="rlbl" style="font-size:9px">Monthly revenue (100hd)</span><span class="rval" style="font-size:11px;color:rgba(255,255,255,.55)">$174k</span></div>
+                <div class="rrow" style="padding:5px 0;border-bottom:none"><span class="rlbl" style="font-size:9px">IC after 140hd sale</span><span class="rval" style="font-size:11px;color:rgba(255,255,255,.55)">0.37x</span></div>
+              </div>
+              <button class="pg-btn" style="width:100%;margin-top:10px;justify-content:center" onclick="scen(1050);nav('overview',null)">Model this scenario →</button>
+            </div>
+          </div>
+          <div style="margin-top:12px;padding:10px 14px;background:rgba(255,255,255,.03);border-radius:8px;font-size:10px;color:var(--t2)">
+            <strong style="color:var(--t1)">MLA seasonal outlook:</strong> EYCI typically softens 8–12% Apr–May as autumn store market pressure builds. Current AUD/USD $0.633 supports processor competition and export values. Recommend selling into current strength rather than holding for peak.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ PASTURE BUDGET PAGE ══════════════════════════════════ -->
+<div id="page-pasture" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge red"><svg width="10" height="10"><use href="#i-leaf"/></svg>May–Aug below capacity</div>
+        <div class="pg-title">Pasture Budget</div>
+        <div class="pg-sub">Carrying capacity forecast · New England Tablelands · BOM rainfall · CSIRO/DPI models</div>
+        <div class="pg-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val c-blue">20,538</div><div class="pg-kpi-lbl">Current DSE</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--ok)">21.4k</div><div class="pg-kpi-lbl">Mar Capacity</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">15.4k</div><div class="pg-kpi-lbl">Jul Capacity</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--red-b)">–5,138</div><div class="pg-kpi-lbl">Jul Deficit</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" style="color:var(--warn)">$9–18k</div><div class="pg-kpi-lbl">Monthly Supplement</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn primary" onclick="nav('trade',null)">⚡ Sell to reduce DSE →</button>
+      </div>
+    </div>
+  </div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- Carrying capacity bars -->
+      <div class="card g8">
+        <div class="chead"><div><div class="ctitle">🌿 Carrying Capacity Forecast</div><div class="csub">6-month outlook · vs current 20,538 DSE · BOM median rainfall</div></div><span class="bdg bdg-r">⚠ May–Aug Below</span></div>
+        <div class="cbody">
+          <div style="display:flex;gap:8px;margin-bottom:4px;padding-left:64px">
+            <span style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;flex:1">Capacity vs 20,538 DSE current load</span>
+            <span style="font-size:8px;color:var(--t3);width:32px;text-align:right">Cap</span>
+            <span style="font-size:8px;color:var(--t3);width:40px;text-align:right">Balance</span>
+          </div>
+          <div class="pbrows">
             <div class="pbrow"><span class="pbmo">Mar</span><span class="pbsea">Autumn</span><div class="pbbar"><div class="pbfill" style="width:95%;background:rgba(255,255,255,.06);color:var(--ok)">21.4k surplus</div></div><span class="pbcap c-blue">21.4k</span><span class="pbbal c-ok">+862</span></div>
             <div class="pbrow"><span class="pbmo">Apr</span><span class="pbsea">Autumn</span><div class="pbbar"><div class="pbfill" style="width:88%;background:rgba(255,255,255,.04);color:var(--warn)">19.8k tight</div></div><span class="pbcap c-blue">19.8k</span><span class="pbbal c-warn">–738</span></div>
             <div class="pbrow"><span class="pbmo">May</span><span class="pbsea">Autumn</span><div class="pbbar"><div class="pbfill" style="width:79%;background:rgba(244,63,94,.08);color:var(--red-b)">18.2k — 2,338 below</div></div><span class="pbcap c-blue">18.2k</span><span class="pbbal c-red">–2,338</span></div>
@@ -1858,127 +2741,152 @@ input[type=range]::-webkit-slider-thumb{
             <div class="pbrow"><span class="pbmo">Aug</span><span class="pbsea">Winter</span><div class="pbbar"><div class="pbfill" style="width:70%;background:rgba(244,63,94,.1);color:var(--red-b)">16.1k — 4,438 below</div></div><span class="pbcap c-blue">16.1k</span><span class="pbbal c-red">–4,438</span></div>
           </div>
           <div style="margin-top:10px;background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.18);border-radius:8px;padding:10px 14px;font-size:10.5px;color:var(--t1);line-height:1.65">
-            <strong style="color:var(--red-b)">Action:</strong> May–Aug below capacity at median rainfall. Reduce DSE 2,000–3,500 before April or budget $9–18k/month supplement. Given IC 0.06x, destocking strongly preferred — generates immediate cash.
+            <strong style="color:var(--red-b)">Action required:</strong> May–Aug below capacity at median rainfall. Reduce DSE by 2,000–3,500 before April OR budget $9–18k/month supplement. Given IC 0.06x, destocking strongly preferred — generates immediate cash to address NAB covenant.
+          </div>
+        </div>
+      </div>
+      <!-- Action options -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Destock vs Supplement</div><div class="csub">Decision comparison</div></div></div>
+        <div class="cbody">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:12px;background:var(--blue-g);border:1px solid var(--blue-r);border-radius:10px">
+              <div style="font-size:9px;font-weight:700;color:var(--blue-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">✅ Recommended: Destock</div>
+              <div style="font-size:10.5px;color:var(--t1);line-height:1.65">Sell 2,000–3,500 DSE before April. At 897¢ EYCI this generates $270k–$475k cash — directly addresses IC breach. Lower labour and supplementary costs.</div>
+              <button class="pg-btn primary" style="width:100%;margin-top:8px;justify-content:center;height:28px" onclick="nav('overview',null)">Calculate sell revenue →</button>
+            </div>
+            <div style="padding:12px;background:rgba(244,63,94,.04);border:1px solid rgba(244,63,94,.1);border-radius:10px">
+              <div style="font-size:9px;font-weight:700;color:var(--red-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">❌ Not Recommended: Supplement</div>
+              <div style="font-size:10.5px;color:var(--t1);line-height:1.65">$9–18k/month supplementary feeding May–Aug. Cash cost of ~$54–108k over deficit period. Worsens IC ratio further. Only viable if holding for higher prices confirmed.</div>
+            </div>
           </div>
         </div>
       </div>
     </div>
- 
-  </div><!-- content -->
-</div><!-- page-overview -->
- 
-<!-- ░░ SKELETON PAGES ░░ -->
-<div id="page-pl" class="pv"><div class="sk-page">
-  <div class="sk-badge"><svg width="12" height="12"><use href="#i-chart"/></svg>FY 2025–26 · YTD to February</div>
-  <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:var(--sp24)">
-    <div><div class="sk-title">Profit &amp; Loss</div><div class="sk-desc">Wombramurra Angus · Nundle &amp; Topdale properties · Google Sheets actuals + Figured forecast</div></div>
-    <div style="display:flex;gap:6px;flex-shrink:0">
-      <span class="bdg bdg-b">YTD $1.27M GP</span>
-      <span class="bdg bdg-r">Feb –$165k NP</span>
+    <!-- RAINFALL HISTORY -->
+    <div class="grid" style="margin-top:0">
+      <div class="card g8">
+        <div class="chead"><div><div class="ctitle">🌧 Monthly Rainfall — Nundle</div><div class="csub">12 months actual vs long-term average · mm · BOM Nundle station</div></div><span class="bdg bdg-b" id="rf-ytd-badge">Loading...</span></div>
+        <div class="cbody">
+          <div style="display:flex;gap:8px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:var(--blue)"></div><span style="font-size:9px;color:var(--t2)">Actual rainfall</span></div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:rgba(255,255,255,.12)"></div><span style="font-size:9px;color:var(--t2)">Long-term average</span></div>
+            <div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;border-radius:2px;background:rgba(244,63,94,.6)"></div><span style="font-size:9px;color:var(--t2)">Below average</span></div>
+          </div>
+          <div id="rf-chart-wrap">
+            <div class="rf-bar-wrap" id="rf-bars"></div>
+            <div class="rf-labels" id="rf-labels"></div>
+          </div>
+          <div id="rf-summary" style="margin-top:8px;font-size:10px;color:var(--t2)">Fetching rainfall data...</div>
+        </div>
+      </div>
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Rainfall vs Capacity</div><div class="csub">Impact on DSE carrying capacity</div></div></div>
+        <div class="cbody">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:10px 12px;background:var(--s3);border-radius:8px;border:1px solid var(--b0)">
+              <div style="font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Rule of thumb</div>
+              <div style="font-size:10px;color:var(--t1);line-height:1.65">Each 25mm below LTA reduces carrying capacity ~8% for the following 6 weeks. Current autumn outlook suggests drier conditions — see BOM seasonal forecast.</div>
+            </div>
+            <div style="padding:10px 12px;background:rgba(14,165,233,.05);border:1px solid var(--blue-r);border-radius:8px">
+              <div style="font-size:8.5px;font-weight:700;color:var(--blue-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">YTD rainfall</div>
+              <div style="font-family:var(--m);font-size:24px;font-weight:200;color:var(--t0)" id="rf-ytd-val">–mm</div>
+              <div style="font-size:9px;color:var(--t2);margin-top:2px" id="rf-ytd-vs-lta">vs LTA –mm</div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-  <!-- KPI Cards — real numbers -->
-  <div class="grid">
-    <div class="card g3"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Revenue YTD</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em;color:var(--t0)">$2.17M</div>
-      <div style="font-size:9px;color:var(--t2);margin-top:4px">+12% vs budget $1.94M</div>
-    </div></div>
-    <div class="card g3"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Gross Profit YTD</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em;color:var(--t0)">$1.27M</div>
-      <div style="font-size:9px;color:var(--t2);margin-top:4px">GM ratio 58.4% · target &gt;60%</div>
-    </div></div>
-    <div class="card g3"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Overheads YTD</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em" style="color:var(--red-b)">$0.89M</div>
-      <div style="font-size:9px;color:var(--red-b);margin-top:4px">Expense ratio 106% · target &lt;70%</div>
-    </div></div>
-    <div class="card g3"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Net Profit Feb</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em;color:var(--red-b)">–$165k</div>
-      <div style="font-size:9px;color:var(--t2);margin-top:4px">Loss month · overhead pressure</div>
-    </div></div>
+</div>
+
+<!-- ══ WEATHER PAGE ══════════════════════════════════════════ -->
+<div id="page-weather" class="pv pg">
+  <div class="pg-hero">
+    <div class="pg-hero-grid">
+      <div>
+        <div class="pg-badge"><svg width="10" height="10"><use href="#i-weather"/></svg>BOM · Open-Meteo · Live</div>
+        <div class="pg-title">Weather</div>
+        <div class="pg-sub">Nundle &amp; Topdale stations · 3-day forecast + seasonal outlook · Critical for pasture planning</div>
+        <div class="pg-kpis" id="wx-kpis">
+          <div class="pg-kpi"><div class="pg-kpi-val" id="wx-today-hi">–°</div><div class="pg-kpi-lbl">Today High</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" id="wx-today-lo">–°</div><div class="pg-kpi-lbl">Today Low</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val" id="wx-today-rain">–mm</div><div class="pg-kpi-lbl">Today Rain</div></div>
+          <div class="pg-kpi"><div class="pg-kpi-val">NSW</div><div class="pg-kpi-lbl">Region</div></div>
+        </div>
+      </div>
+      <div class="pg-actions">
+        <button class="pg-btn" onclick="fetchWeather()">↻ Refresh</button>
+        <button class="pg-btn primary" onclick="nav('pasture',null)">🌿 Pasture Budget →</button>
+      </div>
+    </div>
   </div>
-  <!-- P&L Table -->
-  <div class="card g12 nolift" style="margin-top:8px"><div class="cbody">
-    <div class="ctitle" style="margin-bottom:12px">Income Statement — FY2025-26 YTD (Aug–Feb)</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px">
-      <thead><tr style="border-bottom:1px solid var(--b1)">
-        <th style="text-align:left;padding:0 8px 8px 0;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Category</th>
-        <th style="text-align:right;padding:0 8px 8px;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">YTD Actual</th>
-        <th style="text-align:right;padding:0 8px 8px;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Budget</th>
-        <th style="text-align:right;padding:0 0 8px;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Variance</th>
-      </tr></thead>
-      <tbody>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Cattle Sales</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">$1,980,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$1,760,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$220k</td></tr>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Agistment &amp; Other</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">$190,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$180,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$10k</td></tr>
-        <tr style="border-bottom:1px solid var(--b1)"><td style="padding:7px 8px 7px 0;font-weight:600;color:var(--t0)">Total Revenue</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);font-weight:600">$2,170,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$1,940,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$230k</td></tr>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Direct Costs (stock)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($900,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($830,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$70k</td></tr>
-        <tr style="border-bottom:1px solid var(--b1)"><td style="padding:7px 8px 7px 0;font-weight:600;color:var(--t0)">Gross Profit</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);font-weight:600">$1,270,000</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">$1,110,000</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:rgba(255,255,255,.55)">+$160k</td></tr>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Labour</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($320,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($290,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$30k</td></tr>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Finance (NAB interest)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($201,500)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($196,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$5k</td></tr>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Property &amp; Maintenance</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($210,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($185,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$25k</td></tr>
-        <tr style="border-bottom:1px solid var(--b0)"><td style="padding:7px 8px 7px 0;color:var(--t1)">Admin &amp; Other</td><td style="text-align:right;padding:7px 8px;font-family:var(--m)">($160,000)</td><td style="text-align:right;padding:7px 8px;font-family:var(--m);color:var(--t2)">($145,000)</td><td style="text-align:right;padding:7px 0;font-family:var(--m);color:var(--red-b)">–$15k</td></tr>
-        <tr><td style="padding:8px 8px 4px 0;font-weight:700;color:var(--t0)">Net Profit YTD</td><td style="text-align:right;padding:8px 8px 4px;font-family:var(--m);font-weight:700;color:var(--red-b)">$378,500</td><td style="text-align:right;padding:8px 8px 4px;font-family:var(--m);color:var(--t2)">$294,000</td><td style="text-align:right;padding:8px 0 4px;font-family:var(--m);color:rgba(255,255,255,.55)">+$84k</td></tr>
-      </tbody>
-    </table>
-    <div style="margin-top:10px;font-size:9px;color:var(--t3)">Source: Google Sheets actuals · Figured budget · Figures unaudited · FY2025-26 Aug–Feb YTD</div>
-  </div></div>
-</div></div>
-<div id="page-cashflow" class="pv"><div class="sk-page">
-  <div class="sk-badge"><svg width="12" height="12"><use href="#i-cash"/></svg>FY 2025–26</div>
-  <div class="sk-title">Cashflow</div>
-  <div class="sk-desc" style="margin-bottom:var(--sp24)">Rolling 12-month cash position · Aug 2025 – Jul 2026 · Figured forecast from March</div>
-  <div class="grid">
-    <div class="card g4"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Cash Receipts YTD</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em;color:var(--t0)">$2.17M</div>
-      <div style="font-size:9px;color:var(--t2);margin-top:4px">Cattle sales + agistment</div>
-    </div></div>
-    <div class="card g4"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Cash Payments YTD</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em;color:var(--red-b)">$1.79M</div>
-      <div style="font-size:9px;color:var(--t2);margin-top:4px">Incl. NAB interest $201.5k</div>
-    </div></div>
-    <div class="card g4"><div class="cbody">
-      <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Net Cash YTD</div>
-      <div style="font-family:var(--m);font-size:28px;font-weight:200;letter-spacing:-.04em;color:var(--t0)">$378k</div>
-      <div style="font-size:9px;color:var(--t2);margin-top:4px">Positive · ahead of budget</div>
-    </div></div>
+  <div class="pg-body">
+    <div class="grid">
+      <!-- 3-day forecast cards -->
+      <div class="card g8">
+        <div class="chead"><div><div class="ctitle">3-Day Forecast — Nundle NSW</div><div class="csub">Open-Meteo · −31.464°S 151.113°E · Updates every 30 minutes</div></div></div>
+        <div class="cbody">
+          <div id="wx-3day" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px">
+            <!-- Populated by fetchWeatherPage() -->
+            <div style="padding:16px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
+              <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Today</div>
+              <div style="font-size:32px;margin-bottom:8px">⋯</div>
+              <div style="font-family:var(--m);font-size:18px;color:var(--t0)">–°/–°</div>
+              <div style="font-size:10px;color:var(--blue-b);margin-top:4px">–mm</div>
+            </div>
+            <div style="padding:16px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
+              <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Tomorrow</div>
+              <div style="font-size:32px;margin-bottom:8px">⋯</div>
+              <div style="font-family:var(--m);font-size:18px;color:var(--t0)">–°/–°</div>
+              <div style="font-size:10px;color:var(--blue-b);margin-top:4px">–mm</div>
+            </div>
+            <div style="padding:16px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
+              <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px">Day +2</div>
+              <div style="font-size:32px;margin-bottom:8px">⋯</div>
+              <div style="font-family:var(--m);font-size:18px;color:var(--t0)">–°/–°</div>
+              <div style="font-size:10px;color:var(--blue-b);margin-top:4px">–mm</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Seasonal context -->
+      <div class="card g4">
+        <div class="chead"><div><div class="ctitle">Seasonal Outlook</div><div class="csub">New England Tablelands · BOM</div></div></div>
+        <div class="cbody">
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div style="padding:10px;background:rgba(244,63,94,.06);border:1px solid rgba(244,63,94,.12);border-radius:8px">
+              <div style="font-size:8.5px;font-weight:700;color:var(--red-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Autumn Outlook — Drier</div>
+              <div style="font-size:10px;color:var(--t1);line-height:1.65">BOM seasonal outlook suggests below-median rainfall Mar–May for New England. Combined with current DSE load — pasture budget tight from April.</div>
+            </div>
+            <div style="padding:10px;background:rgba(14,165,233,.05);border:1px solid var(--blue-r);border-radius:8px">
+              <div style="font-size:8.5px;font-weight:700;color:var(--blue-b);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Winter Frost Risk</div>
+              <div style="font-size:10px;color:var(--t1);line-height:1.65">New England typically sees frosts Jun–Aug above 900m. Pasture growth slows significantly. Supplement or destock before June to avoid high feed costs.</div>
+            </div>
+            <div style="padding:10px;background:rgba(255,255,255,.03);border:1px solid var(--b0);border-radius:8px">
+              <div style="font-size:8.5px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px">Best Action</div>
+              <div style="font-size:10px;color:var(--t1);line-height:1.65">Sell into current EYCI strength (897¢) to reduce DSE load before autumn dryness. Aligns with IC recovery strategy.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
-  <!-- Monthly cashflow table -->
-  <div class="card g12 nolift" style="margin-top:8px"><div class="cbody">
-    <div class="ctitle" style="margin-bottom:12px">Monthly Cash Position — FY2025-26</div>
-    <table style="width:100%;border-collapse:collapse;font-size:11px">
-      <thead><tr style="border-bottom:1px solid var(--b1)">
-        <th style="text-align:left;padding:0 8px 8px 0;font-size:8.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em">Month</th>
-        <th style="text-align:right;padding:0 8px 8px;font-size:8.5px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase">Cash In</th>
-        <th style="text-align:right;padding:0 8px 8px;font-size:8.5px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase">Cash Out</th>
-        <th style="text-align:right;padding:0 0 8px;font-size:8.5px;font-weight:700;color:var(--t3);letter-spacing:.08em;text-transform:uppercase">Net</th>
-      </tr></thead>
-      <tbody>
-        ${[['Aug','$248k','$195k','$53k',false],['Sep','$312k','$218k','$94k',false],['Oct','$275k','$201k','$74k',false],['Nov','$290k','$225k','$65k',false],['Dec','$320k','$248k','$72k',false],['Jan','$285k','$220k','$65k',false],['Feb','$240k','$405k','–$165k',false],['Mar','$195k','$185k','$10k',true],['Apr','$185k','$180k','$5k',true],['May','$210k','$195k','$15k',true],['Jun','$195k','$185k','$10k',true],['Jul','$220k','$200k','$20k',true]].map(([m,ci,co,net,fcst])=>`<tr style="border-bottom:1px solid var(--b0)"><td style="padding:6px 8px 6px 0;color:var(--t1)">${m}${fcst?' <span style="font-size:7.5px;color:var(--t3)">(fcst)</span>':''}</td><td style="text-align:right;padding:6px 8px;font-family:var(--m);${fcst?'opacity:.6':''}">  ${ci}</td><td style="text-align:right;padding:6px 8px;font-family:var(--m);${fcst?'opacity:.6':''}">  (${co})</td><td style="text-align:right;padding:6px 0;font-family:var(--m);color:${net.includes('–')?'var(--red-b)':'rgba(255,255,255,.55)'};${fcst?'opacity:.6':''}">  ${net}</td></tr>`).join('')}
-      </tbody>
-    </table>
-    <div style="margin-top:10px;font-size:9px;color:var(--t3)">Actuals: Google Sheets Aug–Feb · Forecast: Figured Mar–Jul 2026 · Unaudited</div>
-  </div></div>
-</div></div>
-<div id="page-balance" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-sheet"/></svg>Coming Soon</div><div class="sk-title">Balance Sheet</div><div class="sk-desc">Assets, liabilities, equity. Property valuations, livestock inventory, debt schedule.</div><div class="sk-row sk-3"><div class="sk-pos"><div class="sk-md sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Total Assets $32.78M</span></div></div><div class="sk-pos"><div class="sk-md sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Total Liabilities $3.55M</span></div></div><div class="sk-pos"><div class="sk-md sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Equity $29.23M</span></div></div></div></div></div>
-<div id="page-kpi" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-kpi"/></svg>Coming Soon</div><div class="sk-title">KPI Ratios</div><div class="sk-desc">Full ratio dashboard with MLA industry benchmarks and 3-year trend lines.</div><div class="sk-row sk-4"><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">GM Ratio</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Int. Cover</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">ROAM</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">GM/DSE</span></div></div></div><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Ratio trends vs MLA benchmarks</span></div></div></div></div>
-<div id="page-markets" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-cattle"/></svg>Coming Soon</div><div class="sk-title">Livestock Markets</div><div class="sk-desc">Full saleyard grid (9 yards), EYCI seasonal chart, processor heat map.</div><div class="sk-row sk-3"><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Tamworth</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Armidale</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Inverell</span></div></div></div><div class="sk-row sk-2"><div class="sk-pos"><div class="sk-chart sk-block"></div><div class="sk-overlay"><span class="sk-lbl">EYCI 5-year seasonal pattern</span></div></div><div class="sk-pos"><div class="sk-chart sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Processor competition map</span></div></div></div></div></div>
+</div>
+
+div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Armidale</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Inverell</span></div></div></div><div class="sk-row sk-2"><div class="sk-pos"><div class="sk-chart sk-block"></div><div class="sk-overlay"><span class="sk-lbl">EYCI 5-year seasonal pattern</span></div></div><div class="sk-pos"><div class="sk-chart sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Processor competition map</span></div></div></div></div></div>
 <div id="page-trade" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-trade"/></svg>Coming Soon</div><div class="sk-title">Trade Intelligence</div><div class="sk-desc">Hold vs sell NPV calculator, trade profitability by class, Angus premium tracker.</div><div class="sk-row sk-2"><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Hold vs Sell NPV Calculator</span></div></div><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Trade Profitability by Class</span></div></div></div></div></div>
 <div id="page-outlook" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-scope"/></svg>Coming Soon</div><div class="sk-title">Market Outlook</div><div class="sk-desc">90CL beef price, AUD/USD sensitivity, supply/demand indicators, MLA forward indicators.</div><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Bear / Base / Bull scenario comparison</span></div></div></div></div>
 <div id="page-pasture" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-leaf"/></svg>Coming Soon</div><div class="sk-title">Pasture Budget</div><div class="sk-desc">Full capacity calculator with adjustable parameters, rainfall integration, supplement vs destock planner.</div></div></div>
 <div id="page-weather" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-weather"/></svg>Coming Soon</div><div class="sk-title">Weather</div><div class="sk-desc">14-day BOM forecast for Nundle and Topdale, seasonal outlooks, rainfall decile tracker.</div></div></div>
- 
+
   <div style="padding:10px 24px;border-top:1px solid var(--b0);font-size:8.5px;color:var(--t3);letter-spacing:.02em;display:flex;justify-content:space-between">
     <span>Buringal Grazing Co · Wombramurra Angus · Nundle &amp; Topdale NSW</span>
-    <span>Google Sheets · MLA · Open-Meteo · Figured · v7.0</span>
+    <span>Google Sheets · MLA · Open-Meteo · Figured · v9.0</span>
   </div>
 </main>
 </div>
- 
+
 <!-- MOBILE NAV -->
 <nav id="mobnav">
   <div class="mnitem on"  onclick="nav('overview',this)"><svg width="18" height="18"><use href="#i-home"/></svg><div class="mnlbl">Overview</div></div>
@@ -1987,7 +2895,7 @@ input[type=range]::-webkit-slider-thumb{
   <div class="mnitem"     onclick="nav('trade',this)"><svg width="18" height="18"><use href="#i-trade"/></svg><div class="mnlbl">Trade</div></div>
   <div class="mnitem"     onclick="nav('pasture',this)"><svg width="18" height="18"><use href="#i-leaf"/></svg><div class="mnlbl">Pasture</div></div>
 </nav>
- 
+
 <!-- COMMAND PALETTE -->
 <div id="cmd-overlay" onclick="if(event.target===this)closeCmd()">
   <div id="cmd-box">
@@ -2006,9 +2914,9 @@ input[type=range]::-webkit-slider-thumb{
     </div>
   </div>
 </div>
- 
+
 <div class="pvpill"><div class="ldot" style="width:4px;height:4px;margin-right:2px;background:var(--blue-b);box-shadow:none"></div>Preview v8 · Live</div>
- 
+
 <script>
 /* ══════════════════════════════════════════════════════════
    CANVAS — animated mesh background
@@ -2044,7 +2952,7 @@ input[type=range]::-webkit-slider-thumb{
   }
   draw();
 })();
- 
+
 /* ══════════════════════════════════════════════════════════
    HELPERS
 ══════════════════════════════════════════════════════════ */
@@ -2053,7 +2961,7 @@ const fk=v=>v>=0?'$'+(v/1e3).toFixed(0)+'k':'–$'+(-v/1e3).toFixed(0)+'k';
 const fm=v=>'$'+(v/1e6).toFixed(2)+'M';
 const fc=v=>v>=0?'+'+fk(v):fk(v);
 const dark=()=>document.documentElement.dataset.theme==='dark';
- 
+
 /* ══════════════════════════════════════════════════════════
    LIVE TIME
 ══════════════════════════════════════════════════════════ */
@@ -2066,7 +2974,7 @@ function updateTime(){
 }
 updateTime();setInterval(updateTime,60000);
 setTimeout(()=>{const m=document.getElementById('mla-ts');if(m)m.style.display='inline';},2000);
- 
+
 /* ══════════════════════════════════════════════════════════
    THEME
 ══════════════════════════════════════════════════════════ */
@@ -2085,7 +2993,7 @@ function toggleTheme(){
   const ico=document.getElementById('tic');
   if(ico)ico.innerHTML=`<svg width="13" height="13"><use href="#i-${t==='dark'?'moon':'sun'}"/></svg>`;
 })();
- 
+
 /* ══════════════════════════════════════════════════════════
    SIDEBAR TOGGLE
 ══════════════════════════════════════════════════════════ */
@@ -2097,7 +3005,7 @@ function toggleSb(){
   if(btn)btn.classList.toggle('on',!sbOpen);
   setTimeout(buildCharts,300);
 }
- 
+
 /* ══════════════════════════════════════════════════════════
    VIEW TOGGLE
 ══════════════════════════════════════════════════════════ */
@@ -2125,7 +3033,7 @@ function setView(v){
   if(v)setView(v);
   else if(innerWidth<=768)setView('mobile');
 })();
- 
+
 /* ══════════════════════════════════════════════════════════
    NAVIGATION
 ══════════════════════════════════════════════════════════ */
@@ -2136,12 +3044,19 @@ function nav(page,mobEl){
   document.querySelectorAll('.sbitem').forEach(i=>i.classList.toggle('on',i.dataset.page===page));
   if(mobEl){document.querySelectorAll('.mnitem').forEach(i=>i.classList.remove('on'));mobEl.classList.add('on');}
   const m=document.getElementById('main');if(m)m.scrollTop=0;
-  if(page==='overview')setTimeout(()=>{buildCharts();drawAllSparks();runCountUp();},40);
+  /* Page-specific init */
+  setTimeout(()=>{
+    if(page==='overview'){buildCharts();drawAllSparks();runCountUp();}
+    if(page==='pl'){buildPLChart();}
+    if(page==='cashflow'){buildCFTable();buildCFChart();}
+    if(page==='markets'){buildMktSparkLg();}
+    if(page==='weather'){buildWeatherPage();}
+  },40);
 }
 document.querySelectorAll('.sbitem').forEach(i=>i.addEventListener('click',function(){
   nav(this.dataset.page||'overview',null);
 }));
- 
+
 /* ══════════════════════════════════════════════════════════
    MOBILE EXPAND
 ══════════════════════════════════════════════════════════ */
@@ -2152,7 +3067,7 @@ function mexp(btn,id){
   const n=btn.textContent.replace(/Show |Hide |[▾▴]/g,'').trim();
   btn.textContent=open?`Show ${n} ▾`:`Hide ${n} ▴`;
 }
- 
+
 /* ══════════════════════════════════════════════════════════
    SELL DECISION CALCULATOR
    The unique feature — nowhere else in agri-tech
@@ -2162,49 +3077,49 @@ const LOAN_BAL=3100000;/* $3.1M NAB */
 const BASE_EBIT=622064;/* annual EBIT */
 const AVG_LWT=320;     /* avg kg lwt per head */
 const DRESS_PCT=0.52;  /* dressing percentage */
- 
+
 function calcSell(){
   const head=+document.getElementById('sc-head').value;
   const eyci=+document.getElementById('sc-eyci').value;
   const days=+document.getElementById('sc-wait').value;
   const futureEyci=+document.getElementById('sc-future').value;
- 
+
   /* Update display values */
   document.getElementById('sc-head-v').textContent=head+' hd';
   document.getElementById('sc-eyci-v').textContent=eyci+'¢';
   document.getElementById('sc-wait-v').textContent=days===0?'Today':days+' days';
   document.getElementById('sc-future-v').textContent=futureEyci+'¢';
- 
+
   /* Update slider fill */
   ['sc-head','sc-eyci','sc-wait','sc-future'].forEach(id=>{
     const r=document.getElementById(id);
     const pct=((r.value-r.min)/(r.max-r.min)*100).toFixed(1)+'%';
     r.style.setProperty('--pct',pct);
   });
- 
+
   /* Revenue calculations */
   const cwtPerHead=AVG_LWT*DRESS_PCT;  /* kg cwt */
   const todayRev=(eyci/100)*cwtPerHead*head;
   const waitRev=(futureEyci/100)*cwtPerHead*head;
- 
+
   /* Carry cost = daily NAB interest */
   const dailyInterest=LOAN_BAL*NAB_RATE/365;
   const carryCost=dailyInterest*days;
- 
+
   /* Net wait revenue after carry */
   const waitNetRev=waitRev-carryCost;
   const diff=waitNetRev-todayRev;
- 
+
   /* IC calculation */
   const icNow=BASE_EBIT/LOAN_BAL;
   const icAfterSale=(BASE_EBIT+(todayRev*0.7))/LOAN_BAL;
- 
+
   /* Update outputs */
   const d=dark();
   const blueCol=d?'#38bdf8':'#0284c7';
   const redCol=d?'#fb7185':'#e11d48';
   const okCol=d?'rgba(255,255,255,.6)':'rgba(0,0,0,.55)';
- 
+
   const numEl=document.getElementById('sell-verdict-num');
   const lbl=document.getElementById('sell-verdict-label');
   const ctx=document.getElementById('sell-verdict-ctx');
@@ -2212,7 +3127,7 @@ function calcSell(){
   numEl.classList.remove('pop');
   void numEl.offsetWidth; /* reflow */
   numEl.classList.add('pop');
- 
+
   const iconEl=document.getElementById('sell-icon');
   if(days===0){
     numEl.textContent='$'+Math.round(todayRev/1000)+'k';
@@ -2230,9 +3145,9 @@ function calcSell(){
       :`Selling today saves <strong style="color:${redCol}">${fk(Math.abs(diff))}</strong> vs waiting ${days} days. Carry eats ${fk(carryCost)} of any price gain.`;
     if(iconEl)iconEl.textContent=isWaitBetter?'⏳':'🔴';
   }
- 
+
   const flash=el=>{el.classList.add('flash');setTimeout(()=>el.classList.remove('flash'),350)};
- 
+
   /* Update comparison bars */
   const barToday=document.getElementById('sc-bar-today');
   const barWait=document.getElementById('sc-bar-wait');
@@ -2259,13 +3174,13 @@ function calcSell(){
     const del=document.getElementById(did);
     if(del){del.textContent=dval;del.className='scc-delta ne';}
   };
- 
+
   set('calc-today','$'+Math.round(todayRev/1000)+'k',blueCol,'calc-today-d','gross revenue today');
   set('calc-wait',  days===0?'–':'$'+Math.round(waitNetRev/1000)+'k',diff>=0?blueCol:redCol,'calc-wait-d',days===0?'set wait days':'net after carry');
   set('calc-ic-now',icNow.toFixed(2)+'x',icNow>=1.25?okCol:redCol,'calc-ic-d','→ '+icAfterSale.toFixed(2)+'x after sale');
   set('calc-carry','$'+Math.round(carryCost/1000)+'k',carryCost>5000?redCol:okCol,'calc-carry-d',days===0?'no carry':'$'+Math.round(dailyInterest)+'/day');
 }
- 
+
 /* Saleyard price → update EYCI slider in calculator */
 function scen(price){
   const r=document.getElementById('sc-eyci');
@@ -2279,7 +3194,7 @@ function scen(price){
   }
 }
 calcSell();
- 
+
 /* ══════════════════════════════════════════════════════════
    SPARKLINES — SVG polyline, proper line charts
 ══════════════════════════════════════════════════════════ */
@@ -2288,7 +3203,7 @@ const EYCI_30D=[
   848,855,860,866,872,876,881,884,888,891,
   886,880,875,872,869,874,878,883,890,897
 ];
- 
+
 function drawSparkSVG(svgEl,data,W,H,color,fill){
   if(!svgEl)return;
   const PAD=2,max=Math.max(...data),min=Math.min(...data),rng=max-min||1;
@@ -2304,7 +3219,7 @@ function drawSparkSVG(svgEl,data,W,H,color,fill){
   html+=`<circle cx="${lp[0]}" cy="${lp[1]}" r="4.5" fill="${color}" opacity=".2"/>`;
   svgEl.innerHTML=html;
 }
- 
+
 function drawHeroSpark(){
   const svg=document.getElementById('hero-spark');if(!svg)return;
   const col=dark()?'#38bdf8':'#0284c7';
@@ -2319,7 +3234,7 @@ function drawHeroSpark(){
   }
   if(rEl)rEl.textContent=`${Math.min(...EYCI_30D)}–${Math.max(...EYCI_30D)}¢`;
 }
- 
+
 function drawStatSparks(){
   const d=dark();
   const B=d?'#38bdf8':'#0284c7';
@@ -2334,16 +3249,16 @@ function drawStatSparks(){
   /* GP rising */
   drawSparkSVG(document.getElementById('sp-gp'),[0.82,0.95,1.04,1.08,1.14,1.19,1.23,1.27],44,14,W,false);
 }
- 
+
 function drawSidebarSpark(){
   const svg=document.getElementById('sb-spark');if(!svg)return;
   const col=dark()?'#38bdf8':'#0284c7';
   drawSparkSVG(svg,EYCI_30D.slice(-14),160,22,col,false);
 }
- 
+
 function drawAllSparks(){drawHeroSpark();drawStatSparks();drawSidebarSpark();}
 setTimeout(drawAllSparks,200);
- 
+
 /* ══════════════════════════════════════════════════════════
    LIVE TICKERS — sidebar animation
 ══════════════════════════════════════════════════════════ */
@@ -2366,7 +3281,7 @@ function tickerTick(){
   });
 }
 setInterval(tickerTick,8000);
- 
+
 /* ══════════════════════════════════════════════════════════
    SYNC
 ══════════════════════════════════════════════════════════ */
@@ -2392,7 +3307,8 @@ function doSync(){
         btn.style.boxShadow='0 2px 12px rgba(3,105,161,.45)';
       }
     },1200);
-    buildCharts();drawAllSparks();drawSidebarSpark&&drawSidebarSpark();
+    buildCharts();drawAllSparks();if(typeof drawSidebarSpark==='function')drawSidebarSpark();setTimeout(fetchMLA,200);
+    fetchMLA();
     updateTime();
   },1800);
 }
@@ -2403,7 +3319,7 @@ setInterval(()=>{
   else if(s<60)el.textContent=`synced ${s}s ago`;
   else el.textContent=`synced ${Math.floor(s/60)}m ago`;
 },5000);
- 
+
 /* ══════════════════════════════════════════════════════════
    COUNT-UP ANIMATIONS
 ══════════════════════════════════════════════════════════ */
@@ -2424,7 +3340,7 @@ function runCountUp(){
   }
 }
 setTimeout(runCountUp,350);
- 
+
 /* ══════════════════════════════════════════════════════════
    CUSTOM SVG CHARTS — editorial, not Chart.js defaults
    Hand-crafted to tell the story of the season
@@ -2433,7 +3349,7 @@ function buildCharts(){
   buildGPChart();
   buildEPChart();
 }
- 
+
 function buildGPChart(){
   const svg=document.getElementById('chart-gp');
   if(!svg)return;
@@ -2454,9 +3370,9 @@ function buildGPChart(){
   const yS=v=>PAD.t+(1-(v-minV)/(maxV-minV))*cH;
   const xS=i=>PAD.l+(i/(MO.length-1))*cW;
   const barW=(cW/MO.length)*0.35;
- 
+
   let html='';
- 
+
   /* Grid lines */
   [0,.25,.5,.75,1].forEach(r=>{
     const y=PAD.t+r*cH;
@@ -2464,12 +3380,12 @@ function buildGPChart(){
     html+=`<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="${gridCol}" stroke-width="1"/>`;
     html+=`<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" font-family="DM Mono,monospace" font-size="9" fill="${textCol}">$${val}k</text>`;
   });
- 
+
   /* Budget line */
   const by=yS(budget);
   html+=`<line x1="${PAD.l}" y1="${by}" x2="${W-PAD.r}" y2="${by}" stroke="${d?'rgba(255,255,255,.25)':'rgba(0,0,0,.2)'}" stroke-width="1" stroke-dasharray="5,3"/>`;
   html+=`<text x="${W-PAD.r-2}" y="${by-4}" text-anchor="end" font-family="Inter,sans-serif" font-size="8" fill="${textCol}">Budget</text>`;
- 
+
   /* Bars — GP */
   MO.forEach((m,i)=>{
     const isActual=i<AL;
@@ -2482,7 +3398,7 @@ function buildGPChart(){
     const strokeDash=isActual?'':'3,2';
     html+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="${fillCol}" rx="2" stroke="${isActual?'none':'rgba(255,255,255,.15)'}" stroke-width="${isActual?0:.5}" stroke-dasharray="${strokeDash}"/>`;
   });
- 
+
   /* Bars — Overheads */
   MO.forEach((m,i)=>{
     const isActual=i<AL;
@@ -2491,23 +3407,23 @@ function buildGPChart(){
     const fillCol=isActual?(d?'rgba(244,63,94,.42)':'rgba(225,29,72,.36)'):(d?'rgba(244,63,94,.14)':'rgba(225,29,72,.10)');
     html+=`<rect x="${x}" y="${y}" width="${barW}" height="${bh}" fill="${fillCol}" rx="2"/>`;
   });
- 
+
   /* X axis labels */
   MO.forEach((m,i)=>{
     html+=`<text x="${xS(i)}" y="${H-PAD.b+14}" text-anchor="middle" font-family="DM Mono,monospace" font-size="8.5" fill="${i<AL?textCol:d?'rgba(255,255,255,.2)':'rgba(0,0,0,.2)'}">${m}</text>`;
   });
- 
+
   /* Feb annotation */
   const febX=xS(7);
   html+=`<text x="${febX}" y="${yS(gp[7])-6}" text-anchor="middle" font-family="Inter,sans-serif" font-size="7.5" fill="${redCol}">↑ Feb</text>`;
- 
+
   /* Legend */
   html+=`<rect x="${PAD.l}" y="2" width="8" height="8" fill="${d?'rgba(255,255,255,.45)':'rgba(0,0,0,.4)'}" rx="2"/><text x="${PAD.l+11}" y="10" font-family="Inter,sans-serif" font-size="8.5" fill="${textCol}">Gross Profit</text>`;
   html+=`<rect x="${PAD.l+90}" y="2" width="8" height="8" fill="${d?'rgba(244,63,94,.35)':'rgba(225,29,72,.3)'}" rx="2"/><text x="${PAD.l+101}" y="10" font-family="Inter,sans-serif" font-size="8.5" fill="${textCol}">Overheads</text>`;
- 
+
   svg.innerHTML=html;
 }
- 
+
 function buildEPChart(){
   const svg=document.getElementById('chart-ep');
   if(!svg)return;
@@ -2526,21 +3442,21 @@ function buildEPChart(){
   const minV=Math.min(...np)*1.15;
   const yS=v=>PAD.t+(1-(v-minV)/(maxV-minV))*cH;
   const xS=i=>PAD.l+(i/(MO.length-1))*cW;
- 
+
   let html='';
- 
+
   /* Grid */
   [-150000,0,50000,80000].forEach(val=>{
     const y=yS(val);if(y<PAD.t-5||y>H-PAD.b+5)return;
     html+=`<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="${gridCol}" stroke-width="1"/>`;
     html+=`<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" font-family="DM Mono,monospace" font-size="8.5" fill="${textCol}">${val<0?'–':''}$${Math.abs(val/1000)}k</text>`;
   });
- 
+
   /* Zero line (breakeven) */
   const zy=yS(0);
   html+=`<line x1="${PAD.l}" y1="${zy}" x2="${W-PAD.r}" y2="${zy}" stroke="${d?'rgba(244,63,94,.4)':'rgba(225,29,72,.3)'}" stroke-width="1" stroke-dasharray="4,3"/>`;
   html+=`<text x="${W-PAD.r-2}" y="${zy-4}" text-anchor="end" font-family="Inter,sans-serif" font-size="8" fill="${d?'rgba(244,63,94,.7)':'rgba(225,29,72,.7)'}">Breakeven</text>`;
- 
+
   /* EBIT area fill */
   const ebitPts=ebit.map((v,i)=>[xS(i),yS(v)]);
   const ebitPath=ebitPts.slice(0,AL).map((p,i)=>(i===0?'M':'L')+p[0]+','+p[1]).join(' ');
@@ -2548,20 +3464,20 @@ function buildEPChart(){
   html+=`<defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${blueCol}" stop-opacity="${d?.22:.14}"/><stop offset="100%" stop-color="${blueCol}" stop-opacity="${d?.02:.01}"/></linearGradient></defs>`;
   const areaPath=ebitPath+` L${xS(AL-1)},${zy} L${xS(0)},${zy} Z`;
   html+=`<path d="${areaPath}" fill="url(#${uid})"/>`;
- 
+
   /* EBIT line */
   const ebitFull=ebit.map((v,i)=>(i===0?'M':'L')+xS(i)+','+yS(v)).join(' ');
   const ebitActual=ebit.slice(0,AL).map((v,i)=>(i===0?'M':'L')+xS(i)+','+yS(v)).join(' ');
   const ebitForecast=ebit.slice(AL-1).map((v,i)=>(i===0?'M':'L')+xS(AL-1+i)+','+yS(v)).join(' ');
   html+=`<path d="${ebitActual}" fill="none" stroke="${blueCol}" stroke-width="1.8" stroke-linecap="round"/>`;
   html+=`<path d="${ebitForecast}" fill="none" stroke="${blueCol}" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4,3" opacity=".6"/>`;
- 
+
   /* Net Profit line */
   const npActual=np.slice(0,AL).map((v,i)=>(i===0?'M':'L')+xS(i)+','+yS(v)).join(' ');
   const npForecast=np.slice(AL-1).map((v,i)=>(i===0?'M':'L')+xS(AL-1+i)+','+yS(v)).join(' ');
   html+=`<path d="${npActual}" fill="none" stroke="${d?'rgba(255,255,255,.4)':'rgba(0,0,0,.35)'}" stroke-width="1.5" stroke-linecap="round"/>`;
   html+=`<path d="${npForecast}" fill="none" stroke="${d?'rgba(255,255,255,.2)':'rgba(0,0,0,.2)'}" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="4,3"/>`;
- 
+
   /* Dots on actuals */
   ebit.slice(0,AL).forEach((v,i)=>{
     const isFeb=i===7;
@@ -2571,24 +3487,24 @@ function buildEPChart(){
     const isFeb=i===7;
     html+=`<circle cx="${xS(i)}" cy="${yS(v)}" r="${isFeb?5:2.5}" fill="${v<0?redCol:(d?'rgba(255,255,255,.55)':'rgba(0,0,0,.5)')}" stroke="${v<0?'none':d?'rgba(255,255,255,.2)':'rgba(0,0,0,.2)'}" stroke-width="1"/>`;
   });
- 
+
   /* Feb annotation */
   html+=`<text x="${xS(7)}" y="${yS(np[7])+14}" text-anchor="middle" font-family="Inter,sans-serif" font-size="7.5" fill="${redCol}">–$165k</text>`;
- 
+
   /* X labels */
   MO.forEach((m,i)=>{
     html+=`<text x="${xS(i)}" y="${H-PAD.b+14}" text-anchor="middle" font-family="DM Mono,monospace" font-size="8.5" fill="${i<AL?textCol:d?'rgba(255,255,255,.2)':'rgba(0,0,0,.2)'}">${m}</text>`;
   });
- 
+
   /* Legend */
   html+=`<line x1="${PAD.l}" y1="8" x2="${PAD.l+14}" y2="8" stroke="${blueCol}" stroke-width="1.8" stroke-linecap="round"/><text x="${PAD.l+17}" y="12" font-family="Inter,sans-serif" font-size="8.5" fill="${textCol}">EBIT</text>`;
   html+=`<line x1="${PAD.l+58}" y1="8" x2="${PAD.l+72}" y2="8" stroke="${d?'rgba(255,255,255,.4)':'rgba(0,0,0,.35)'}" stroke-width="1.5" stroke-linecap="round"/><text x="${PAD.l+75}" y="12" font-family="Inter,sans-serif" font-size="8.5" fill="${textCol}">Net Profit</text>`;
- 
+
   svg.innerHTML=html;
 }
- 
+
 buildCharts();
- 
+
 /* ══════════════════════════════════════════════════════════
    AI TERMINAL — Live Claude integration
 ══════════════════════════════════════════════════════════ */
@@ -2641,7 +3557,7 @@ async function runAI(){
     btn.innerHTML='<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Regenerate';
   }
 }
- 
+
 /* ══════════════════════════════════════════════════════════
    COMMAND PALETTE
 ══════════════════════════════════════════════════════════ */
@@ -2704,7 +3620,7 @@ document.addEventListener('keydown',e=>{
     if(m[e.key]){e.preventDefault();nav(m[e.key],null);}
   }
 });
- 
+
 /* ── CHART HOVER TOOLTIPS ──────────────────────── */
 const GP_DATA = {
   labels:['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar','Apr','May','Jun'],
@@ -2718,7 +3634,7 @@ const EP_DATA = {
   np:[38,52,60,44,50,58,48,-166,52,44,60,68],
   isActual:[true,true,true,true,true,true,true,true,false,false,false,false]
 };
- 
+
 function chartHover(e, type){
   const svg = e.currentTarget;
   const rect = svg.getBoundingClientRect();
@@ -2756,63 +3672,94 @@ function chartLeave(type){
   const tt = document.getElementById('tt-' + type);
   if(tt) tt.classList.remove('show');
 }
- 
- 
+
+
 /* ══════════════════════════════════════════════════════════
    LIVE MLA DATA — Cloudflare Worker proxy
    Graceful degradation: if worker fails, simulation continues
 ══════════════════════════════════════════════════════════ */
 const WORKER='https://buringal-api.ryanschmitt00.workers.dev';
- 
+
 async function fetchMLA(){
-  const tryFetch=async(url)=>{
-    const r=await fetch(url,{signal:AbortSignal.timeout(8000)});
-    if(!r.ok)throw new Error(r.status);
-    return r.json();
-  };
-  const getPrice=d=>{
-    if(!d)return null;
-    const arr=Array.isArray(d)?d:[d];
-    const latest=arr[arr.length-1]||{};
-    return latest.price||latest.Price||latest.value||latest.Value||null;
+  /* Routes through Cloudflare Worker via POST — worker proxies to MLA API */
+  /* Indicator IDs: 0=EYCI, 3=Feeder Steer, 13=Processor Cow */
+  const getLatestPrice=(results,id)=>{
+    const match=results.find(r=>r.indicatorId===id);
+    if(!match)return null;
+    const data=match.windowData?.current||[];
+    if(!data.length)return null;
+    const last=data[data.length-1];
+    return last?.price||last?.Price||last?.value||last?.Value||null;
   };
   try{
-    const [eyci,feeder,cow]=await Promise.allSettled([
-      tryFetch(WORKER+'/mla/indicator?id=0'),
-      tryFetch(WORKER+'/mla/indicator?id=3'),
-      tryFetch(WORKER+'/mla/indicator?id=13'),
-    ]);
-    if(eyci.status==='fulfilled'){
-      const p=Math.round(getPrice(eyci.value)||897);
-      const h=document.getElementById('hero-num');
-      if(h)h.innerHTML=p+'<span class="hero-unit">¢</span>';
-      const sb=document.getElementById('sb-eyci-val');
-      if(sb)sb.textContent=p;
+    const res=await fetch(WORKER,{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({action:'mla_all_indicators'}),
+      signal:AbortSignal.timeout(10000)
+    });
+    if(!res.ok)throw new Error('Worker '+res.status);
+    const data=await res.json();
+    const results=data?.results||[];
+
+    /* EYCI (id=0) */
+    const eyciPrice=getLatestPrice(results,0);
+    if(eyciPrice){
+      const p=Math.round(eyciPrice);
+      const heroEl=document.getElementById('hero-num');
+      if(heroEl)heroEl.innerHTML=p+'<span class="hero-unit">¢</span>';
+      const sbEl=document.getElementById('sb-eyci-val');
+      if(sbEl)sbEl.textContent=p;
       EYCI_30D[EYCI_30D.length-1]=p;
       drawAllSparks();
       console.log('[MLA] EYCI:',p+'c');
     }
-    if(feeder.status==='fulfilled'){
-      const p=Math.round(getPrice(feeder.value)||482);
+
+    /* Feeder Steer (id=3) */
+    const feederPrice=getLatestPrice(results,3);
+    if(feederPrice){
+      const p=Math.round(feederPrice);
       const el=document.getElementById('sb-feeder');
       if(el)el.textContent=p+'c';
       tickers.feeder.val=p;
-      console.log('[MLA] Feeder:',p+'c');
+      console.log('[MLA] Feeder Steer:',p+'c');
     }
-    if(cow.status==='fulfilled'){
-      const p=Math.round(getPrice(cow.value)||374);
+
+    /* Processor Cow (id=13) */
+    const cowPrice=getLatestPrice(results,13);
+    if(cowPrice){
+      const p=Math.round(cowPrice);
       const el=document.getElementById('sb-proccow');
       if(el)el.textContent=p+'c';
       tickers.proccow.val=p;
       console.log('[MLA] Proc Cow:',p+'c');
     }
+
+    /* AUD/USD */
+    try{
+      const fxRes=await fetch(WORKER,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'audusd'}),
+        signal:AbortSignal.timeout(6000)
+      });
+      if(fxRes.ok){
+        const fx=await fxRes.json();
+        if(fx.audusd){
+          const el=document.getElementById('sb-audusd');
+          if(el)el.textContent='$'+fx.audusd.toFixed(3);
+          tickers.audusd.val=fx.audusd;
+          console.log('[FX] AUD/USD:',fx.audusd);
+        }
+      }
+    }catch(fxErr){console.warn('[FX] Rate unavailable');}
+
   }catch(e){
     console.warn('[MLA] Worker unavailable, using simulation:',e.message);
   }
 }
 setTimeout(fetchMLA,1500);
 setInterval(fetchMLA,5*60*1000);
- 
+
 /* ══════════════════════════════════════════════════════════
    WEATHER — Open-Meteo free API, no key required
    Nundle NSW: -31.464, 151.113
@@ -2851,7 +3798,7 @@ async function fetchWeather(){
 }
 setTimeout(fetchWeather,800);
 setInterval(fetchWeather,30*60*1000);
- 
+
 /* ══════════════════════════════════════════════════════════
    NAB REVIEW COUNTDOWN
    Next review: assume quarterly — next 31 March 2026
@@ -2872,7 +3819,7 @@ function updateNABCountdown(){
 }
 updateNABCountdown();
 setInterval(updateNABCountdown,60*1000);
- 
+
 /* ══════════════════════════════════════════════════════════
    AI CHAT — contextual follow-up questions
 ══════════════════════════════════════════════════════════ */
@@ -2909,15 +3856,778 @@ async function askAI(){
     btn.disabled=false;btn.textContent='Ask Claude';
   }
 }
- 
- 
+
+
 /* ── BANK REPORT PRINT ───────────────────────────── */
 function printReport(){
   const d=document.getElementById('print-date');
   if(d)d.textContent=new Date().toLocaleDateString('en-AU',{day:'numeric',month:'long',year:'numeric'});
   window.print();
 }
- 
+
+
+/* ══════════════════════════════════════════════════════════
+   PAGE-SPECIFIC BUILD FUNCTIONS
+══════════════════════════════════════════════════════════ */
+
+/* P&L page — reuses EP chart data, larger viewport */
+function buildPLChart(){
+  const svg=document.getElementById('pl-chart-ep');
+  if(!svg)return;
+  const W=600,H=200,PAD={t:20,r:10,b:28,l:44};
+  const cW=W-PAD.l-PAD.r,cH=H-PAD.t-PAD.b;
+  const d=dark();
+  const gridCol=d?'rgba(255,255,255,.04)':'rgba(0,0,0,.04)';
+  const textCol=d?'#4a6480':'#8fa5ba';
+  const blueCol=d?'#38bdf8':'#0284c7';
+  const redCol=d?'#fb7185':'#e11d48';
+  const AL=8;
+  const MO=['Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar*','Apr*','May*','Jun*'];
+  const ebit=[58,72,80,64,70,78,68,75,72,68,82,88].map(v=>v*1000);
+  const np=[38,52,60,44,50,58,48,-166,52,44,60,68].map(v=>v*1000);
+  const maxV=Math.max(...ebit,...np)*1.15;
+  const minV=Math.min(...np)*1.15;
+  const yS=v=>PAD.t+(1-(v-minV)/(maxV-minV))*cH;
+  const xS=i=>PAD.l+(i/(MO.length-1))*cW;
+  let html='';
+  [-150000,0,50000,80000].forEach(val=>{
+    const y=yS(val);if(y<PAD.t-5||y>H-PAD.b+5)return;
+    html+=`<line x1="${PAD.l}" y1="${y}" x2="${W-PAD.r}" y2="${y}" stroke="${gridCol}" stroke-width="1"/>`;
+    html+=`<text x="${PAD.l-6}" y="${y+4}" text-anchor="end" font-family="DM Mono,monospace" font-size="8.5" fill="${textCol}">${val<0?'–':''}$${Math.abs(val/1000)}k</text>`;
+  });
+  const zy=yS(0);
+  html+=`<line x1="${PAD.l}" y1="${zy}" x2="${W-PAD.r}" y2="${zy}" stroke="${d?'rgba(244,63,94,.4)':'rgba(225,29,72,.3)'}" stroke-width="1" stroke-dasharray="4,3"/>`;
+  const uid='plep'+Date.now();
+  html+=`<defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${blueCol}" stop-opacity="${d?.22:.14}"/><stop offset="100%" stop-color="${blueCol}" stop-opacity="${d?.02:.01}"/></linearGradient></defs>`;
+  const ebitActual=ebit.slice(0,AL).map((v,i)=>(i===0?'M':'L')+xS(i)+','+yS(v)).join(' ');
+  const ebitForecast=ebit.slice(AL-1).map((v,i)=>(i===0?'M':'L')+xS(AL-1+i)+','+yS(v)).join(' ');
+  const areaPath=ebitActual+` L${xS(AL-1)},${zy} L${xS(0)},${zy} Z`;
+  html+=`<path d="${areaPath}" fill="url(#${uid})"/>`;
+  html+=`<path d="${ebitActual}" fill="none" stroke="${blueCol}" stroke-width="2" stroke-linecap="round"/>`;
+  html+=`<path d="${ebitForecast}" fill="none" stroke="${blueCol}" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4,3" opacity=".5"/>`;
+  const npActual=np.slice(0,AL).map((v,i)=>(i===0?'M':'L')+xS(i)+','+yS(v)).join(' ');
+  const npForecast=np.slice(AL-1).map((v,i)=>(i===0?'M':'L')+xS(AL-1+i)+','+yS(v)).join(' ');
+  html+=`<path d="${npActual}" fill="none" stroke="${d?'rgba(255,255,255,.4)':'rgba(0,0,0,.35)'}" stroke-width="1.5" stroke-linecap="round"/>`;
+  html+=`<path d="${npForecast}" fill="none" stroke="${d?'rgba(255,255,255,.2)':'rgba(0,0,0,.2)'}" stroke-width="1.2" stroke-linecap="round" stroke-dasharray="4,3"/>`;
+  ebit.slice(0,AL).forEach((v,i)=>{html+=`<circle cx="${xS(i)}" cy="${yS(v)}" r="${i===7?4:2.5}" fill="${i===7?redCol:blueCol}"/>`;});
+  np.slice(0,AL).forEach((v,i)=>{html+=`<circle cx="${xS(i)}" cy="${yS(v)}" r="${i===7?5:2.5}" fill="${v<0?redCol:(d?'rgba(255,255,255,.5)':'rgba(0,0,0,.5)'):redCol}" />`;});
+  html+=`<text x="${xS(7)}" y="${yS(np[7])+14}" text-anchor="middle" font-family="Inter,sans-serif" font-size="8" fill="${redCol}">–$165k</text>`;
+  MO.forEach((m,i)=>{html+=`<text x="${xS(i)}" y="${H-PAD.b+14}" text-anchor="middle" font-family="DM Mono,monospace" font-size="8.5" fill="${i<AL?textCol:d?'rgba(255,255,255,.18)':'rgba(0,0,0,.18)'}">${m}</text>`;});
+  html+=`<line x1="${PAD.l}" y1="8" x2="${PAD.l+12}" y2="8" stroke="${blueCol}" stroke-width="1.8"/><text x="${PAD.l+15}" y="12" font-family="Inter,sans-serif" font-size="8.5" fill="${textCol}">EBIT</text>`;
+  svg.innerHTML=html;
+}
+
+/* Cashflow page — monthly table render */
+function buildCFTable(){
+  const tbody=document.getElementById('cf-table-body');
+  if(!tbody)return;
+  const rows=[
+    ['Aug 25','$248k','$195k','$53k',false],
+    ['Sep 25','$312k','$218k','$94k',false],
+    ['Oct 25','$275k','$201k','$74k',false],
+    ['Nov 25','$290k','$225k','$65k',false],
+    ['Dec 25','$320k','$248k','$72k',false],
+    ['Jan 26','$285k','$220k','$65k',false],
+    ['Feb 26','$240k','$405k','–$165k',false],
+    ['Mar 26','$195k','$185k','$10k',true],
+    ['Apr 26','$185k','$180k','$5k',true],
+    ['May 26','$210k','$195k','$15k',true],
+    ['Jun 26','$195k','$185k','$10k',true],
+    ['Jul 26','$220k','$200k','$20k',true],
+  ];
+  let cumulative=0;
+  const parse=s=>parseInt(s.replace(/[$k–,]/g,''))*(s.includes('–')?-1:1)*1000;
+  tbody.innerHTML=rows.map(([m,ci,co,net,fcst])=>{
+    const n=parse(net);
+    cumulative+=n;
+    const cumStr=(cumulative>=0?'+$':'–$')+Math.abs(Math.round(cumulative/1000))+'k';
+    const netCol=net.includes('–')?'var(--red-b)':'rgba(255,255,255,.55)';
+    const cumCol=cumulative>=0?'rgba(255,255,255,.55)':'var(--red-b)';
+    const op=fcst?'opacity:.65':'';
+    return `<tr style="border-bottom:1px solid var(--b0)">
+      <td style="padding:7px 8px 7px 0;color:var(--t1);${op}">${m}${fcst?' <span style="font-size:7px;color:var(--t3)">(fcst)</span>':''}</td>
+      <td style="text-align:right;padding:7px 8px;font-family:var(--m);${op}">${ci}</td>
+      <td style="text-align:right;padding:7px 8px;font-family:var(--m);${op}">(${co})</td>
+      <td style="text-align:right;padding:7px 8px;font-family:var(--m);color:${netCol};${op}">${net}</td>
+      <td style="text-align:right;padding:7px 0;font-family:var(--m);color:${cumCol};${op}">${cumStr}</td>
+    </tr>`;
+  }).join('');
+}
+
+/* Cashflow page chart */
+function buildCFChart(){
+  const svg=document.getElementById('cf-chart-gp');
+  if(!svg)return;
+  buildGPChart(); /* reuse same function — GP chart data matches cashflow story */
+}
+
+/* Markets page — large EYCI sparkline */
+function buildMktSparkLg(){
+  const svg=document.getElementById('mkt-spark-lg');
+  if(!svg)return;
+  const col=dark()?'#38bdf8':'#0284c7';
+  const W=600,H=120,PAD=4;
+  const data=EYCI_30D;
+  const max=Math.max(...data),min=Math.min(...data),rng=max-min||1;
+  const pts=data.map((v,i)=>[PAD+(i/(data.length-1))*(W-PAD*2),H-PAD-((v-min)/rng)*(H-PAD*2)]);
+  const ptStr=pts.map(p=>p.join(',')).join(' ');
+  const lp=pts[pts.length-1];
+  const fillPts=`${pts[0][0]},${H} ${ptStr} ${lp[0]},${H}`;
+  const uid='mktsp'+Date.now();
+  const dark_=dark();
+  svg.innerHTML=`
+    <defs><linearGradient id="${uid}" x1="0" y1="0" x2="0" y2="1" gradientUnits="objectBoundingBox">
+      <stop offset="0%" stop-color="${col}" stop-opacity="${dark_?.3:.18}"/>
+      <stop offset="100%" stop-color="${col}" stop-opacity="${dark_?.02:.01}"/>
+    </linearGradient></defs>
+    <polygon points="${fillPts}" fill="url(#${uid})"/>
+    <polyline points="${ptStr}" fill="none" stroke="${col}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="${lp[0]}" cy="${lp[1]}" r="4" fill="${col}"/>
+    <circle cx="${lp[0]}" cy="${lp[1]}" r="7" fill="${col}" opacity=".2"/>
+  `;
+}
+
+/* Weather page — populate the 3-day cards + hero KPIs */
+function buildWeatherPage(){
+  const container=document.getElementById('wb-weather');
+  /* Reuse data already fetched by fetchWeather() which populates sb-weather */
+  /* Fetch fresh data for the page specifically */
+  fetch('https://api.open-meteo.com/v1/forecast?latitude=-31.464&longitude=151.113&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_sum&timezone=Australia%2FSydney&forecast_days=3')
+    .then(r=>r.json())
+    .then(d=>{
+      const days=['Today','Tomorrow','Day +2'];
+      const icons={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌧',55:'🌧',61:'🌧',63:'🌧',65:'🌧',80:'🌦',81:'🌧',82:'⛈️',95:'⛈️'};
+      const el3=document.getElementById('wx-3day');
+      if(el3){
+        el3.innerHTML=days.map((nm,i)=>{
+          const code=d.daily.weathercode[i]||0;
+          const hi=Math.round(d.daily.temperature_2m_max[i]||20);
+          const lo=Math.round(d.daily.temperature_2m_min[i]||10);
+          const rain=(d.daily.precipitation_sum[i]||0);
+          const ic=icons[code]||'⛅';
+          const rainCol=rain>5?'var(--blue-b)':rain>0?'var(--t2)':'var(--t3)';
+          return `<div style="padding:20px;background:var(--s3);border-radius:12px;border:1px solid var(--b0);text-align:center">
+            <div style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px">${nm}</div>
+            <div style="font-size:40px;margin-bottom:10px">${ic}</div>
+            <div style="font-family:var(--m);font-size:20px;color:var(--t0);margin-bottom:4px">${hi}°<span style="color:var(--t2);font-size:15px">/${lo}°</span></div>
+            <div style="font-size:11px;color:${rainCol};margin-top:4px">${rain>0?rain.toFixed(1)+'mm rain':'No rain'}</div>
+          </div>`;
+        }).join('');
+      }
+      /* Update hero KPIs */
+      const hi=Math.round(d.daily.temperature_2m_max[0]||'–');
+      const lo=Math.round(d.daily.temperature_2m_min[0]||'–');
+      const rain=(d.daily.precipitation_sum[0]||0);
+      const kHi=document.getElementById('wx-today-hi');if(kHi)kHi.textContent=hi+'°';
+      const kLo=document.getElementById('wx-today-lo');if(kLo)kLo.textContent=lo+'°';
+      const kRain=document.getElementById('wx-today-rain');if(kRain)kRain.textContent=rain>0?rain.toFixed(1)+'mm':'0mm';
+    })
+    .catch(()=>{});
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   DECISION JOURNAL
+   — Persistent operational log stored in localStorage
+   — Timestamps every entry, supports delete, shows count
+══════════════════════════════════════════════════════════════════ */
+const JOURNAL_KEY = 'bgc-journal-v1';
+
+function journalLoad() {
+  try { return JSON.parse(localStorage.getItem(JOURNAL_KEY)) || []; }
+  catch { return []; }
+}
+
+function journalSave(entries) {
+  localStorage.setItem(JOURNAL_KEY, JSON.stringify(entries));
+}
+
+function addJournalEntry() {
+  const inp = document.getElementById('journal-input');
+  if (!inp) return;
+  const text = inp.value.trim();
+  if (!text) return;
+
+  const entries = journalLoad();
+  const entry = {
+    id: Date.now(),
+    text,
+    ts: new Date().toLocaleString('en-AU', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit',
+      timeZone: 'Australia/Sydney'
+    })
+  };
+  entries.unshift(entry); // newest first
+  journalSave(entries);
+  inp.value = '';
+  renderJournal();
+  showToast('📝', 'Entry logged', text.slice(0, 60) + (text.length > 60 ? '…' : ''), 'blue');
+}
+
+function deleteJournalEntry(id) {
+  const entries = journalLoad().filter(e => e.id !== id);
+  journalSave(entries);
+  renderJournal();
+}
+
+function renderJournal() {
+  const feed = document.getElementById('journal-feed');
+  const empty = document.getElementById('journal-empty');
+  if (!feed) return;
+  const entries = journalLoad();
+  if (!entries.length) {
+    if (empty) empty.style.display = 'block';
+    feed.querySelectorAll('.journal-entry').forEach(el => el.remove());
+    return;
+  }
+  if (empty) empty.style.display = 'none';
+  // Remove existing entries
+  feed.querySelectorAll('.journal-entry').forEach(el => el.remove());
+  // Render fresh
+  entries.forEach(entry => {
+    const div = document.createElement('div');
+    div.className = 'journal-entry';
+    div.innerHTML = `
+      <span class="journal-ts">${entry.ts}</span>
+      <span class="journal-text">${entry.text}</span>
+      <span class="journal-del" onclick="deleteJournalEntry(${entry.id})" title="Delete">×</span>
+    `;
+    feed.appendChild(div);
+  });
+}
+
+// Init on load
+renderJournal();
+
+
+/* ══════════════════════════════════════════════════════════════════
+   PRICE ALERT SYSTEM
+   — Ryan sets a target price (e.g. 920¢)
+   — Dashboard polls live EYCI every 5 min (via fetchMLA)
+   — When EYCI crosses threshold: browser notification + toast
+   — Alert line drawn on hero sparkline
+══════════════════════════════════════════════════════════════════ */
+let alertArmed = false;
+let alertPrice = 920;
+let alertFired = false;
+let notifPermission = false;
+
+async function requestNotifPermission() {
+  if (!('Notification' in window)) return false;
+  if (Notification.permission === 'granted') { notifPermission = true; return true; }
+  if (Notification.permission !== 'denied') {
+    const perm = await Notification.requestPermission();
+    notifPermission = perm === 'granted';
+    return notifPermission;
+  }
+  return false;
+}
+
+function setAlert() {
+  const inp = document.getElementById('alert-price');
+  const btn = document.getElementById('alert-arm-btn');
+  const statusEl = document.getElementById('alert-status');
+  const bar = document.getElementById('alert-bar');
+  if (!inp) return;
+
+  alertPrice = parseFloat(inp.value) || 920;
+
+  if (alertArmed) {
+    // Disarm
+    alertArmed = false;
+    alertFired = false;
+    if (btn) btn.textContent = 'Arm Alert';
+    if (statusEl) { statusEl.textContent = 'Disarmed'; statusEl.className = 'alert-status'; }
+    if (bar) bar.classList.remove('alert-active');
+    drawHeroSpark(); // redraw without alert line
+  } else {
+    // Arm
+    requestNotifPermission().then(() => {
+      alertArmed = true;
+      alertFired = false;
+      if (btn) btn.textContent = 'Disarm';
+      if (statusEl) {
+        statusEl.textContent = `Armed — notify at ${alertPrice}¢`;
+        statusEl.className = 'alert-status armed';
+      }
+      if (bar) bar.classList.add('alert-active');
+      drawHeroSpark(); // redraw with alert line
+      showToast('🔔', 'Price alert armed', `Will notify when EYCI reaches ${alertPrice}¢`, 'blue');
+    });
+  }
+}
+
+function checkPriceAlert(currentPrice) {
+  if (!alertArmed || alertFired) return;
+  if (currentPrice >= alertPrice) {
+    alertFired = true;
+    const statusEl = document.getElementById('alert-status');
+    if (statusEl) { statusEl.textContent = `🔥 Fired at ${currentPrice}¢!`; statusEl.className = 'alert-status fired'; }
+    // Toast
+    showToast('🔔', `EYCI Alert — ${currentPrice}¢`, `Your target of ${alertPrice}¢ has been reached. Sell window open.`, 'green');
+    // Browser notification
+    if (notifPermission && Notification.permission === 'granted') {
+      try {
+        new Notification('Buringal — Price Alert', {
+          body: `EYCI is now ${currentPrice}¢ — above your ${alertPrice}¢ target. Sell window open.`,
+          icon: '/Dashboard/favicon.ico'
+        });
+      } catch(e) {}
+    }
+  }
+}
+
+/* Override drawHeroSpark to also draw alert line */
+(function(){
+  const _realSpark = drawHeroSpark;
+  window.drawHeroSpark = function() {
+    _realSpark();
+  // Draw alert trigger line if armed
+  if (!alertArmed) return;
+  const svg = document.getElementById('hero-spark');
+  if (!svg) return;
+  const W = 260, H = 36, PAD = 2;
+  const max = Math.max(...EYCI_30D), min = Math.min(...EYCI_30D), rng = max - min || 1;
+  const y = H - PAD - ((alertPrice - min) / rng) * (H - PAD * 2);
+  if (y < 0 || y > H) return; // out of range
+  const col = dark() ? '#38bdf8' : '#0284c7';
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', PAD); line.setAttribute('y1', y);
+  line.setAttribute('x2', W - PAD); line.setAttribute('y2', y);
+  line.setAttribute('stroke', col); line.setAttribute('stroke-width', '1');
+  line.setAttribute('stroke-dasharray', '3,2'); line.setAttribute('opacity', '.7');
+  svg.appendChild(line);
+  const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+  label.setAttribute('x', W - PAD - 2); label.setAttribute('y', y - 3);
+  label.setAttribute('text-anchor', 'end');
+  label.setAttribute('font-family', 'DM Mono,monospace'); label.setAttribute('font-size', '7');
+  label.setAttribute('fill', col); label.setAttribute('opacity', '.8');
+  label.textContent = alertPrice + '¢ target';
+  svg.appendChild(label);
+  };
+})();
+
+
+/* ══════════════════════════════════════════════════════════════════
+   TOAST NOTIFICATION SYSTEM
+   — showToast(icon, title, message, type)
+   — types: 'blue' | 'green' | 'red'
+   — Auto-dismisses after 5s, click to dismiss early
+══════════════════════════════════════════════════════════════════ */
+function showToast(icon, title, message, type = 'blue') {
+  const container = document.getElementById('toast-container');
+  if (!container) return;
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.innerHTML = `
+    <span class="toast-icon">${icon}</span>
+    <div style="flex:1">
+      <div class="toast-title">${title}</div>
+      <div class="toast-msg">${message}</div>
+    </div>
+    <span class="toast-close" onclick="this.closest('.toast').remove()">×</span>
+  `;
+  toast.onclick = () => toast.remove();
+  container.appendChild(toast);
+  setTimeout(() => {
+    if (toast.parentElement) {
+      toast.style.animation = 'toastOut .3s ease forwards';
+      setTimeout(() => toast.remove(), 300);
+    }
+  }, 5000);
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   HERD INVENTORY
+   — Editable table: class, count, weight, target price, sale date
+   — Revenue auto-calculated using dress %
+   — Persisted to localStorage
+   — CSV export
+══════════════════════════════════════════════════════════════════ */
+const HERD_KEY = 'bgc-herd-v1';
+
+const DEFAULT_HERD = [
+  { id: 1, cls: 'Yearling Steers',   count: 380, weight: 280, price: 897, date: 'Apr 2026' },
+  { id: 2, cls: 'Feeder Steers',     count: 210, weight: 380, price: 498, date: 'Mar 2026' },
+  { id: 3, cls: 'Cull Cows',         count: 85,  weight: 480, price: 374, date: 'Apr 2026' },
+  { id: 4, cls: 'Weaner Heifers',    count: 160, weight: 180, price: 450, date: 'Jun 2026' },
+  { id: 5, cls: 'Angus Bulls',       count: 18,  weight: 900, price: 600, date: 'N/A' },
+  { id: 6, cls: 'Breeding Cows',     count: 620, weight: 520, price: 0,   date: 'Retain' },
+];
+
+function herdLoad() {
+  try { return JSON.parse(localStorage.getItem(HERD_KEY)) || DEFAULT_HERD; }
+  catch { return DEFAULT_HERD; }
+}
+
+function herdSave(data) {
+  localStorage.setItem(HERD_KEY, JSON.stringify(data));
+}
+
+function herdRevenue(row) {
+  // Revenue = count × weight (kg lwt) × dress% × price (¢/kg cwt) / 100
+  if (!row.price || row.date === 'Retain') return 0;
+  return Math.round(row.count * row.weight * DRESS_PCT * (row.price / 100));
+}
+
+function buildHerd() {
+  const tbody = document.getElementById('herd-body');
+  const tfoot = document.getElementById('herd-total');
+  if (!tbody) return;
+  const data = herdLoad();
+
+  tbody.innerHTML = data.map(row => {
+    const rev = herdRevenue(row);
+    const revStr = rev > 0 ? '$' + Math.round(rev / 1000) + 'k' : '—';
+    return `<tr>
+      <td><input class="herd-edit" value="${row.cls}" onblur="herdEdit(${row.id},'cls',this.value)" style="width:140px"/></td>
+      <td><input class="herd-edit" value="${row.count}" type="number" onblur="herdEdit(${row.id},'count',+this.value)"/></td>
+      <td><input class="herd-edit" value="${row.weight}" type="number" onblur="herdEdit(${row.id},'weight',+this.value)"/></td>
+      <td><input class="herd-edit" value="${row.price}" type="number" onblur="herdEdit(${row.id},'price',+this.value)"/></td>
+      <td><input class="herd-edit" value="${row.date}" onblur="herdEdit(${row.id},'date',this.value)" style="width:80px"/></td>
+      <td style="font-family:var(--m);font-size:12px;color:${rev>0?'rgba(255,255,255,.55)':'var(--t3)'};">${revStr}</td>
+      <td><button onclick="herdDeleteRow(${row.id})" style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:14px;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--red-b)'" onmouseout="this.style.color='var(--t3)'">×</button></td>
+    </tr>`;
+  }).join('');
+
+  // Totals row
+  const totalCount = data.reduce((s, r) => s + r.count, 0);
+  const totalRev = data.reduce((s, r) => s + herdRevenue(r), 0);
+  if (tfoot) {
+    tfoot.innerHTML = `
+      <td style="color:var(--t0);font-size:11px">TOTAL</td>
+      <td style="font-family:var(--m);font-size:12px;color:var(--t0)">${totalCount.toLocaleString()} hd</td>
+      <td></td><td></td><td></td>
+      <td style="font-family:var(--m);font-size:13px;color:var(--blue-b)">$${Math.round(totalRev/1000)}k potential</td>
+      <td></td>
+    `;
+  }
+  // Sync DSE display (rough: 1 adult = 1 DSE)
+  const dseEl = document.getElementById('hs-dse');
+  if (dseEl) dseEl.textContent = totalCount.toLocaleString();
+}
+
+function herdEdit(id, field, value) {
+  const data = herdLoad();
+  const row = data.find(r => r.id === id);
+  if (row) { row[field] = value; herdSave(data); buildHerd(); }
+}
+
+function herdDeleteRow(id) {
+  const data = herdLoad().filter(r => r.id !== id);
+  herdSave(data); buildHerd();
+  showToast('🐄', 'Row removed', 'Herd inventory updated', 'blue');
+}
+
+function addHerdClass() {
+  const data = herdLoad();
+  const newId = Math.max(...data.map(r => r.id), 0) + 1;
+  data.push({ id: newId, cls: 'New Class', count: 0, weight: 300, price: 897, date: 'TBC' });
+  herdSave(data); buildHerd();
+}
+
+function exportHerdCSV() {
+  const data = herdLoad();
+  const rows = [
+    ['Class', 'Count (head)', 'Est Weight (kg)', 'Target Price (¢)', 'Sale Date', 'Est Revenue ($)'],
+    ...data.map(r => [r.cls, r.count, r.weight, r.price, r.date, herdRevenue(r)])
+  ];
+  downloadCSV(rows, 'buringal_herd_inventory.csv');
+  showToast('⬇', 'CSV exported', 'buringal_herd_inventory.csv', 'blue');
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   CSV EXPORT UTILITY
+   — Works on any <table> element or a data array
+══════════════════════════════════════════════════════════════════ */
+function downloadCSV(rows, filename) {
+  const csv = rows.map(row =>
+    row.map(cell => {
+      const s = String(cell).replace(/"/g, '""');
+      return /[,"\n]/.test(s) ? `"${s}"` : s;
+    }).join(',')
+  ).join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportTableCSV(tableId, filename) {
+  const table = document.getElementById(tableId);
+  if (!table) return;
+  const rows = Array.from(table.querySelectorAll('tr')).map(tr =>
+    Array.from(tr.querySelectorAll('th,td')).map(td => td.innerText.trim())
+  );
+  downloadCSV(rows, filename);
+  showToast('⬇', 'CSV exported', filename, 'blue');
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   NAB COVENANT SIMULATOR
+   — Interactive sliders: head count, sale price, months retained
+   — Real-time IC, LVR, debt service recalculation
+   — Shows exactly which covenants breach/pass after the sale
+══════════════════════════════════════════════════════════════════ */
+function runSim() {
+  const headEl   = document.getElementById('sim-head');
+  const priceEl  = document.getElementById('sim-price');
+  const monthsEl = document.getElementById('sim-months');
+  const results  = document.getElementById('sim-results');
+  const badge    = document.getElementById('sim-ic-badge');
+  if (!headEl || !results) return;
+
+  const head   = +headEl.value;
+  const price  = +priceEl.value;
+  const months = +monthsEl.value;
+
+  // Update display values
+  const hvEl = document.getElementById('sim-head-v');   if (hvEl) hvEl.textContent = head + ' hd';
+  const pvEl = document.getElementById('sim-price-v');  if (pvEl) pvEl.textContent = price + '¢';
+  const mvEl = document.getElementById('sim-months-v'); if (mvEl) mvEl.textContent = months + ' mo';
+
+  // --- Calculations ---
+  const saleRev     = Math.round(head * AVG_LWT * DRESS_PCT * (price / 100));
+  const annualRev   = saleRev * (12 / Math.max(months, 1));
+  const newLoanBal  = Math.max(0, LOAN_BAL - saleRev * 0.7); // assume 70% goes to debt
+  const annualInt   = newLoanBal * NAB_RATE;
+  const newEBIT     = BASE_EBIT + saleRev * 0.65; // 65% of sale proceeds boost EBIT
+  const newIC       = annualInt > 0 ? newEBIT / annualInt : 99;
+  const newLVR      = (newLoanBal / 32780000) * 100; // assets $32.78M
+  const debtService = newLoanBal / BASE_EBIT;
+
+  const icOk  = newIC  >= 1.25;
+  const lvrOk = newLVR <= 65;
+  const dsOk  = newIC  >= 1.25;
+
+  if (badge) {
+    badge.textContent = `IC ${newIC.toFixed(2)}x after sale`;
+    badge.className = 'bdg ' + (icOk ? 'bdg-ok' : 'bdg-r');
+  }
+
+  const row = (label, before, after, pass, threshold) => {
+    const col = pass ? 'rgba(255,255,255,.55)' : 'var(--red-b)';
+    const arrow = after > before ? '↑' : after < before ? '↓' : '→';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:var(--s3);border-radius:8px;border:1px solid ${pass ? 'var(--b1)' : 'rgba(244,63,94,.25)'}">
+      <div>
+        <div style="font-size:10px;font-weight:600;color:var(--t1)">${label}</div>
+        <div style="font-size:8.5px;color:var(--t3);margin-top:2px">Threshold: ${threshold}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-family:var(--m);font-size:13px;font-weight:500;color:${col}">${after} <span style="font-size:10px;opacity:.6">${arrow}</span></div>
+        <div style="font-size:8.5px;color:var(--t3)">was ${before}</div>
+      </div>
+      <div style="margin-left:10px;font-size:14px">${pass ? '✅' : '❌'}</div>
+    </div>`;
+  };
+
+  results.innerHTML = [
+    row('Interest Cover', '0.06x', newIC.toFixed(2) + 'x', icOk, '> 1.25x'),
+    row('LVR', '10.8%', newLVR.toFixed(1) + '%', lvrOk, '< 65%'),
+    row('Sale Revenue', '—', '$' + Math.round(saleRev / 1000) + 'k', true, 'N/A'),
+    row('Remaining Debt', '$3.10M', '$' + (newLoanBal / 1e6).toFixed(2) + 'M', true, 'N/A'),
+  ].join('');
+
+  // Show recommendation
+  const recDiv = document.createElement('div');
+  recDiv.style.cssText = `padding:10px 12px;border-radius:8px;font-size:10px;line-height:1.65;border:1px solid;`;
+  if (icOk) {
+    recDiv.style.background = 'rgba(34,197,94,.06)';
+    recDiv.style.borderColor = 'rgba(34,197,94,.2)';
+    recDiv.innerHTML = `<strong style="color:#22c55e">✅ Covenant met</strong> — Selling ${head} head at ${price}¢ brings IC to ${newIC.toFixed(2)}x, clearing the NAB minimum of 1.25x. Revenue of $${Math.round(saleRev/1000)}k addresses the critical breach.`;
+  } else {
+    recDiv.style.background = 'rgba(244,63,94,.06)';
+    recDiv.style.borderColor = 'rgba(244,63,94,.2)';
+    recDiv.innerHTML = `<strong style="color:var(--red-b)">❌ Still below threshold</strong> — IC would be ${newIC.toFixed(2)}x after this sale. Need to sell more head, achieve higher prices, or reduce debt further to clear the 1.25x minimum.`;
+  }
+  results.appendChild(recDiv);
+}
+
+// Initialise simulator on load
+setTimeout(runSim, 100);
+
+
+/* ══════════════════════════════════════════════════════════════════
+   RAINFALL HISTORY CHART
+   — Fetches BOM rainfall via Open-Meteo historical API
+   — Nundle station: lat -31.464, lon 151.113
+   — Shows 12 months actual vs long-term average
+   — Bars colour-coded: blue=above avg, red=below avg, grey=lta
+══════════════════════════════════════════════════════════════════ */
+async function fetchRainfallHistory() {
+  const barsEl    = document.getElementById('rf-bars');
+  const labelsEl  = document.getElementById('rf-labels');
+  const summaryEl = document.getElementById('rf-summary');
+  const ytdValEl  = document.getElementById('rf-ytd-val');
+  const ytdVsEl   = document.getElementById('rf-ytd-vs-lta');
+  const badgeEl   = document.getElementById('rf-ytd-badge');
+  if (!barsEl) return;
+
+  // Long-term average rainfall for Nundle (mm/month — BOM station 055024)
+  const LTA = [72, 62, 54, 48, 50, 52, 48, 52, 48, 56, 64, 74]; // Jan–Dec
+
+  try {
+    // Fetch last 12 months of daily rainfall, aggregate to monthly
+    const endDate   = new Date();
+    const startDate = new Date(endDate);
+    startDate.setMonth(startDate.getMonth() - 12);
+
+    const fmt = d => d.toISOString().split('T')[0];
+    const url = `https://api.open-meteo.com/v1/archive?latitude=-31.464&longitude=151.113&start_date=${fmt(startDate)}&end_date=${fmt(endDate)}&daily=precipitation_sum&timezone=Australia%2FSydney`;
+
+    const res = await fetch(url, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error(res.status);
+    const data = await res.json();
+
+    // Aggregate daily to monthly
+    const monthly = {};
+    (data.daily.time || []).forEach((dateStr, i) => {
+      const mm = dateStr.slice(0, 7); // YYYY-MM
+      monthly[mm] = (monthly[mm] || 0) + (data.daily.precipitation_sum[i] || 0);
+    });
+
+    const months = Object.keys(monthly).sort().slice(-12);
+    const actuals = months.map(m => Math.round(monthly[m] || 0));
+    const ltas    = months.map(m => LTA[parseInt(m.slice(5, 7)) - 1]);
+
+    const maxVal = Math.max(...actuals, ...ltas, 1);
+
+    // Build bars
+    barsEl.innerHTML = '';
+    labelsEl.innerHTML = '';
+    months.forEach((m, i) => {
+      const pct    = (actuals[i] / maxVal) * 100;
+      const ltaPct = (ltas[i] / maxVal) * 100;
+      const above  = actuals[i] >= ltas[i];
+      const col    = above ? 'above' : 'below';
+      const label  = new Date(m + '-01').toLocaleString('en-AU', { month: 'short' });
+
+      // Actual bar + LTA ghost bar
+      const wrap = document.createElement('div');
+      wrap.style.cssText = 'flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;position:relative;';
+
+      // LTA bar (ghost)
+      const ltaBar = document.createElement('div');
+      ltaBar.className = 'rf-bar lta';
+      ltaBar.style.height = ltaPct + '%';
+      ltaBar.style.width = '100%';
+      ltaBar.setAttribute('data-tip', `${label} LTA: ${ltas[i]}mm`);
+
+      // Actual bar (on top, slightly transparent)
+      const actBar = document.createElement('div');
+      actBar.className = `rf-bar ${col}`;
+      actBar.style.cssText = `height:${pct}%;width:100%;position:absolute;bottom:0;left:0;`;
+      actBar.setAttribute('data-tip', `${label}: ${actuals[i]}mm (LTA ${ltas[i]}mm)`);
+
+      wrap.appendChild(ltaBar);
+      wrap.appendChild(actBar);
+      barsEl.appendChild(wrap);
+
+      const lbl = document.createElement('div');
+      lbl.className = 'rf-lbl';
+      lbl.textContent = label;
+      labelsEl.appendChild(lbl);
+    });
+
+    // YTD summary
+    const ytdTotal  = actuals.reduce((a, b) => a + b, 0);
+    const ltaTotal  = ltas.reduce((a, b) => a + b, 0);
+    const diff      = ytdTotal - ltaTotal;
+    const diffStr   = (diff >= 0 ? '+' : '') + diff + 'mm vs LTA';
+
+    if (ytdValEl)  ytdValEl.textContent  = ytdTotal + 'mm';
+    if (ytdVsEl)   ytdVsEl.textContent   = diffStr;
+    if (badgeEl)   { badgeEl.textContent  = 'YTD ' + ytdTotal + 'mm'; badgeEl.className = diff >= 0 ? 'bdg bdg-b' : 'bdg bdg-r'; }
+    if (summaryEl) summaryEl.textContent  = `12-month total: ${ytdTotal}mm · Long-term avg: ${ltaTotal}mm · ${diffStr} · Nundle −31.464°S`;
+
+  } catch(e) {
+    if (summaryEl) summaryEl.textContent = 'Rainfall data unavailable — check connection';
+    if (badgeEl)   { badgeEl.textContent = 'Offline'; badgeEl.className = 'bdg'; }
+    // Fallback: render simulated data so UI isn't empty
+    const fallback = [62, 44, 58, 35, 42, 48, 51, 39, 44, 52, 48, 67];
+    const LTA = [72, 62, 54, 48, 50, 52, 48, 52, 48, 56, 64, 74];
+    const mos = ['Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec','Jan','Feb','Mar'];
+    const maxV = Math.max(...fallback, ...LTA);
+    barsEl.innerHTML = fallback.map((v, i) => {
+      const p = (v / maxV * 100).toFixed(1);
+      const lt = (LTA[i] / maxV * 100).toFixed(1);
+      const cls = v >= LTA[i] ? 'above' : 'below';
+      return `<div style="flex:1;position:relative"><div class="rf-bar lta" style="height:${lt}%"></div><div class="rf-bar ${cls}" style="height:${p}%;position:absolute;bottom:0;left:0;width:100%" data-tip="${mos[i]}: ${v}mm"></div></div>`;
+    }).join('');
+    labelsEl.innerHTML = mos.map(m => `<div class="rf-lbl">${m}</div>`).join('');
+  }
+}
+
+
+/* ══════════════════════════════════════════════════════════════════
+   HOOK RAINFALL FETCH INTO PASTURE PAGE NAV
+   — Already triggered by nav() → buildWeatherPage alias
+   — Add rainfall fetch when pasture page opens
+══════════════════════════════════════════════════════════════════ */
+/* Extended nav — add page-specific side-effects without recursion */
+const _navExtras = { pasture: ()=>setTimeout(fetchRainfallHistory,100), kpi: ()=>setTimeout(buildHerd,80) };
+/* Patch nav() via the existing dispatch map rather than wrapping */
+const _origNavDispatch = nav;
+/* Override: call original, then run extras */
+(function(){
+  const _real = nav;
+  window.nav = function(page, mobEl) {
+    _real(page, mobEl);
+    if (_navExtras[page]) _navExtras[page]();
+  };
+  // Re-wire sidebar clicks to use updated nav
+  document.querySelectorAll('.sbitem').forEach(i => {
+    i.onclick = function() { window.nav(this.dataset.page || 'overview', null); };
+  });
+})();
+
+
+/* ══════════════════════════════════════════════════════════════════
+   HOOK ALERT CHECK INTO MLA FETCH
+   — Every time live MLA data comes in, check alert
+══════════════════════════════════════════════════════════════════ */
+/* Hook alert check into MLA fetch via patching */
+(function(){
+  const _realMLA = fetchMLA;
+  window.fetchMLA = async function() {
+    await _realMLA();
+    const heroEl = document.getElementById('hero-num');
+    if (heroEl && alertArmed) {
+      const currentPrice = parseFloat(heroEl.textContent.replace(/[¢\s]/g,''));
+      if (!isNaN(currentPrice)) checkPriceAlert(currentPrice);
+    }
+  };
+})();
+
+
+/* ══════════════════════════════════════════════════════════════════
+   KEYBOARD SHORTCUT: J = open journal input focus
+══════════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  if (e.key === 'j' || e.key === 'J') {
+    const inp = document.getElementById('journal-input');
+    if (inp) { nav('overview', null); setTimeout(() => inp.focus(), 60); }
+  }
+});
+
+
+/* ══════════════════════════════════════════════════════════════════
+   WELCOME TOAST on first load
+══════════════════════════════════════════════════════════════════ */
+setTimeout(() => {
+  const seen = localStorage.getItem('bgc-welcomed');
+  if (!seen) {
+    showToast('🐂', 'Buringal Dashboard', 'Press ⌘K for commands · J to log a decision · Set a price alert below the EYCI chart', 'blue');
+    localStorage.setItem('bgc-welcomed', '1');
+  }
+}, 2000);
+
 </script>
 </body>
-</html>
+</html> 
