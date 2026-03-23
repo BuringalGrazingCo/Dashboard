@@ -118,7 +118,7 @@ input{font-family:var(--f)}
 
 /* Grain texture — premium material feel */
 body::before{
-  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.03;
+  content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.012;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)'/%3E%3C/svg%3E");
   background-size:200px
 }
@@ -160,13 +160,12 @@ body::after{
 }
 [data-theme="light"] #topbar{background:rgba(252,250,246,.94)}
 
-/* Topbar scanning line */
+/* Topbar bottom border — clean line, no animation */
 #topbar::after{
   content:'';position:absolute;bottom:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--blue-d) 30%,var(--blue-b) 50%,var(--blue-d) 70%,transparent);
-  background-size:200%;opacity:.45;animation:scan 10s linear infinite
+  background:linear-gradient(90deg,transparent,var(--b2) 20%,var(--b2) 80%,transparent);
+  opacity:.6
 }
-@keyframes scan{to{background-position:-200% 0}}
 
 /* Brand */
 .brand{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-right:auto}
@@ -287,11 +286,7 @@ body::after{
   background:var(--s2);border:1px solid var(--b1);
   border-radius:var(--r10);padding:var(--sp12);position:relative;overflow:hidden
 }
-.sbticker::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1px;
-  background:linear-gradient(90deg,transparent,var(--blue-b),transparent);
-  opacity:.35;animation:scan 5s linear infinite
-}
+.sbticker::before{display:none}
 .sbt-title{
   font-size:7.5px;font-weight:700;color:var(--t3);
   text-transform:uppercase;letter-spacing:.1em;margin-bottom:var(--sp8);
@@ -1706,263 +1701,583 @@ input:focus-visible,
 ═══════════════════════════════════════════════════════ */
 
 /* ── BUSINESS KPI STRIP ────────────────────────────── */
+/* ═══════════════════════════════════════════════════════════
+   OVERVIEW — KPI CARDS + STRATEGIC INTELLIGENCE
+   Bloomberg data density · Linear polish · Zero noise
+   ═══════════════════════════════════════════════════════════ */
+
+/* ── KPI CARD STRIP ─────────────────────────────────────────
+   Horizontal scrolling row of metric cards.
+   Each card: label · value · sparkline · benchmark arc · delta
+   ───────────────────────────────────────────────────────── */
 .bkpi-strip{
-  display:flex;align-items:center;
-  padding:0 28px;
+  display:flex;
+  align-items:stretch;
+  padding:0;
   background:var(--s1);
   border-bottom:1px solid var(--b1);
-  height:44px;
   overflow-x:auto;
-  flex-shrink:0
+  overflow-y:visible;
+  flex-shrink:0;
+  height:auto
 }
 .bkpi-strip::-webkit-scrollbar{height:0}
+
+/* Each KPI is now a full card */
 .bkpi-item{
-  display:flex;flex-direction:column;justify-content:center;
-  padding:0 16px 0 0;
-  flex-shrink:0
+  display:flex;
+  flex-direction:column;
+  padding:14px 20px 12px;
+  border-right:1px solid var(--b1);
+  flex-shrink:0;
+  min-width:148px;
+  position:relative;
+  cursor:default;
+  transition:background var(--fast)
 }
-.bkpi-item.bkpi-market{
-  padding:0 0 0 16px;
-  border-left:1px solid var(--b1)
+.bkpi-item:hover{background:rgba(255,255,255,.015)}
+.bkpi-item:last-child{border-right:none}
+.bkpi-item.bkpi-critical{min-width:168px}
+
+/* Top row: label + status dot */
+.bkpi-top{
+  display:flex;align-items:center;gap:5px;
+  margin-bottom:8px
 }
 .bkpi-lbl{
-  font-size:7.5px;font-weight:700;color:var(--t3);
-  text-transform:uppercase;letter-spacing:.1em;
-  line-height:1;margin-bottom:3px;white-space:nowrap
+  font-size:9px;font-weight:500;
+  color:var(--t3);
+  letter-spacing:.05em;
+  line-height:1;white-space:nowrap;
+  text-transform:uppercase;flex:1
+}
+/* Status dot — red/amber/green */
+.bkpi-status{
+  width:5px;height:5px;border-radius:50%;
+  flex-shrink:0
+}
+.bkpi-status.ok{background:rgba(34,197,94,.7)}
+.bkpi-status.warn{background:rgba(251,191,36,.8)}
+.bkpi-status.crit{background:var(--red-b);box-shadow:0 0 6px rgba(244,63,94,.4)}
+
+/* Middle row: value + sparkline side by side */
+.bkpi-mid{
+  display:flex;align-items:flex-end;gap:8px;
+  margin-bottom:6px
 }
 .bkpi-val{
-  font-family:var(--m);font-size:15px;font-weight:400;
-  color:var(--t0);line-height:1;letter-spacing:-.02em
+  font-family:var(--m);font-size:22px;font-weight:200;
+  line-height:1;letter-spacing:-.04em;
+  color:var(--t0)
 }
-.bkpi-val.warn{color:var(--warn)}
 .bkpi-val.crit{color:var(--red-b)}
+.bkpi-val.warn{color:rgba(251,191,36,.95)}
+.bkpi-val.ok-v{color:rgba(255,255,255,.75)}
 .bkpi-val.blue{color:var(--blue-b)}
-.bkpi-val.ok{color:var(--ok)}
-.bkpi-arrow{
-  font-size:7.5px;font-weight:600;color:var(--t3);
-  line-height:1;margin-top:2px;white-space:nowrap
-}
-.bkpi-arrow.up{color:rgba(255,255,255,.5)}
-.bkpi-arrow.dn{color:var(--red-b)}
-.bkpi-sep{
-  width:1px;height:28px;background:var(--b0);
-  flex-shrink:0;margin:0 16px 0 0
+/* Critical items slightly larger */
+.bkpi-item.bkpi-critical .bkpi-val{font-size:26px}
+
+.bkpi-spark-wrap{
+  flex:1;display:flex;flex-direction:column;
+  align-items:flex-end;padding-bottom:3px
 }
 
-/* ── THREE-COLUMN COMMAND CENTRE ───────────────────── */
+/* Bottom row: benchmark progress + delta */
+.bkpi-bench{
+  display:flex;align-items:center;gap:6px;
+  margin-top:2px
+}
+/* The benchmark track */
+.bkpi-track{
+  flex:1;height:2px;
+  background:rgba(255,255,255,.07);
+  border-radius:1px;overflow:visible;
+  position:relative
+}
+.bkpi-fill{
+  height:100%;border-radius:1px;
+  transition:width 1.2s cubic-bezier(.22,1,.36,1)
+}
+.bkpi-fill.ok{background:rgba(34,197,94,.6)}
+.bkpi-fill.warn{background:rgba(251,191,36,.7)}
+.bkpi-fill.crit{background:rgba(244,63,94,.7)}
+/* Benchmark target tick mark */
+.bkpi-target-tick{
+  position:absolute;top:-3px;
+  width:1.5px;height:8px;
+  background:rgba(255,255,255,.25);
+  border-radius:1px;
+  transform:translateX(-50%)
+}
+
+/* Delta from benchmark */
+.bkpi-delta{
+  font-size:8.5px;font-weight:600;
+  white-space:nowrap;font-family:var(--m);
+  letter-spacing:-.01em
+}
+.bkpi-delta.ok{color:rgba(34,197,94,.7)}
+.bkpi-delta.warn{color:rgba(251,191,36,.7)}
+.bkpi-delta.crit{color:rgba(244,63,94,.7)}
+.bkpi-delta.blue{color:var(--blue-b);opacity:.8}
+
+/* Separator — legacy, now unused but keep for compat */
+.bkpi-sep{display:none}
+.bkpi-arrow{display:none}
+
+/* ── STRATEGIC INTELLIGENCE ─────────────────────────────── */
+.si-panel{background:var(--s0)}
+.si-header{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 28px 14px;
+  border-bottom:1px solid var(--b1)
+}
+.si-title{
+  font-size:12px;font-weight:600;color:var(--t0);
+  letter-spacing:-.01em
+}
+.si-subtitle{font-size:9px;color:var(--t3);margin-top:2px;letter-spacing:.01em}
+.si-badge{display:none}
+.si-refresh-btn{
+  margin-left:auto;display:flex;align-items:center;gap:5px;
+  height:28px;padding:0 12px;border-radius:6px;
+  background:transparent;border:1px solid var(--b1);
+  color:var(--t2);font-size:9px;font-weight:500;
+  cursor:pointer;transition:all var(--fast);letter-spacing:.02em
+}
+.si-refresh-btn:hover{border-color:var(--b2);color:var(--t0);background:var(--s3)}
+.si-refresh-btn:disabled{opacity:.35;cursor:default}
+
+.si-grid{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid var(--b1)
+}
+.si-card{
+  padding:18px 20px;
+  border-right:1px solid var(--b1);
+  position:relative;overflow:hidden;
+  transition:background var(--fast)
+}
+.si-card:hover{background:rgba(255,255,255,.012)}
+.si-card:last-child{border-right:none}
+.si-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px
+}
+.si-card.red::before{background:var(--red);opacity:.7}
+.si-card.amber::before{background:rgba(245,158,11,.8)}
+.si-card.blue::before{background:var(--blue);opacity:.7}
+.si-card.grey::before{background:rgba(255,255,255,.1)}
+.si-card.green::before{background:rgba(34,197,94,.6)}
+
+.si-card-priority{
+  font-size:8px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.14em;margin-bottom:8px;
+  display:flex;align-items:center;gap:5px
+}
+.si-card.red .si-card-priority{color:var(--red-b)}
+.si-card.amber .si-card-priority{color:rgba(245,158,11,.85)}
+.si-card.blue .si-card-priority{color:var(--blue-b)}
+.si-card.grey .si-card-priority{color:var(--t2)}
+.si-card.green .si-card-priority{color:rgba(34,197,94,.8)}
+
+.si-card-icon{font-size:14px;flex-shrink:0}
+.si-card-label{
+  font-size:12px;font-weight:600;color:var(--t0);
+  margin-bottom:8px;line-height:1.3;letter-spacing:-.01em
+}
+.si-card-action{
+  font-size:10.5px;color:var(--t1);line-height:1.65;margin-bottom:8px
+}
+.si-card-rationale{
+  font-size:9.5px;color:var(--t3);line-height:1.55;
+  padding-top:8px;border-top:1px solid var(--b0)
+}
+.si-card-checklist{font-size:8px;font-family:var(--m);color:var(--t3);margin-top:6px}
+
+/* SI card nav link */
+.si-card-link{
+  display:inline-flex;align-items:center;gap:4px;
+  margin-top:8px;font-size:8.5px;font-weight:600;
+  color:var(--blue-b);opacity:.7;cursor:pointer;
+  transition:opacity var(--fast)
+}
+.si-card-link:hover{opacity:1}
+
+.si-loading{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:0;padding:0
+}
+.si-skel-card{padding:18px 20px;border-right:1px solid var(--b1)}
+.si-skel-card:last-child{border-right:none}
+.si-skel-line{
+  height:8px;border-radius:3px;margin-bottom:8px;
+  background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);
+  background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite
+}
+
+.si-bottom{
+  display:grid;grid-template-columns:1fr 360px;
+  border-top:1px solid var(--b1)
+}
+.si-news-col{padding:18px 24px;border-right:1px solid var(--b1)}
+.si-news-title{
+  font-size:9px;font-weight:600;color:var(--t2);
+  text-transform:uppercase;letter-spacing:.08em;
+  display:flex;align-items:center;gap:7px;margin-bottom:12px
+}
+.si-news-dot{
+  width:5px;height:5px;border-radius:50%;
+  background:var(--blue-b);flex-shrink:0;opacity:.8
+}
+.si-news-item{
+  display:flex;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--b0);font-size:10.5px
+}
+.si-news-item:last-child{border-bottom:none}
+.si-news-bullet{width:4px;height:4px;border-radius:50%;flex-shrink:0;margin-top:6px}
+.si-news-bullet.pos{background:rgba(255,255,255,.35)}
+.si-news-bullet.neg{background:rgba(244,63,94,.7)}
+.si-news-bullet.neu{background:var(--blue-b);opacity:.7}
+
+.si-plan-col{padding:18px 20px}
+.si-plan-title{
+  font-size:9px;font-weight:600;color:var(--t2);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px
+}
+.si-plan-item{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:7px 0;border-bottom:1px solid var(--b0);
+  font-size:10px;color:var(--t2);line-height:1.55
+}
+.si-plan-item:last-child{border-bottom:none}
+.si-plan-icon{flex-shrink:0;font-size:10px;margin-top:2px;opacity:.7}
+.si-plan-text strong{color:var(--t1);font-size:10.5px;font-weight:600}
+
+@media(max-width:900px){
+  .bkpi-strip{flex-wrap:nowrap}
+  .si-grid,.si-loading{grid-template-columns:1fr 1fr}
+  .si-bottom{grid-template-columns:1fr}
+  .si-card{padding:14px 16px}
+}
+.hero{display:none}
+
+/* ── COMMAND CENTRE ────────────────────────────────────────
+   Two equal columns. No decorative borders inside cards.
+   Content breathes. Data is the design.
+   ───────────────────────────────────────────────────────── */
 .cmd-centre{
   display:grid;
-  grid-template-columns:260px 1fr 300px;
-  min-height:300px;
-  border-bottom:1px solid var(--b0)
+  grid-template-columns:1fr 1fr;
+  border-bottom:1px solid var(--b1)
 }
 .cmd-col{
-  padding:16px 20px;
-  border-right:1px solid var(--b0);
-  display:flex;flex-direction:column;gap:10px
+  padding:20px 24px;
+  border-right:1px solid var(--b1);
+  display:flex;flex-direction:column;gap:12px
 }
 .cmd-col:last-child{border-right:none}
+
 .cmd-col-head{
-  display:flex;align-items:center;gap:7px;
-  margin-bottom:2px
+  display:flex;align-items:center;gap:8px;
+  padding-bottom:10px;
+  border-bottom:1px solid var(--b0)
 }
 .cmd-col-title{
-  font-size:10px;font-weight:700;color:var(--t1);
-  letter-spacing:.04em;text-transform:uppercase
+  font-size:9px;font-weight:600;color:var(--t2);
+  letter-spacing:.08em;text-transform:uppercase
 }
-.cmd-col-badge{
-  font-size:7.5px;font-weight:700;padding:2px 6px;
-  border-radius:10px;border:1px solid;margin-left:auto
-}
-.bdg-b.cmd-col-badge{background:var(--blue-g);color:var(--blue-b);border-color:var(--blue-r)}
-.bdg-r.cmd-col-badge{background:var(--red-g);color:var(--red-b);border-color:var(--red-r)}
-.cmd-refresh-btn{
-  margin-left:auto;display:flex;align-items:center;gap:4px;
-  height:22px;padding:0 8px;border-radius:5px;
-  background:var(--s3);border:1px solid var(--b0);
-  color:var(--t2);font-size:8.5px;cursor:pointer;
-  transition:all var(--fast)
-}
-.cmd-refresh-btn:hover{border-color:var(--b2);color:var(--t0)}
+/* Remove all col badges — too noisy */
+.cmd-col-badge{display:none}
 
-/* ── MARKETS COL ───────────────────────────────────── */
+/* ── MARKETS COL ────────────────────────────────────────── */
+/* EYCI: the number IS the design */
 .eyci-compact{
-  display:flex;gap:12px;align-items:flex-start;
-  padding:10px 12px;
-  background:var(--s2);border-radius:var(--r8);
-  border:1px solid var(--b1)
+  display:flex;gap:16px;align-items:flex-start;
+  padding:14px 0 10px;
+  border-bottom:1px solid var(--b0)
 }
 .eyci-compact-left{flex:1}
 .eyci-compact-label{
-  font-size:8px;font-weight:700;color:var(--t3);
-  text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px
+  font-size:9px;font-weight:500;color:var(--t3);
+  letter-spacing:.04em;margin-bottom:6px
 }
 .eyci-compact-num{
-  font-family:var(--m);font-size:32px;font-weight:200;
-  color:var(--t0);line-height:1;letter-spacing:-.04em;
-  margin-bottom:3px
+  font-family:var(--m);font-size:44px;font-weight:200;
+  color:var(--t0);line-height:1;letter-spacing:-.05em;
+  margin-bottom:5px
 }
 [data-theme="dark"] .eyci-compact-num{
-  background:linear-gradient(155deg,#fff 0%,#bfdbfe 70%,#93c5fd 100%);
+  background:linear-gradient(155deg,#fff 0%,#bfdbfe 60%,#93c5fd 100%);
   -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
 }
-.eyci-compact-unit{font-size:16px;vertical-align:middle}
+.eyci-compact-unit{font-size:22px;vertical-align:middle;letter-spacing:0}
 .eyci-compact-meta{
-  display:flex;align-items:center;gap:6px;
-  font-size:8.5px
-}
-.eyci-badge-up{
-  color:rgba(255,255,255,.6);font-weight:700
-}
-.eyci-compact-right{flex-shrink:0}
-.syards-compact{
-  background:var(--s2);border-radius:var(--r8);
-  border:1px solid var(--b0);overflow:hidden
-}
-.syc-compact-head{
-  display:flex;align-items:center;gap:6px;
-  padding:6px 10px;border-bottom:1px solid var(--b0)
-}
-.syc-compact-row{
-  display:flex;align-items:center;
-  padding:5px 10px;border-bottom:1px solid var(--b0);
-  cursor:pointer;font-size:10px;color:var(--t1);
-  transition:background var(--fast)
-}
-.syc-compact-row:last-of-type{border-bottom:none}
-.syc-compact-row:hover{background:var(--blue-g);color:var(--t0)}
-.syc-compact-price{
-  font-family:var(--m);font-size:12px;color:var(--t0);
-  margin-left:auto;margin-right:8px
-}
-.syc-compact-chg{font-size:9px;font-weight:700}
-.syc-compact-chg.up{color:rgba(255,255,255,.5)}
-.syc-compact-chg.dn{color:var(--red-b)}
-.syc-compact-hint{
-  padding:4px 10px;font-size:7.5px;color:var(--t3);
-  text-align:center;border-top:1px solid var(--b0)
-}
-.fx-compact{
   display:flex;align-items:center;gap:8px;
-  padding:7px 10px;background:var(--s2);
-  border-radius:var(--r8);border:1px solid var(--b0)
+  font-size:10px;color:var(--t2)
+}
+.eyci-badge-up{color:rgba(255,255,255,.55);font-weight:500}
+.eyci-compact-right{
+  flex-shrink:0;display:flex;flex-direction:column;
+  align-items:flex-end;padding-top:4px;gap:6px
 }
 
-/* ── POSITION COL ──────────────────────────────────── */
+/* Saleyards — clean list, no card chrome */
+.syards-compact{padding:2px 0}
+.syc-compact-head{
+  display:flex;align-items:center;gap:6px;
+  padding:0 0 6px;
+  font-size:9px;font-weight:600;color:var(--t3);
+  letter-spacing:.06em;text-transform:uppercase;
+  border-bottom:1px solid var(--b0);margin-bottom:4px
+}
+.syc-compact-head .bdg{display:none}/* remove Live badge */
+.syc-compact-row{
+  display:flex;align-items:center;
+  padding:5px 0;border-bottom:1px solid var(--b0);
+  cursor:pointer;font-size:11px;color:var(--t2);
+  transition:color var(--fast)
+}
+.syc-compact-row:last-of-type{border-bottom:none}
+.syc-compact-row:hover{color:var(--t0)}
+.syc-compact-price{
+  font-family:var(--m);font-size:13px;font-weight:300;
+  color:var(--t0);margin-left:auto;margin-right:10px;
+  letter-spacing:-.02em
+}
+.syc-compact-chg{font-size:9px;font-weight:600;min-width:32px;text-align:right}
+.syc-compact-chg.up{color:rgba(255,255,255,.45)}
+.syc-compact-chg.dn{color:rgba(244,63,94,.7)}
+.syc-compact-hint{
+  padding:5px 0 0;font-size:9px;color:var(--t3)
+}
+
+/* AUD/USD — single clean row */
+.fx-compact{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 0;
+  border-top:1px solid var(--b0)
+}
+
+/* ── BUSINESS POSITION COL ──────────────────────────────── */
+/* IC alarm — THIS is the unmissable element.
+   Full-bleed red, large number, minimal chrome. */
 .ic-compact{
-  padding:10px 12px;
-  background:linear-gradient(135deg,rgba(244,63,94,.1),rgba(244,63,94,.04));
-  border:1px solid rgba(244,63,94,.25);
-  border-radius:var(--r8);
+  padding:16px;
+  background:linear-gradient(135deg,rgba(244,63,94,.12) 0%,rgba(244,63,94,.05) 100%);
+  border:1px solid rgba(244,63,94,.3);
+  border-radius:10px;
   position:relative;overflow:hidden
 }
-.ic-compact::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:1.5px;
-  background:linear-gradient(90deg,transparent,var(--red),transparent);
-  animation:alarm-scan 3s ease-in-out infinite
+/* Left edge accent — always visible */
+.ic-compact::after{
+  content:'';position:absolute;top:0;left:0;bottom:0;width:3px;
+  background:var(--red);border-radius:10px 0 0 10px
 }
-.ic-compact-header{display:flex;align-items:center;gap:8px}
+/* Remove old top-line animation — too noisy */
+.ic-compact::before{display:none}
+
+.ic-compact-header{display:flex;align-items:center;gap:10px;margin-bottom:10px}
 .ic-compact-icon{
-  width:24px;height:24px;border-radius:6px;flex-shrink:0;
-  background:rgba(244,63,94,.15);border:1px solid rgba(244,63,94,.3);
+  width:28px;height:28px;border-radius:7px;flex-shrink:0;
+  background:rgba(244,63,94,.15);
   display:flex;align-items:center;justify-content:center;
   color:var(--red-b)
 }
-.ic-compact-title{font-size:10px;font-weight:700;color:var(--t0)}
-.ic-compact-sub{font-size:8px;color:rgba(244,63,94,.7);margin-top:1px}
+/* No border on icon — cleaner */
+.ic-compact-title{font-size:11px;font-weight:600;color:var(--t0);letter-spacing:-.01em}
+.ic-compact-sub{font-size:9px;color:rgba(244,63,94,.6);margin-top:2px}
+
+/* THE IC NUMBER — must be unmissable */
 .ic-compact-num{
-  margin-left:auto;font-family:var(--m);font-size:24px;
-  font-weight:200;color:var(--red-b);letter-spacing:-.04em
+  margin-left:auto;
+  font-family:var(--m);font-size:36px;
+  font-weight:200;color:var(--red-b);letter-spacing:-.05em;
+  line-height:1
 }
+
+/* Key metrics — clean 2-col grid, no card chrome */
 .pos-grid{
   display:grid;grid-template-columns:1fr 1fr;
-  gap:6px
+  gap:1px;
+  background:var(--b0);
+  border-radius:8px;overflow:hidden;
+  border:1px solid var(--b0)
 }
 .pos-item{
-  padding:8px 10px;background:var(--s2);
-  border-radius:var(--r8);border:1px solid var(--b0)
-}
-.pos-label{font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:3px}
-.pos-val{font-family:var(--m);font-size:14px;font-weight:400;color:var(--t0);letter-spacing:-.02em}
-.pos-val.red{color:var(--red-b)}
-.pos-val.ok{color:var(--ok)}
-.pos-val.warn{color:var(--warn)}
-
-/* ── STRATEGY COL ──────────────────────────────────── */
-.focus-panel{
-  flex:0 0 auto;
-  background:var(--s2);border-radius:var(--r8);
-  border:1px solid var(--b0);
   padding:10px 12px;
-  min-height:80px
+  background:var(--s2)
 }
-.focus-skel{
-  height:9px;border-radius:3px;
+.pos-item:nth-child(2n){background:var(--s2)}
+.pos-label{
+  font-size:9px;font-weight:500;color:var(--t3);
+  letter-spacing:.03em;margin-bottom:4px
+}
+.pos-val{
+  font-family:var(--m);font-size:15px;font-weight:300;
+  color:var(--t0);letter-spacing:-.03em
+}
+.pos-val.red{color:rgba(244,63,94,.8)}
+.pos-val.ok{color:rgba(255,255,255,.55)}
+.pos-val.warn{color:rgba(251,191,36,.8)}
+
+/* ── STRATEGIC INTELLIGENCE ─────────────────────────────── */
+.si-panel{
+  background:var(--s0)
+}
+.si-header{
+  display:flex;align-items:center;gap:12px;
+  padding:16px 28px 14px;
+  border-bottom:1px solid var(--b1)
+}
+.si-title{
+  font-size:12px;font-weight:600;color:var(--t0);
+  letter-spacing:-.01em
+}
+.si-subtitle{
+  font-size:9px;color:var(--t3);margin-top:2px;letter-spacing:.01em
+}
+/* Remove SI badges — noisy */
+.si-badge{display:none}
+
+.si-refresh-btn{
+  margin-left:auto;display:flex;align-items:center;gap:5px;
+  height:28px;padding:0 12px;border-radius:6px;
+  background:transparent;border:1px solid var(--b1);
+  color:var(--t2);font-size:9px;font-weight:500;
+  cursor:pointer;transition:all var(--fast);letter-spacing:.02em
+}
+.si-refresh-btn:hover{border-color:var(--b2);color:var(--t0);background:var(--s3)}
+.si-refresh-btn:disabled{opacity:.35;cursor:default}
+
+/* Cards — more breathing room, cleaner borders */
+.si-grid{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid var(--b1)
+}
+.si-card{
+  padding:18px 20px;
+  border-right:1px solid var(--b1);
+  position:relative;overflow:hidden
+}
+.si-card:last-child{border-right:none}
+/* Top accent — thinner, more refined */
+.si-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px
+}
+.si-card.red::before{background:var(--red);opacity:.7}
+.si-card.amber::before{background:rgba(245,158,11,.8)}
+.si-card.blue::before{background:var(--blue);opacity:.7}
+.si-card.grey::before{background:rgba(255,255,255,.1)}
+.si-card.green::before{background:rgba(34,197,94,.6)}
+
+.si-card-priority{
+  font-size:8px;font-weight:700;text-transform:uppercase;
+  letter-spacing:.14em;margin-bottom:8px;
+  display:flex;align-items:center;gap:5px
+}
+.si-card.red .si-card-priority{color:var(--red-b)}
+.si-card.amber .si-card-priority{color:rgba(245,158,11,.85)}
+.si-card.blue .si-card-priority{color:var(--blue-b)}
+.si-card.grey .si-card-priority{color:var(--t2)}
+.si-card.green .si-card-priority{color:rgba(34,197,94,.8)}
+
+.si-card-icon{font-size:14px;flex-shrink:0}
+.si-card-label{
+  font-size:12px;font-weight:600;color:var(--t0);
+  margin-bottom:8px;line-height:1.3;letter-spacing:-.01em
+}
+.si-card-action{
+  font-size:10.5px;color:var(--t1);line-height:1.65;
+  margin-bottom:8px
+}
+.si-card-rationale{
+  font-size:9.5px;color:var(--t3);line-height:1.55;
+  padding-top:8px;border-top:1px solid var(--b0)
+}
+.si-card-checklist{
+  font-size:8px;font-family:var(--m);
+  color:var(--t3);margin-top:6px
+}
+
+/* Skeleton */
+.si-loading{
+  display:grid;grid-template-columns:repeat(5,1fr);
+  gap:0;padding:0
+}
+.si-skel-card{
+  padding:18px 20px;border-right:1px solid var(--b1)
+}
+.si-skel-card:last-child{border-right:none}
+.si-skel-line{
+  height:8px;border-radius:3px;margin-bottom:8px;
   background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);
   background-size:200% 100%;
-  animation:skel-shimmer 1.5s ease infinite;
-  margin-bottom:7px;width:100%
-}
-.focus-loading,.news-loading{display:flex;flex-direction:column;gap:4px}
-.focus-item{
-  display:flex;gap:6px;margin-bottom:8px;
-  font-size:10.5px;color:var(--t1);line-height:1.6
-}
-.focus-item:last-child{margin-bottom:0}
-.focus-icon{flex-shrink:0;margin-top:2px;font-size:12px}
-.focus-text strong{color:var(--t0);font-weight:600}
-.focus-label{
-  font-size:7.5px;font-weight:800;color:var(--blue-b);
-  text-transform:uppercase;letter-spacing:.14em;
-  margin-bottom:6px;margin-top:4px;
-  display:flex;align-items:center;gap:4px
-}
-.focus-label::before{
-  content:'';width:12px;height:1px;
-  background:var(--blue);flex-shrink:0
+  animation:skel-shimmer 1.5s ease infinite
 }
 
-.news-divider{
-  display:flex;align-items:center;gap:8px;
-  padding-top:4px;
-  flex-shrink:0
+/* News + Plan — more padding, less cramped */
+.si-bottom{
+  display:grid;grid-template-columns:1fr 360px;
+  border-top:1px solid var(--b1)
 }
-.news-divider-label{
-  display:flex;align-items:center;gap:5px;
-  font-size:8.5px;font-weight:700;color:var(--t2);
-  text-transform:uppercase;letter-spacing:.1em;
-  white-space:nowrap
+.si-news-col{
+  padding:18px 24px;
+  border-right:1px solid var(--b1)
 }
-.news-ts{font-size:7.5px;color:var(--t3);font-family:var(--m);margin-left:auto}
-.news-panel{flex:1;overflow-y:auto;min-height:0}
-.news-panel::-webkit-scrollbar{width:2px}
-.news-item{
-  display:flex;gap:8px;
-  padding:7px 0;border-bottom:1px solid var(--b0);
-  font-size:10px;color:var(--t1);line-height:1.55
+.si-news-title{
+  font-size:9px;font-weight:600;color:var(--t2);
+  text-transform:uppercase;letter-spacing:.08em;
+  display:flex;align-items:center;gap:7px;margin-bottom:12px
 }
-.news-item:last-child{border-bottom:none}
-.news-dot{
+.si-news-dot{
   width:5px;height:5px;border-radius:50%;
-  background:var(--blue-b);flex-shrink:0;margin-top:5px
+  background:var(--blue-b);flex-shrink:0;
+  /* Remove pulsing animation — too distracting */
+  animation:none;opacity:.8
 }
-.news-dot.red{background:var(--red-b)}
-.news-dot.ok{background:rgba(255,255,255,.4)}
-.news-text strong{color:var(--t0);font-weight:600}
-.news-source{font-size:8px;color:var(--t3);margin-top:2px;font-family:var(--m)}
+.si-news-item{
+  display:flex;gap:8px;padding:7px 0;
+  border-bottom:1px solid var(--b0);font-size:10.5px
+}
+.si-news-item:last-child{border-bottom:none}
+.si-news-bullet{
+  width:4px;height:4px;border-radius:50%;
+  flex-shrink:0;margin-top:6px
+}
+.si-news-bullet.pos{background:rgba(255,255,255,.35)}
+.si-news-bullet.neg{background:rgba(244,63,94,.7)}
+.si-news-bullet.neu{background:var(--blue-b);opacity:.7}
 
-/* ── REMOVE OLD HERO CSS ───────────────────────────── */
-/* Keep hero-stats IDs working but hide old .hero section */
-.hero{display:none}
-/* Keep sparklines working */
-.hs-spark{display:block}
+.si-plan-col{
+  padding:18px 20px;
+  background:transparent
+}
+.si-plan-title{
+  font-size:9px;font-weight:600;color:var(--t2);
+  text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px
+}
+.si-plan-item{
+  display:flex;align-items:flex-start;gap:8px;
+  padding:7px 0;border-bottom:1px solid var(--b0);
+  font-size:10px;color:var(--t2);line-height:1.55
+}
+.si-plan-item:last-child{border-bottom:none}
+.si-plan-icon{flex-shrink:0;font-size:10px;margin-top:2px;opacity:.7}
+.si-plan-text strong{color:var(--t1);font-size:10.5px;font-weight:600}
 
-/* ── RESPONSIVE ─────────────────────────────────────  */
 @media(max-width:900px){
   .cmd-centre{grid-template-columns:1fr}
-  .cmd-col{border-right:none;border-bottom:1px solid var(--b0)}
-  .bkpi-strip{height:auto;padding:8px 16px;flex-wrap:wrap;gap:8px}
+  .cmd-col{border-right:none;border-bottom:1px solid var(--b1)}
+  .bkpi-strip{height:auto;padding:8px 16px;flex-wrap:wrap;gap:6px 0}
+  .si-grid,.si-loading{grid-template-columns:1fr 1fr}
+  .si-bottom{grid-template-columns:1fr}
+  .si-card{padding:14px 16px}
 }
+
+/* Remove old hero (unused) */
+.hero{display:none}
+
+
 
 
 /* ── MASTER PLAN PROGRESS TRACKER ───────────────── */
@@ -2066,9 +2381,9 @@ input:focus-visible,
 .si-badge.urgent{
   background:var(--red-g);color:var(--red-b);
   border-color:var(--red-r);
-  animation:pulse-red 2s ease-in-out infinite
+  /* no pulse animation */
 }
-@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.7}}
+@keyframes pulse-red{0%,100%{opacity:1}50%{opacity:.85}}
 .si-refresh-btn{
   margin-left:auto;display:flex;align-items:center;gap:5px;
   height:28px;padding:0 12px;border-radius:6px;
@@ -2541,869 +2856,235 @@ input:focus-visible,
 <!-- ░░ OVERVIEW ░░ -->
 <div id="page-overview" class="pv active">
 
-  <!-- ══ NEW OVERVIEW — Business-first command centre ══ -->
+  <!-- ── KPI CARDS ────────────────────────────────────────── -->
+  <div class="bkpi-strip fade" id="kpi-strip">
 
-  <!-- ── BUSINESS KPI STRIP — always visible, full width ── -->
-  <div class="bkpi-strip fade">
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">Total Equity</span>
-      <span class="bkpi-val">$29.23M</span>
-      <span class="bkpi-arrow up">▲ 89.2%</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">GP YTD</span>
-      <span class="bkpi-val" id="hs-gp">$1.27M</span><svg id="sp-gp" style="display:none" width="44" height="14" viewBox="0 0 44 14"></svg>
-      <span class="bkpi-arrow up">▲ +12% budget</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">GM / DSE</span>
-      <span class="bkpi-val warn" id="hs-gm">$36.58</span><svg id="sp-gm" style="display:none" width="44" height="14" viewBox="0 0 44 14"></svg>
-      <span class="bkpi-arrow dn">▼ target $65</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">Interest Cover</span>
-      <span class="bkpi-val crit" id="hs-ic">0.06x</span>
-      <span class="bkpi-arrow dn">⚠ min 1.25x</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">DSE Load</span>
-      <span class="bkpi-val blue" id="hs-dse">20,538</span><svg id="sp-dse" style="display:none" width="44" height="14" viewBox="0 0 44 14"></svg>
-      <span class="bkpi-arrow">↓ destocking</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">Net Cash YTD</span>
-      <span class="bkpi-val">+$378k</span>
-      <span class="bkpi-arrow up">▲ ahead</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item">
-      <span class="bkpi-lbl">Equity Ratio</span>
-      <span class="bkpi-val" id="hs-eq">89.2%</span><svg id="sp-eq" style="display:none" width="44" height="14" viewBox="0 0 44 14"></svg>
-      <span class="bkpi-arrow up">▲ strong</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <div class="bkpi-item bkpi-market">
-      <span class="bkpi-lbl">EYCI</span>
-      <span class="bkpi-val blue" id="hero-num" style="font-size:16px">897<span style="font-size:10px">¢</span></span>
-      <span class="bkpi-arrow up">▲ +8.4% avg</span>
-    </div>
-    <div class="bkpi-sep"></div>
-    <!-- Property split toggle -->
-    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;padding-left:16px">
-      <div style="display:flex;flex-direction:column;gap:3px">
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:7.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;width:50px">Nundle</span>
-          <div style="width:80px;height:4px;background:var(--s4);border-radius:2px;overflow:hidden">
-            <div style="width:79%;height:100%;background:var(--blue-b);border-radius:2px"></div>
-          </div>
-          <span style="font-size:8.5px;font-family:var(--m);color:var(--t1)">10,080 DSE</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span style="font-size:7.5px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;width:50px">Topdale</span>
-          <div style="width:80px;height:4px;background:var(--s4);border-radius:2px;overflow:hidden">
-            <div style="width:59%;height:100%;background:rgba(14,165,233,.5);border-radius:2px"></div>
-          </div>
-          <span style="font-size:8.5px;font-family:var(--m);color:var(--t1)">1,940 DSE</span>
+    <!-- IC — CRITICAL, must-fix -->
+    <div class="bkpi-item bkpi-critical">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">Interest Cover</span>
+        <span class="bkpi-status crit"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val crit" id="hs-ic">0.06x</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-ic" width="64" height="22" viewBox="0 0 64 22" style="overflow:visible"></svg>
         </div>
       </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end">
-        <span style="font-size:7.5px;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;font-weight:700">Slack</span>
-        <span style="font-family:var(--m);font-size:13px;color:rgba(255,255,255,.55)" id="total-slack-disp">4,030</span>
-        <span style="font-size:7px;color:rgba(255,255,255,.4)">DSE free</span>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill crit" style="width:3.4%"></div>
+          <div class="bkpi-target-tick" style="left:71.4%" title="Target 1.75x"></div>
+        </div>
+        <span class="bkpi-delta crit">−1.19x to min</span>
       </div>
     </div>
+
+    <!-- EYCI — live market price -->
+    <div class="bkpi-item bkpi-critical">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">EYCI</span>
+        <span class="bkpi-status ok"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val blue" id="hero-num">897<span style="font-size:14px;letter-spacing:0;opacity:.7">¢</span></div>
+        <div class="bkpi-spark-wrap">
+          <svg id="hero-spark" width="64" height="22" viewBox="0 0 64 22" style="overflow:visible;display:block"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill blue" style="width:73%;background:var(--blue-b);opacity:.5"></div>
+          <div class="bkpi-target-tick" style="left:100%" title="No fixed benchmark"></div>
+        </div>
+        <span class="bkpi-delta blue">▲ +8.4% avg</span>
+      </div>
+    </div>
+
+    <!-- GP YTD -->
+    <div class="bkpi-item">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">GP YTD</span>
+        <span class="bkpi-status ok"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val ok-v" id="hs-gp">$1.27M</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-gp" width="56" height="20" viewBox="0 0 56 20" style="overflow:visible"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill ok" style="width:85%"></div>
+          <div class="bkpi-target-tick" style="left:100%"></div>
+        </div>
+        <span class="bkpi-delta ok">+12% budget</span>
+      </div>
+    </div>
+
+    <!-- GM / DSE -->
+    <div class="bkpi-item">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">GM / DSE</span>
+        <span class="bkpi-status crit"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val warn" id="hs-gm">$36.58</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-gm" width="56" height="20" viewBox="0 0 56 20" style="overflow:visible"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill crit" style="width:40%"></div>
+          <div class="bkpi-target-tick" style="left:100%"></div>
+        </div>
+        <span class="bkpi-delta crit">−$28.42 to $65</span>
+      </div>
+    </div>
+
+    <!-- DSE Load -->
+    <div class="bkpi-item">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">DSE Load</span>
+        <span class="bkpi-status ok"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val" id="hs-dse">20,538</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-dse" width="56" height="20" viewBox="0 0 56 20" style="overflow:visible"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill ok" style="width:72%;background:var(--blue-b);opacity:.45"></div>
+          <div class="bkpi-target-tick" style="left:75%" title="16,050 cap"></div>
+        </div>
+        <span class="bkpi-delta blue">↓ destocking</span>
+      </div>
+    </div>
+
+    <!-- Net Cash YTD -->
+    <div class="bkpi-item">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">Net Cash YTD</span>
+        <span class="bkpi-status ok"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val ok-v">+$378k</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-cash" width="56" height="20" viewBox="0 0 56 20" style="overflow:visible"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill ok" style="width:80%"></div>
+          <div class="bkpi-target-tick" style="left:100%"></div>
+        </div>
+        <span class="bkpi-delta ok">▲ ahead of plan</span>
+      </div>
+    </div>
+
+    <!-- Equity Ratio -->
+    <div class="bkpi-item">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">Equity Ratio</span>
+        <span class="bkpi-status ok"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val ok-v" id="hs-eq">89.2%</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-eq" width="56" height="20" viewBox="0 0 56 20" style="overflow:visible"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <div class="bkpi-fill ok" style="width:90%"></div>
+          <div class="bkpi-target-tick" style="left:36%" title="NAB min 35%"></div>
+        </div>
+        <span class="bkpi-delta ok">+54.2% vs min</span>
+      </div>
+    </div>
+
+    <!-- NAB Debt -->
+    <div class="bkpi-item">
+      <div class="bkpi-top">
+        <span class="bkpi-lbl">NAB Debt</span>
+        <span class="bkpi-status warn"></span>
+      </div>
+      <div class="bkpi-mid">
+        <div class="bkpi-val warn">$3.1M</div>
+        <div class="bkpi-spark-wrap">
+          <svg id="sp-debt" width="56" height="20" viewBox="0 0 56 20" style="overflow:visible"></svg>
+        </div>
+      </div>
+      <div class="bkpi-bench">
+        <div class="bkpi-track">
+          <!-- $3.1M of $3.1M = 100%, target $1M = 32% -->
+          <div class="bkpi-fill crit" style="width:100%"></div>
+          <div class="bkpi-target-tick" style="left:32%" title="Target ≤$1M"></div>
+        </div>
+        <span class="bkpi-delta crit">−$2.1M to target</span>
+      </div>
+    </div>
+
   </div>
 
-  <!-- ── THREE-COLUMN COMMAND CENTRE ── -->
-  <div class="cmd-centre fade d1">
-
-    <!-- LEFT: MARKETS -->
-    <div class="cmd-col cmd-col-markets">
-      <div class="cmd-col-head">
-        <span class="cmd-col-title">Live Markets</span>
-        <div class="ldot" style="width:6px;height:6px"></div>
-        <span style="font-size:8.5px;color:var(--t3);font-family:var(--m)" id="live-time">Live</span>
-        <span class="cmd-col-badge bdg-b">MLA</span>
-      </div>
-      <!-- EYCI compact with sparkline -->
-      <div class="eyci-compact">
-        <div class="eyci-compact-left">
-          <div class="eyci-compact-label">Eastern Young Cattle Indicator</div>
-          <div class="eyci-compact-num">897<span class="eyci-compact-unit">¢</span></div>
-          <div class="eyci-compact-meta">
-            <span class="eyci-badge-up">▲ +8.4% vs 5yr avg</span>
-            <span style="color:var(--t3)">·</span>
-            <span style="font-size:9px;color:var(--t2)">BE 482¢</span>
-          </div>
-        </div>
-        <div class="eyci-compact-right">
-          <svg id="hero-spark" width="120" height="32" viewBox="0 0 120 32" style="display:block;overflow:visible"></svg>
-          <div style="display:flex;align-items:center;gap:6px;margin-top:3px">
-            <span id="spark-trend" style="font-size:8px;font-weight:700"></span>
-            <span id="spark-range" style="font-size:8px;color:var(--t3)"></span>
-          </div>
-        </div>
-      </div>
-      <!-- Alert bar — compact -->
-      <div class="alert-trigger-bar" id="alert-bar" style="margin-top:8px">
-        <span class="alert-trigger-label" style="font-size:8px">🔔 Alert ≥</span>
-        <input class="alert-trigger-input" id="alert-price" type="number" value="920" min="400" max="1500" step="5" onchange="setAlert()" style="width:60px;font-size:11px;padding:3px 6px"/>
-        <span style="font-size:9px;color:var(--t2);font-family:var(--m)">¢</span>
-        <button class="alert-btn" onclick="setAlert()" id="alert-arm-btn" style="height:22px;font-size:8.5px;padding:0 8px">Arm</button>
-        <span class="alert-status" id="alert-status" style="font-size:8.5px"></span>
-      </div>
-      <!-- Saleyard prices compact -->
-      <div class="syards-compact">
-        <div class="syc-compact-head">
-          <span style="font-size:8.5px;font-weight:700;color:var(--t2)">TAMWORTH TRLX</span>
-          <span class="bdg bdg-b" style="font-size:7px;padding:1px 5px">Live</span>
-        </div>
-        <div class="syc-compact-row" onclick="scen(498)"><span>Feeder Steer</span><span class="syc-compact-price">498¢</span><span class="syc-compact-chg up">▲+12</span></div>
-        <div class="syc-compact-row" onclick="scen(512)"><span>Restocker</span><span class="syc-compact-price">512¢</span><span class="syc-compact-chg up">▲+8</span></div>
-        <div class="syc-compact-row" onclick="scen(374)"><span>Proc. Cow</span><span class="syc-compact-price">374¢</span><span class="syc-compact-chg up">▲+5</span></div>
-        <div class="syc-compact-hint">Tap price → Sell Calculator</div>
-      </div>
-      <!-- AUD/USD compact -->
-      <div class="fx-compact">
-        <span style="font-size:8.5px;color:var(--t2)">AUD/USD</span>
-        <span style="font-family:var(--m);font-size:13px;color:var(--t0)" id="cmd-audusd">$0.633</span>
-        <span style="font-size:8px;color:var(--t3)">Weak — supports export values</span>
-      </div>
-    </div>
-
-    <!-- CENTRE: BUSINESS POSITION -->
-    <div class="cmd-col cmd-col-position">
-      <div class="cmd-col-head">
-        <span class="cmd-col-title">Business Position</span>
-        <span class="cmd-col-badge bdg-r">IC Critical</span>
-      </div>
-      <!-- IC Alert — compact version -->
-      <div class="ic-compact">
-        <div class="ic-compact-header">
-          <div class="ic-compact-icon">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-          </div>
-          <div>
-            <div class="ic-compact-title">Interest Cover — Critical</div>
-            <div class="ic-compact-sub">NAB covenant min 1.25x · target 1.75x</div>
-          </div>
-          <div class="ic-compact-num" id="ic-display">0.06x</div>
-        </div>
-        <div class="alarm-bar" style="margin:8px 0 4px">
-          <div class="alarm-fill" style="width:3.4%"></div>
-          <div class="alarm-tline" style="left:71.4%"></div>
-        </div>
-        <div style="display:flex;gap:12px;font-size:9px">
-          <span style="color:var(--red-b)">Every week delay ≈ $18k carry cost</span>
-          <span style="margin-left:auto;color:var(--t3);font-family:var(--m)" id="nab-countdown">–</span>
-        </div>
-      </div>
-      <!-- Key metrics 2-col grid -->
-      <div class="pos-grid">
-        <div class="pos-item">
-          <div class="pos-label">Total Assets</div>
-          <div class="pos-val">$32.78M</div>
-        </div>
-        <div class="pos-item">
-          <div class="pos-label">NAB Debt</div>
-          <div class="pos-val red">$3.1M</div>
-        </div>
-        <div class="pos-item">
-          <div class="pos-label">LVR</div>
-          <div class="pos-val ok">10.8%</div>
-        </div>
-        <div class="pos-item">
-          <div class="pos-label">Net Profit (Feb)</div>
-          <div class="pos-val red">–$165k</div>
-        </div>
-        <div class="pos-item">
-          <div class="pos-label">Cattle sold YTD</div>
-          <div class="pos-val">1,240 hd</div>
-        </div>
-        <div class="pos-item">
-          <div class="pos-label">Pasture outlook</div>
-          <div class="pos-val warn">May–Aug ↓</div>
-        </div>
-      </div>
-      <!-- Action buttons -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">
-        <button onclick="nav('trade',null)" style="height:32px;background:linear-gradient(135deg,#0369a1,#4338ca);border:none;border-radius:8px;color:#fff;font-size:9.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
-          onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
-          ⚡ Trade Intelligence
-        </button>
-        <button onclick="printReport()" style="height:32px;background:var(--s3);border:1px solid var(--b1);border-radius:8px;color:var(--t1);font-size:9.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px;transition:all .15s"
-          onmouseover="this.style.background='var(--s4)';this.style.color='var(--t0)'" onmouseout="this.style.background='var(--s3)';this.style.color='var(--t1)'">
-          📄 Bank Report
-        </button>
-      </div>
-    </div>
-
-    <!-- RIGHT: PROPERTY SPLIT + TRADING LADDER -->
-    <div class="cmd-col cmd-col-property">
-      <div class="cmd-col-head">
-        <span class="cmd-col-title">Properties &amp; Trading</span>
-        <span class="cmd-col-badge bdg-b">16,050 DSE cap</span>
-      </div>
-
-      <!-- Nundle vs Topdale DSE split -->
-      <div class="prop-split">
-        <div class="prop-item">
-          <div class="prop-header">
-            <span class="prop-name">Nundle</span>
-            <span class="prop-role">Breeders · Finishing · Exits</span>
-          </div>
-          <div class="prop-dse-bar">
-            <div class="prop-dse-fill nundle" style="width:79%"></div>
-          </div>
-          <div class="prop-dse-meta">
-            <span class="prop-dse-val">12,750</span>
-            <span class="prop-dse-cap">/ 12,750 DSE cap</span>
-          </div>
-        </div>
-        <div class="prop-item">
-          <div class="prop-header">
-            <span class="prop-name">Topdale</span>
-            <span class="prop-role">Light cattle · Fast turns</span>
-          </div>
-          <div class="prop-dse-bar">
-            <div class="prop-dse-fill topdale" style="width:59%"></div>
-          </div>
-          <div class="prop-dse-meta">
-            <span class="prop-dse-val">1,940</span>
-            <span class="prop-dse-cap">/ 3,300 DSE cap</span>
-          </div>
-        </div>
-        <div class="prop-slack">
-          <span class="prop-slack-label">Platform slack</span>
-          <span class="prop-slack-val" id="prop-slack-val">5,848 DSE</span>
-          <span class="prop-slack-ok" id="prop-slack-status">✓ Above 4,000 minimum</span>
-        </div>
-      </div>
-
-      <!-- Trading Capital Ladder live status -->
-      <div class="ladder-widget">
-        <div class="ladder-title">Trading Capital Ladder</div>
-        <div class="ladder-levels">
-          <div class="ladder-level active" title="Current — IC breach forces defensive posture">
-            <div class="ladder-level-dot active-dot"></div>
-            <div class="ladder-level-info">
-              <div class="ladder-level-name">Level 0 — Defensive</div>
-              <div class="ladder-level-detail">Breeders + agistment only · $0–1M</div>
-            </div>
-            <div class="ladder-level-badge current">NOW</div>
-          </div>
-          <div class="ladder-level locked" title="Unlock: IC ≥ 1.25x, grass surplus confirmed">
-            <div class="ladder-level-dot"></div>
-            <div class="ladder-level-info">
-              <div class="ladder-level-name">Level 1 — Cautious</div>
-              <div class="ladder-level-detail">2,500–3,500 DSE · $2–3M</div>
-            </div>
-            <div class="ladder-level-badge lock">🔒 IC &lt;1.25x</div>
-          </div>
-          <div class="ladder-level locked">
-            <div class="ladder-level-dot"></div>
-            <div class="ladder-level-info">
-              <div class="ladder-level-name">Level 2 — Confident</div>
-              <div class="ladder-level-detail">4,000–6,000 DSE · $4–6M</div>
-            </div>
-            <div class="ladder-level-badge lock">🔒</div>
-          </div>
-          <div class="ladder-level locked">
-            <div class="ladder-level-dot"></div>
-            <div class="ladder-level-info">
-              <div class="ladder-level-name">Level 3 — Opportunistic</div>
-              <div class="ladder-level-detail">6,000–8,000 DSE · $7–10M</div>
-            </div>
-            <div class="ladder-level-badge lock">🔒 Rare</div>
-          </div>
-        </div>
-        <div class="ladder-unlock">
-          <span class="ladder-unlock-label">Unlock Level 1 when:</span>
-          IC ≥ 1.25x · grass surplus confirmed · sell Tranche 1 cows first
-        </div>
-      </div>
-    </div>
-  </div><!-- end cmd-centre -->
-
-
-  <!-- MASTER PLAN PROGRESS TRACKER -->
-  <div class="plan-tracker fade d1">
-    <div class="plan-tracker-label">
-      <span class="plan-tracker-title">Master Plan — 2026 Transformation</span>
-      <span class="plan-tracker-stage">Stage 1 of 3 · Balance Sheet Reset</span>
-    </div>
-    <div class="plan-stages">
-      <div class="plan-stage active">
-        <div class="plan-stage-dot active-dot"></div>
-        <div class="plan-stage-content">
-          <div class="plan-stage-name">Stage 1 — Balance Sheet Reset</div>
-          <div class="plan-stage-detail">Sell 600 cows · Reduce debt to ≤$1M · IC ≥1.25x</div>
-          <div class="plan-stage-progress">
-            <div class="plan-prog-bar"><div class="plan-prog-fill" id="plan-prog-fill" style="width:0%"></div></div>
-            <span class="plan-prog-pct" id="plan-prog-text">$3.1M → $1.0M · Tranche 1 pending</span>
-          </div>
-        </div>
-      </div>
-      <div class="plan-stage-connector"></div>
-      <div class="plan-stage pending">
-        <div class="plan-stage-dot"></div>
-        <div class="plan-stage-content">
-          <div class="plan-stage-name">Stage 2 — Herd Transformation</div>
-          <div class="plan-stage-detail">IVF program · Elite registered Angus females · Value/DSE uplift</div>
-        </div>
-      </div>
-      <div class="plan-stage-connector"></div>
-      <div class="plan-stage pending">
-        <div class="plan-stage-dot"></div>
-        <div class="plan-stage-content">
-          <div class="plan-stage-name">Stage 3 — Operating Engine</div>
-          <div class="plan-stage-detail">3-4% ROAM · $600k+ avg EBIT · Grass-led cycle-aware trading</div>
-        </div>
-      </div>
-    </div>
-    <div class="plan-checklist-mini">
-      <span class="plan-check-label">8-Point Decision Gate</span>
-      <div class="plan-checks">
-        <span class="plan-check pass" title="Capital preserved">1 Cap</span>
-        <span class="plan-check warn" title="Pasture deficit approaching">2 Grass</span>
-        <span class="plan-check pass" title="Herd not used as collateral">3 Herd</span>
-        <span class="plan-check pass" title="IVF subordinate to cash">4 IVF</span>
-        <span class="plan-check fail" title="IC breach — Level 0 only">5 Trade</span>
-        <span class="plan-check pass" title="Aligned with 3yr plan">6 ROAM</span>
-        <span class="plan-check fail" title="IC breach requires immediate action">7 CF</span>
-        <span class="plan-check warn" title="Post-sale verification pending">8 Review</span>
-      </div>
-    </div>
-  </div>
-
-  
-
-  <!-- STRATEGIC INTELLIGENCE PANEL — full width, world class advisory -->
-  <div class="si-panel fade">
+  <!-- ── STRATEGIC INTELLIGENCE ───────────────────────────── -->
+  <div class="si-panel fade d1">
     <div class="si-header">
       <div>
         <div class="si-title">Strategic Intelligence</div>
-        <div class="si-subtitle">Master Plan aligned · Buy/sell discipline · Updated on every Sync</div>
+        <div class="si-subtitle">Master Plan aligned · Updated on every Sync</div>
       </div>
-      <div class="si-badge stage1">Stage 1 — Balance Sheet Reset</div>
-      <div class="si-badge urgent">IC 0.06x — CRITICAL</div>
-      <span id="si-ts" style="font-size:8.5px;color:var(--t3);font-family:var(--m)"></span>
+      <span id="si-ts" style="font-size:9px;color:var(--t3);font-family:var(--m)"></span>
       <button class="si-refresh-btn" id="si-refresh-btn" onclick="fetchStrategicIntelligence()">
         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M3.51 15a9 9 0 102.13-9.36L1 10"/><polyline points="1 4 1 10 7 10"/></svg>
-        Refresh Intelligence
+        Refresh
       </button>
     </div>
 
-    <!-- 5-card strategic grid -->
     <div id="si-cards-wrap">
       <div class="si-loading" id="si-loading">
-        <div class="si-skel-card"><div class="si-skel-line" style="width:60%;height:6px"></div><div class="si-skel-line" style="height:10px;margin-top:4px"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:80%"></div><div class="si-skel-line" style="width:70%"></div></div>
-        <div class="si-skel-card"><div class="si-skel-line" style="width:60%;height:6px"></div><div class="si-skel-line" style="height:10px;margin-top:4px"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:75%"></div><div class="si-skel-line" style="width:65%"></div></div>
-        <div class="si-skel-card"><div class="si-skel-line" style="width:60%;height:6px"></div><div class="si-skel-line" style="height:10px;margin-top:4px"></div><div class="si-skel-line" style="width:85%"></div><div class="si-skel-line" style="width:70%"></div><div class="si-skel-line" style="width:80%"></div></div>
-        <div class="si-skel-card"><div class="si-skel-line" style="width:60%;height:6px"></div><div class="si-skel-line" style="height:10px;margin-top:4px"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:60%"></div><div class="si-skel-line" style="width:75%"></div></div>
-        <div class="si-skel-card"><div class="si-skel-line" style="width:60%;height:6px"></div><div class="si-skel-line" style="height:10px;margin-top:4px"></div><div class="si-skel-line" style="width:80%"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:65%"></div></div>
+        <div class="si-skel-card"><div class="si-skel-line" style="width:55%;height:7px"></div><div class="si-skel-line" style="height:11px;margin-top:5px"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:80%"></div><div class="si-skel-line" style="width:70%"></div></div>
+        <div class="si-skel-card"><div class="si-skel-line" style="width:55%;height:7px"></div><div class="si-skel-line" style="height:11px;margin-top:5px"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:75%"></div><div class="si-skel-line" style="width:65%"></div></div>
+        <div class="si-skel-card"><div class="si-skel-line" style="width:55%;height:7px"></div><div class="si-skel-line" style="height:11px;margin-top:5px"></div><div class="si-skel-line" style="width:85%"></div><div class="si-skel-line" style="width:70%"></div><div class="si-skel-line" style="width:80%"></div></div>
+        <div class="si-skel-card"><div class="si-skel-line" style="width:55%;height:7px"></div><div class="si-skel-line" style="height:11px;margin-top:5px"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:60%"></div><div class="si-skel-line" style="width:75%"></div></div>
+        <div class="si-skel-card"><div class="si-skel-line" style="width:55%;height:7px"></div><div class="si-skel-line" style="height:11px;margin-top:5px"></div><div class="si-skel-line" style="width:80%"></div><div class="si-skel-line" style="width:90%"></div><div class="si-skel-line" style="width:65%"></div></div>
       </div>
-      <div class="si-grid" id="si-cards" style="display:none">
-        <!-- Rendered by fetchStrategicIntelligence() -->
-      </div>
+      <div class="si-grid" id="si-cards" style="display:none"></div>
     </div>
 
-    <!-- Bottom row: News + Plan principles -->
     <div class="si-bottom">
       <div class="si-news-col">
         <div class="si-news-title">
           <div class="si-news-dot"></div>
           Live Agribusiness Intelligence
-          <span id="si-news-ts" style="font-size:8px;color:var(--t3);font-family:var(--m);margin-left:4px"></span>
+          <span id="si-news-ts" style="font-size:8.5px;color:var(--t3);font-family:var(--m);margin-left:4px"></span>
         </div>
         <div id="si-news" style="min-height:80px">
-          <div class="si-loading" style="flex-direction:column;gap:6px;padding:0">
-            <div style="height:8px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:100%"></div>
-            <div style="height:8px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:90%"></div>
-            <div style="height:8px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:85%"></div>
-            <div style="height:8px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:95%"></div>
-            <div style="height:8px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:88%"></div>
+          <div style="display:flex;flex-direction:column;gap:7px">
+            <div style="height:9px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:100%"></div>
+            <div style="height:9px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:90%"></div>
+            <div style="height:9px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:85%"></div>
+            <div style="height:9px;border-radius:3px;background:linear-gradient(90deg,var(--s3) 25%,var(--s4) 50%,var(--s3) 75%);background-size:200% 100%;animation:skel-shimmer 1.5s ease infinite;width:92%"></div>
           </div>
         </div>
       </div>
       <div class="si-plan-col">
-        <div class="si-plan-title">Master Plan — Governing Rules</div>
-        <div class="si-plan-item"><span class="si-plan-icon">⚖️</span><span class="si-plan-text"><strong>Capital before production.</strong> Doing nothing is an acceptable decision. Every dollar of debt retired is permanent risk reduction.</span></div>
-        <div class="si-plan-item"><span class="si-plan-icon">🌿</span><span class="si-plan-text"><strong>Grass governs all stocking.</strong> Minimum 4,000 DSE slack at all times. Proactive, never reactive.</span></div>
-        <div class="si-plan-item"><span class="si-plan-icon">📉</span><span class="si-plan-text"><strong>Never chase the last 10%.</strong> Two exits pre-defined before any purchase: time exit + price exit. Either triggers = sell.</span></div>
-        <div class="si-plan-item"><span class="si-plan-icon">🧬</span><span class="si-plan-text"><strong>Value/DSE over volume.</strong> Fewer cows at higher genetic value. IVF is a herd upgrade, not expansion.</span></div>
-        <div class="si-plan-item"><span class="si-plan-icon">🏦</span><span class="si-plan-text"><strong>Breeders never as collateral.</strong> Genetic capital is unencumbered. Embryos survive any drought.</span></div>
+        <div class="si-plan-title">Governing Principles</div>
+        <div class="si-plan-item"><span class="si-plan-icon">⚖️</span><span class="si-plan-text"><strong>Capital before production.</strong> Doing nothing is an acceptable decision.</span></div>
+        <div class="si-plan-item"><span class="si-plan-icon">🌿</span><span class="si-plan-text"><strong>Grass governs all stocking.</strong> Minimum 4,000 DSE slack at all times.</span></div>
+        <div class="si-plan-item"><span class="si-plan-icon">📉</span><span class="si-plan-text"><strong>Never chase the last 10%.</strong> Two exits pre-defined before any purchase.</span></div>
+        <div class="si-plan-item"><span class="si-plan-icon">🧬</span><span class="si-plan-text"><strong>Value/DSE over volume.</strong> IVF is a herd upgrade, not expansion.</span></div>
+        <div class="si-plan-item"><span class="si-plan-icon">🏦</span><span class="si-plan-text"><strong>Breeders never as collateral.</strong> Embryos survive any drought.</span></div>
       </div>
     </div>
   </div>
 
-  <!-- SELL DECISION CALCULATOR — the unique feature -->
-  <div class="sell-calc fade d1">
-    <div class="sell-calc-header">
-      <div>
-        <div class="sell-calc-title">⚡ Sell Decision Calculator</div>
-        <div class="sell-calc-sub">Real-time: should you sell today or wait? Live EYCI · Your COP · NAB interest rate</div>
-      </div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <!-- Herd class quick-select — pulls from Herd Inventory -->
-        <select id="sc-class-sel" onchange="loadHerdClass()" style="height:26px;padding:0 8px;background:var(--s3);border:1px solid var(--b1);border-radius:6px;color:var(--t1);font-size:10px;font-family:var(--f);cursor:pointer;outline:none">
-          <option value="">📋 Load from Herd...</option>
-        </select>
-        <span class="bdg bdg-b">Live · Updates instantly</span>
-        <span style="font-size:8.5px;color:var(--t3);font-family:var(--m)">avg lwt 320kg · dress 52%</span>
-      </div>
-    </div>
-    <div class="sell-calc-body">
-      <div class="scc-inputs">
-        <div class="scc-row">
-          <div class="scc-label">Cattle to sell (head)</div>
-          <div class="scc-slider-wrap">
-            <input type="range" id="sc-head" min="50" max="400" value="140" step="10" oninput="calcSell()">
-            <span class="scc-val" id="sc-head-v">140 hd</span>
-          </div>
-          <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:7.5px;color:var(--t3);font-family:var(--m)">
-            <span>50</span><span>150</span><span>250</span><span>400 max</span>
-          </div>
-        </div>
-        <div class="scc-row">
-          <div class="scc-label">EYCI assumption (¢/kg)</div>
-          <div class="scc-slider-wrap">
-            <input type="range" id="sc-eyci" min="500" max="1100" value="897" step="5" oninput="calcSell()">
-            <span class="scc-val" id="sc-eyci-v">897¢</span>
-          </div>
-          <!-- Range context: Bear / 5yr avg / Today / Record -->
-          <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:7.5px;color:var(--t3);font-family:var(--m)">
-            <span>↓Bear 620</span>
-            <span style="color:var(--t2)">avg 827</span>
-            <span style="color:var(--blue-b)">▲ Today 897</span>
-            <span>↑Rec 1100</span>
-          </div>
-        </div>
-        <div class="scc-row">
-          <div class="scc-label">Days to wait (0 = sell today)</div>
-          <div class="scc-slider-wrap">
-            <input type="range" id="sc-wait" min="0" max="90" value="0" step="7" oninput="calcSell()">
-            <span class="scc-val" id="sc-wait-v">Today</span>
-          </div>
-        </div>
-        <div class="scc-row" style="margin-bottom:0">
-          <div class="scc-label">Expected EYCI in wait period (¢)</div>
-          <div class="scc-slider-wrap">
-            <input type="range" id="sc-future" min="600" max="1100" value="860" step="5" oninput="calcSell()">
-            <span class="scc-val" id="sc-future-v">860¢</span>
-          </div>
-        </div>
-      </div>
-      <div class="scc-output">
-        <div class="verdict-icon" id="sell-icon">⚡</div>
-        <div class="scc-decision-label" id="sell-verdict-label">Decision</div>
-        <div class="scc-decision-num" id="sell-verdict-num" style="color:var(--blue-b)">$0</div>
-        <div class="scc-decision-context" id="sell-verdict-ctx">Adjust sliders to model your sell decision.</div>
-        <!-- Visual comparison bars -->
-        <div class="sell-compare" id="sell-compare">
-          <div class="sell-compare-row">
-            <span class="sell-compare-label">Today</span>
-            <div class="sell-compare-bar-wrap">
-              <div class="sell-compare-bar" id="sc-bar-today" style="width:70%;background:var(--blue-b)"></div>
-            </div>
-            <span class="sell-compare-val" id="sc-bar-today-v" style="color:var(--blue-b)">–</span>
-          </div>
-          <div class="sell-compare-row">
-            <span class="sell-compare-label">Wait</span>
-            <div class="sell-compare-bar-wrap">
-              <div class="sell-compare-bar" id="sc-bar-wait" style="width:60%;background:var(--t2)"></div>
-            </div>
-            <span class="sell-compare-val" id="sc-bar-wait-v" style="color:var(--t2)">–</span>
-          </div>
-        </div>
-        <div class="scc-metrics">
-          <div class="scc-m"><div class="scc-mv" id="calc-today">–</div><div class="scc-ml">Sell Today</div><div class="scc-delta ne" id="calc-today-d">gross revenue</div></div>
-          <div class="scc-m"><div class="scc-mv" id="calc-wait">–</div><div class="scc-ml">If You Wait</div><div class="scc-delta ne" id="calc-wait-d">adjusted for carry</div></div>
-          <div class="scc-m"><div class="scc-mv" id="calc-ic-now">0.06x</div><div class="scc-ml">IC Now</div><div class="scc-delta ne" id="calc-ic-d">after sale</div></div>
-          <div class="scc-m"><div class="scc-mv" id="calc-carry">$0</div><div class="scc-ml">Carry Cost</div><div class="scc-delta ne" id="calc-carry-d">NAB interest</div></div>
-        </div>
-      </div>
-    </div>
-  <!-- Scenario save & compare -->
-  <div class="scenario-bar">
-    <span style="font-size:9px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;white-space:nowrap">Save Scenario</span>
-    <input class="scenario-name-input" id="scen-name" placeholder="e.g. Sell 140 now, Wait 30 days…" maxlength="40"
-      onkeydown="if(event.key==='Enter')saveScenario()"/>
-    <button class="scenario-save-btn" onclick="saveScenario()">💾 Save</button>
-    <div class="scenario-list" id="scen-list"></div>
-  </div>
-  <div class="scenario-compare" id="scen-compare">
-    <div class="scenario-compare-title">Scenario Comparison</div>
-    <div class="scenario-compare-grid" id="scen-compare-grid"></div>
-  </div>
+</div><!-- end page-overview -->
 
-
-  <!-- DECISION JOURNAL — operational log for Ryan -->
-  <div class="journal-bar">
-    <input class="journal-input" id="journal-input"
-      placeholder="Log a decision… e.g. &quot;Sold 80 steers at Tamworth 498¢ — 18 Mar 2026&quot;"
-      maxlength="280"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();addJournalEntry();}"/>
-    <button class="journal-submit" onclick="addJournalEntry()">+ Log</button>
-    <span style="font-size:9px;color:var(--t3);font-family:var(--m);white-space:nowrap">Decision journal</span>
-  </div>
-  <div class="journal-feed" id="journal-feed">
-    <div class="journal-empty" id="journal-empty">No entries yet — log sales, decisions and key events above.</div>
-  </div>
-
-  <!-- NEXT STEPS CHECKLIST -->
-  <div class="checklist-bar">
-    <span class="checklist-title">Next Steps</span>
-    <input class="checklist-add-input" id="checklist-input"
-      placeholder="Add a task… e.g. Book Tamworth sale, Call NAB, Cull cows before May"
-      maxlength="120"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}"/>
-    <button class="checklist-add-btn" onclick="addChecklistItem()">+ Add</button>
-  </div>
-  <div id="checklist-items" class="checklist-items">
-    <div class="checklist-empty" id="checklist-empty">No tasks yet — add your next steps above.</div>
-  </div>
-  <div class="checklist-progress" id="checklist-progress" style="display:none">
-    <div class="checklist-prog-bar"><div class="checklist-prog-fill" id="checklist-prog-fill" style="width:0%"></div></div>
-    <span class="checklist-prog-text" id="checklist-prog-text">0 of 0</span>
-  </div>
-
-  
-  <!-- DECISION JOURNAL — operational log for Ryan -->
-  <div class="journal-bar">
-    <input class="journal-input" id="journal-input"
-      placeholder="Log a decision… e.g. &quot;Sold 80 steers at Tamworth 498¢ — 18 Mar 2026&quot;"
-      maxlength="280"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();addJournalEntry();}"/>
-    <button class="journal-submit" onclick="addJournalEntry()">+ Log</button>
-    <span style="font-size:9px;color:var(--t3);font-family:var(--m);white-space:nowrap">Decision journal</span>
-  </div>
-  <div class="journal-feed" id="journal-feed">
-    <div class="journal-empty" id="journal-empty">No entries yet — log sales, decisions and key events above.</div>
-  </div>
-
-  <!-- NEXT STEPS CHECKLIST -->
-  <div class="checklist-bar">
-    <span class="checklist-title">Next Steps</span>
-    <input class="checklist-add-input" id="checklist-input"
-      placeholder="Add a task… e.g. Book Tamworth sale, Call NAB, Cull cows before May"
-      maxlength="120"
-      onkeydown="if(event.key==='Enter'){event.preventDefault();addChecklistItem();}"/>
-    <button class="checklist-add-btn" onclick="addChecklistItem()">+ Add</button>
-  </div>
-  <div id="checklist-items" class="checklist-items">
-    <div class="checklist-empty" id="checklist-empty">No tasks yet — add your next steps above.</div>
-  </div>
-  <div class="checklist-progress" id="checklist-progress" style="display:none">
-    <div class="checklist-prog-bar"><div class="checklist-prog-fill" id="checklist-prog-fill" style="width:0%"></div></div>
-    <span class="checklist-prog-text" id="checklist-prog-text">0 of 0</span>
-  </div>
-
-  
-  <!-- RECORD A SALE — structured entry → updates herd + journal + DSE -->
-  <div class="sale-form-bar" id="sale-form-bar">
-    <span class="sale-form-label">🐄 Record a Sale</span>
-    <select id="sale-class" class="sale-input sale-select">
-      <option value="">Class…</option>
-      <option>Yearling Steers</option>
-      <option>Feeder Steers</option>
-      <option>Cull Cows</option>
-      <option>Weaner Heifers</option>
-      <option>Breeding Cows</option>
-      <option>Other</option>
-    </select>
-    <input id="sale-head" class="sale-input" type="number" min="1" max="1000" placeholder="Head" style="width:72px"/>
-    <input id="sale-price" class="sale-input" type="number" min="200" max="1500" placeholder="¢/kg" style="width:72px"/>
-    <input id="sale-location" class="sale-input" type="text" placeholder="Saleyard" style="width:100px" value="Tamworth"/>
-    <input id="sale-date" class="sale-input" type="date" style="width:130px"/>
-    <button class="sale-submit-btn" onclick="recordSale()">⚡ Record &amp; Update</button>
-    <span class="sale-preview" id="sale-preview"></span>
-  </div>
-
-
-  <div class="content">
-
-    <!-- FINANCIAL PERFORMANCE -->
-    <div class="sec fade d2">
-      <div class="sec-bar" style="background:linear-gradient(180deg,var(--blue),var(--blue-b))"></div>
-      <span class="sec-label">Financial Performance</span>
-      <span class="sec-count">FY25-26</span>
-      <span class="bdg bdg-ok" style="font-size:8px">GP +12% vs budget</span>
-      <div class="sec-line"></div>
-    </div>
-    <button class="mexpbtn" onclick="mexp(this,'perf-s')">Show Financial Performance ▾</button>
-    <div id="perf-s" class="mcollapse open">
-    <!-- Row 1: Charts side by side, equal width -->
-    <div class="grid fade d2">
-      <div class="card-float g6">
-        <div class="chead">
-          <div><div class="ctitle">Gross Profit vs Overheads</div><div class="csub">FY2025-26 · Dashed = Figured forecast · Budget line shown</div></div>
-        </div>
-        <div class="cbody">
-          <div class="chart-wrap"><svg id="chart-gp" class="chart-svg" height="176" viewBox="0 0 500 176" onmousemove="chartHover(event,'gp')" onmouseleave="chartLeave('gp')"></svg><div class="chart-tooltip" id="tt-gp"></div></div>
-        </div>
-      </div>
-      <div class="card-float g6">
-        <div class="chead">
-          <div><div class="ctitle">EBIT &amp; Net Profit</div><div class="csub">Monthly trend · Feb loss annotated · Zero + budget lines</div></div>
-          <span class="bdg bdg-r">–$165k Feb</span>
-        </div>
-        <div class="cbody">
-          <div class="chart-wrap"><svg id="chart-ep" class="chart-svg" height="176" viewBox="0 0 500 176" onmousemove="chartHover(event,'ep')" onmouseleave="chartLeave('ep')"></svg><div class="chart-tooltip" id="tt-ep"></div></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Row 2: AI Current Position Analysis — full width, integrated -->
-    <div class="grid fade d2" style="margin-top:0">
-      <div class="ai-card g12">
-        <div class="ai-header">
-          <div class="ai-header-left">
-            <!-- Claude logo mark -->
-            <div class="ai-logo">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                <!-- Simplified Claude C mark -->
-                <path d="M20 12a8 8 0 01-8 8 8 8 0 01-8-8 8 8 0 018-8" stroke="white" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                <circle cx="12" cy="12" r="2.5" fill="white" opacity=".8"/>
-              </svg>
-            </div>
-            <div>
-              <div class="ai-title">AI Current Position Analysis</div>
-              <div class="ai-sub">Claude Sonnet · Live dashboard data · EYCI 897¢ · IC 0.06x · GM/DSE $36.58</div>
-            </div>
-          </div>
-          <div class="ai-header-right">
-            <div class="ai-status" id="ai-status">
-              <div class="ai-status-dot" id="ai-dot"></div>
-              <span id="ai-status-txt">Ready to analyse</span>
-            </div>
-            <button class="ai-gen-btn" id="term-btn" onclick="runAI()">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-              Generate Analysis
-            </button>
-          </div>
-        </div>
-
-        <!-- Content area: empty state or 3-column sections -->
-        <div id="ai-body" class="ai-body">
-          <!-- Empty state shown before first generation -->
-          <div class="ai-empty" id="ai-empty">
-            <div class="ai-empty-icon">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--blue-b)" stroke-width="1.8" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-            </div>
-            <div class="ai-empty-text">
-              Click <strong style="color:var(--blue-b)">Generate Analysis</strong> to get an AI-powered assessment of your current season position — covering livestock market conditions, financial health, and immediate priorities.
-            </div>
-            <div class="ai-empty-hint">Powered by Claude · Uses live EYCI, IC, DSE, and P&amp;L data from this dashboard</div>
-          </div>
-        </div>
-
-        <!-- AI Chat: ask follow-up questions -->
-        <div class="ai-chat" id="ai-chat-row">
-          <input class="ai-chat-input" id="ai-chat-input"
-            placeholder="Ask a follow-up… e.g. &quot;what if EYCI drops to 750?&quot;"
-            onkeydown="if(event.key==='Enter')askAI()"
-            maxlength="200"/>
-          <button class="ai-chat-send" id="ai-chat-btn" onclick="askAI()">Ask Claude</button>
-        </div>
-        <div class="ai-chat-response" id="ai-chat-resp" style="display:none"></div>
-        <div class="ai-footer">
-          <span class="ai-ts" id="term-ts"></span>
-          <span class="ai-footer-ctx" id="term-ctx">Anthropic Claude · Buringal Grazing Co data</span>
-        </div>
-      </div>
-    </div>
-
-
-    <!-- SEASON SUMMARY: This year vs last year -->
-    <div class="grid fade d2" style="margin-top:0">
-      <div class="card g12 nolift">
-        <div class="chead">
-          <div><div class="ctitle">Season Summary</div><div class="csub">FY2025-26 YTD vs FY2024-25 same period</div></div>
-          <span class="bdg bdg-ok">YTD Ahead</span>
-        </div>
-        <div class="cbody">
-          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:0">
-            <div style="padding:12px 16px;border-right:1px solid var(--b0)">
-              <div style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Gross Profit YTD</div>
-              <div style="font-family:var(--m);font-size:22px;font-weight:200;color:var(--t0);margin-bottom:2px">$1.27M</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.55)">▲ +18% vs $1.08M last yr</div>
-            </div>
-            <div style="padding:12px 16px;border-right:1px solid var(--b0)">
-              <div style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">GM per DSE</div>
-              <div style="font-family:var(--m);font-size:22px;font-weight:200;color:var(--red-b);margin-bottom:2px">$36.58</div>
-              <div style="font-size:9px;color:var(--red-b)">▼ –12% vs $41.50 last yr</div>
-            </div>
-            <div style="padding:12px 16px;border-right:1px solid var(--b0)">
-              <div style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">EYCI Avg YTD</div>
-              <div style="font-family:var(--m);font-size:22px;font-weight:200;color:var(--blue-b);margin-bottom:2px">841¢</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.55)">▲ +9% vs 772¢ last yr</div>
-            </div>
-            <div style="padding:12px 16px;border-right:1px solid var(--b0)">
-              <div style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">DSE Avg YTD</div>
-              <div style="font-family:var(--m);font-size:22px;font-weight:200;color:var(--t0);margin-bottom:2px">22,480</div>
-              <div style="font-size:9px;color:var(--red-b)">▼ –16% vs 26,618 last yr</div>
-            </div>
-            <div style="padding:12px 16px">
-              <div style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:6px">Cattle Sold YTD</div>
-              <div style="font-family:var(--m);font-size:22px;font-weight:200;color:var(--t0);margin-bottom:2px">1,240 hd</div>
-              <div style="font-size:9px;color:rgba(255,255,255,.55)">▲ +6% vs 1,170 last yr</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Row 3: Saleyards -->
-    <div class="grid fade d2" style="margin-top:0">
-      <div class="card g6">
-        <div class="cbody">
-          <div class="syhd"><div><div class="syn">Tamworth (TRLX)</div><div class="sym">18 Mar · 4,820 hd · ↑ Firm</div></div><span class="bdg bdg-b">Live</span></div>
-          <div class="syg">
-            <div class="syc" onclick="scen(498)"><div class="sycl">Feeder</div><div class="sycv">498¢</div><div class="sycc up">▲+12</div></div>
-            <div class="syc" onclick="scen(512)"><div class="sycl">Restocker</div><div class="sycv">512¢</div><div class="sycc up">▲+8</div></div>
-            <div class="syc" onclick="scen(374)"><div class="sycl">Proc Cow</div><div class="sycv">374¢</div><div class="sycc up">▲+5</div></div>
-          </div>
-          <div class="sy-hint">Tap any price → updates Sell Calculator above</div>
-        </div>
-      </div>
-      <div class="card g6">
-        <div class="cbody">
-          <div class="syhd"><div><div class="syn">Armidale (ARM)</div><div class="sym">14 Mar · 2,140 hd · → Steady</div></div><span class="bdg bdg-n">Updated</span></div>
-          <div class="syg">
-            <div class="syc" onclick="scen(484)"><div class="sycl">Feeder</div><div class="sycv">484¢</div><div class="sycc up">▲+4</div></div>
-            <div class="syc" onclick="scen(496)"><div class="sycl">Restocker</div><div class="sycv">496¢</div><div class="sycc up">▲+2</div></div>
-            <div class="syc" onclick="scen(368)"><div class="sycl">Proc Cow</div><div class="sycv">368¢</div><div class="sycc dn">▼–3</div></div>
-          </div>
-          <div class="sy-hint">Tap any price → updates Sell Calculator above</div>
-        </div>
-      </div>
-    </div>
-    </div>
-
-    <!-- TRADE INTELLIGENCE -->
-    <div class="sec fade d3" style="margin-top:var(--sp24)">
-      <div class="sec-bar" style="background:linear-gradient(180deg,#f43f5e,#fb7185);height:20px;width:3px"></div>
-      <span class="sec-label" style="font-weight:700;color:var(--t0)">Trade Intelligence</span>
-      <span class="bdg bdg-r">⚡ 3 urgent signals</span>
-      <span class="bdg" style="background:rgba(255,255,255,.05);color:var(--t2);border-color:var(--b0);font-size:8px">Sell window open</span>
-      <div class="sec-line"></div>
-    </div>
-    <button class="mexpbtn" onclick="mexp(this,'trade-s')">Show Trade Intelligence ▾</button>
-    <div id="trade-s" class="mcollapse">
-    <div class="grid fade d3">
-      <div class="card g5">
-        <div class="chead"><div><div class="ctitle">⚡ Decision Engine</div><div class="csub">Ranked · BE ~482¢ · Saleyard-linked</div></div></div>
-        <div class="delist">
-          <div class="derow"><div class="denum" style="background:var(--red)">1</div><div style="flex:1"><div class="det">Sell cattle — address IC immediately</div><div class="ded">IC at 0.06x is critical. 140 hd at EYCI 897¢ = ~$127k gross. IC improves 0.06x → ~0.31x post-sale.</div><div class="dei">↑ IC: 0.06x → ~0.31x &nbsp;·&nbsp; ~$127k revenue &nbsp;·&nbsp; $18k/week carry cost avoided</div><div style="display:flex;gap:4px;margin-top:6px;flex-wrap:wrap;align-items:center"><span class="syref" onclick="scen(498)">TRLX Feeder 498¢</span><span class="syref" onclick="scen(512)">TRLX Restocker 512¢</span><span style="font-size:8.5px;color:var(--t3);margin-left:4px">→ tap to model</span></div></div></div>
-          <div class="derow"><div class="denum" style="background:rgba(255,255,255,.35)">2</div><div><div class="det">Bring sales forward — seasonal softening ahead</div><div class="ded">MLA: EYCI softens Apr–May. 8.4% above avg — acting now vs 30 days protects ~$94k on 100hd.</div><div class="dei">Protects ~$94k vs waiting</div></div></div>
-          <div class="derow"><div class="denum" style="background:rgba(255,255,255,.2)">3</div><div><div class="det">Cull cows — processor competition firm</div><div class="ded">374¢ above 320¢ threshold. Weak AUD boosts processor margins 4–6 weeks.</div><div class="dei">Strong window for culls</div><div style="margin-top:5px"><span class="syref" onclick="scen(374)">TRLX Proc Cow 374¢</span></div></div></div>
-        </div>
-      </div>
-      <div class="card g3">
-        <div class="chead"><div><div class="ctitle">Buy / Sell Signals</div><div class="csub">Tap price → Sell Calculator</div></div></div>
-        <div class="siglist">
-          <div class="sigrow"><div class="sig-indicator G"></div><div class="signm">Sell Finished Steers</div><div class="sigdt" onclick="scen(897)" style="cursor:pointer">897¢</div><span class="sigarr" onclick="scen(897)">↗</span><div class="sigst G">86% above BE</div></div>
-          <div class="sigrow"><div class="sig-indicator A"></div><div class="signm">Buy Restockers</div><div class="sigdt">at parity</div><div class="sigst A">Selective</div></div>
-          <div class="sigrow"><div class="sig-indicator G"></div><div class="signm">Sell Cull Cows</div><div class="sigdt" onclick="scen(374)" style="cursor:pointer">374¢</div><span class="sigarr" onclick="scen(374)">↗</span><div class="sigst G">Strong</div></div>
-          <div class="sigrow"><div class="sig-indicator R"></div><div class="signm">Cash Flow</div><div class="sigdt">IC 0.06x</div><div class="sigst R">Critical</div></div>
-          <div class="sigrow"><div class="sig-indicator G"></div><div class="signm">Forward Contract</div><div class="sigdt">+8.4% vs avg</div><div class="sigst G">Lock in</div></div>
-        </div>
-      </div>
-      <div class="card g4">
-        <div class="chead"><div><div class="ctitle">Market Sentiment</div><div class="csub">Composite greed/fear index</div></div><span class="bdg bdg-n">68 · Greed</span></div>
-        <div class="cbody">
-          <!-- SVG Arc Gauge — custom drawn -->
-          <div style="display:flex;gap:16px;align-items:center;margin-bottom:14px">
-            <div style="flex-shrink:0;text-align:center">
-              <svg width="88" height="52" viewBox="0 0 88 52" style="overflow:visible">
-                <path d="M 6,50 A 38,38 0 0,1 82,50" fill="none" stroke="var(--s4)" stroke-width="5.5" stroke-linecap="round"/>
-                <path d="M 6,50 A 38,38 0 0,1 82,50" fill="none" stroke="var(--blue)" stroke-width="5.5" stroke-linecap="round"
-                  stroke-dasharray="119.4" stroke-dashoffset="38.2" opacity=".8"/>
-                <text x="44" y="44" text-anchor="middle" font-family="DM Mono,monospace" font-size="20" font-weight="300" fill="var(--blue-b)">68</text>
-              </svg>
-              <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--t3);margin-top:3px;font-family:var(--m)">
-                <span>Fear</span><span>Greed</span>
-              </div>
-            </div>
-            <div style="flex:1;display:flex;flex-direction:column;gap:5px">
-              <div style="font-size:10px;color:var(--t1);line-height:1.5;margin-bottom:4px">Good selling window. Don't wait for perfection.</div>
-              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">Price Level</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:72%;height:100%;background:var(--ok);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">72</span></div>
-              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">vs 5yr Avg</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:84%;height:100%;background:var(--ok);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">84</span></div>
-              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">Momentum</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:65%;height:100%;background:var(--warn);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">65</span></div>
-              <div style="display:flex;align-items:center;gap:7px"><span style="font-size:8px;color:var(--t3);width:64px">Processor</span><div style="flex:1;height:2.5px;background:var(--s4);border-radius:2px;overflow:hidden"><div style="width:78%;height:100%;background:var(--ok);border-radius:2px"></div></div><span style="font-family:var(--m);font-size:8px;color:var(--t3);width:16px;text-align:right">78</span></div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    </div>
-
-    <!-- KPI + COVENANTS -->
-    <div class="sec fade d4">
-      <div class="sec-bar"></div>
-      <span class="sec-label">KPI Ratios &amp; Covenant Monitor</span>
-      <span class="sec-count">4/5 met</span>
-      <div class="sec-line"></div>
-    </div>
-    <div class="grid fade d4">
-      <div class="card g4">
-        <div class="chead"><div><div class="ctitle">KPI Ratios</div><div class="csub">Feb 26 actuals vs benchmarks</div></div></div>
-        <div class="cbody">
-          <div class="rrows">
-            <div class="rrow"><span class="rlbl">Gross Margin Ratio</span><span class="rval c-warn">58.4%</span><span class="rthr">&gt;60%</span><div class="rbar"><div class="rbf" style="width:75%;background:var(--warn)"></div></div></div>
-            <div class="rrow"><span class="rlbl">Interest Cover</span><span class="rval c-red">0.06x</span><span class="rthr">&gt;1.75x</span><div class="rbar"><div class="rbf" style="width:4%;background:var(--red)"></div></div></div>
-            <div class="rrow"><span class="rlbl">ROAM</span><span class="rval c-red">0.03%</span><span class="rthr">&gt;4%</span><div class="rbar"><div class="rbf" style="width:2%;background:var(--red)"></div></div></div>
-            <div class="rrow"><span class="rlbl">Expense Ratio</span><span class="rval c-red">106%</span><span class="rthr">&lt;70%</span><div class="rbar"><div class="rbf" style="width:48%;background:var(--red)"></div></div></div>
-            <div class="rrow"><span class="rlbl">GM per DSE</span><span class="rval c-red">$36.58</span><span class="rthr">&gt;$65</span><div class="rbar"><div class="rbf" style="width:40%;background:var(--red)"></div></div></div>
-          </div>
-        </div>
-      </div>
-      <div class="card g8 nolift">
-        <div class="chead">
-          <div><div class="ctitle">🏦 NAB Covenant Monitor</div><div class="csub">Live vs thresholds · Bear / Base / Bull</div></div>
-          <div style="display:flex;align-items:center;gap:7px">
-            <span class="bdg bdg-ok">4/5 Met</span>
-            <button class="tbtn cta" style="height:24px;font-size:9.5px;padding:0 9px" onclick="printReport()">📄 Bank Report</button>
-          </div>
-        </div>
-        <div class="cbody" style="padding-top:4px">
-          <table class="covt">
-            <thead><tr><th>Covenant</th><th>Current</th><th>Threshold</th><th>Progress</th><th>Scenarios</th></tr></thead>
-            <tbody>
-              <tr><td class="covnm">Loan to Value Ratio</td><td class="covvl c-ok">10.8%</td><td class="covth">&lt;65%</td><td><div class="covmini"><div class="covminif" style="width:83%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">11.3</span><span class="csc m">10.9</span><span class="csc u">10.5</span></div></td></tr>
-              <tr><td class="covnm">Debt Service Cover</td><td class="covvl c-red">0.06x</td><td class="covth">&gt;1.25x</td><td><div class="covmini"><div class="covminif" style="width:5%;background:var(--red)"></div></div></td><td><div class="covscrow"><span class="csc b">.04</span><span class="csc m">.07</span><span class="csc u">.11</span></div></td></tr>
-              <tr><td class="covnm">Equity Ratio</td><td class="covvl c-ok">89.2%</td><td class="covth">&gt;35%</td><td><div class="covmini"><div class="covminif" style="width:100%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">88.5</span><span class="csc m">89.1</span><span class="csc u">89.6</span></div></td></tr>
-              <tr><td class="covnm">Interest Coverage</td><td class="covvl c-ok">1.51x</td><td class="covth">&gt;1.25x</td><td><div class="covmini"><div class="covminif" style="width:75%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">.91</span><span class="csc m">1.51</span><span class="csc u">2.12</span></div></td></tr>
-              <tr><td class="covnm">Net Debt / EBIT</td><td class="covvl c-ok">1.4x</td><td class="covth">&lt;5x</td><td><div class="covmini"><div class="covminif" style="width:72%;background:var(--ok)"></div></div></td><td><div class="covscrow"><span class="csc b">2.0</span><span class="csc m">1.4</span><span class="csc u">1.0</span></div></td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- PASTURE -->
-    <div class="sec fade d5">
-      <div class="sec-bar"></div>
-      <span class="sec-label">Pasture Budget</span>
-      <span class="sec-count">6-month</span>
-      <div class="sec-line"></div>
-    </div>
-    <div class="grid fade d5">
-      <div class="card g12 nolift">
-        <div class="chead"><div><div class="ctitle">🌿 Carrying Capacity Forecast</div><div class="csub">CSIRO/DPI · New England Tablelands · BOM rainfall integrated</div></div><span class="bdg bdg-r">⚠ May–Aug Below</span></div>
-        <div class="cbody">
-          <div style="display:flex;gap:8px;margin-bottom:4px;padding-left:64px">
-            <span style="font-size:8px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.08em;flex:1">Capacity vs 20,538 DSE current</span>
-            <span style="font-size:8px;color:var(--t3);width:32px;text-align:right">Cap</span>
-            <span style="font-size:8px;color:var(--t3);width:40px;text-align:right">Balance</span>
-          </div>
-          <div class="pbrows">
-            <div class="pbrow"><span class="pbmo">Mar</span><span class="pbsea">Autumn<<!-- ░░ STANDALONE PAGES — each a complete operational tool ░░ -->
+<!-- ░░ STANDALONE PAGES — each a complete operational tool ░░ -->
 
 <!-- ══ P&L PAGE ══════════════════════════════════════════ -->
 <div id="page-pl" class="pv pg">
@@ -4046,7 +3727,7 @@ input:focus-visible,
   </div>
 </div>
 
-id="page-outlook" class="pv pg">
+<div id="page-outlook" class="pv pg">
   <div class="pg-hero">
     <div class="pg-hero-grid">
       <div>
@@ -4343,15 +4024,14 @@ id="page-outlook" class="pv pg">
   </div>
 </div>
 
-div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Armidale</span></div></div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Inverell</span></div></div></div><div class="sk-row sk-2"><div class="sk-pos"><div class="sk-chart sk-block"></div><div class="sk-overlay"><span class="sk-lbl">EYCI 5-year seasonal pattern</span></div></div><div class="sk-pos"><div class="sk-chart sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Processor competition map</span></div></div></div></div></div>
-<div id="page-trade" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-trade"/></svg>Coming Soon</div><div class="sk-title">Trade Intelligence</div><div class="sk-desc">Hold vs sell NPV calculator, trade profitability by class, Angus premium tracker.</div><div class="sk-row sk-2"><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Hold vs Sell NPV Calculator</span></div></div><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Trade Profitability by Class</span></div></div></div></div></div>
-<div id="page-outlook" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-scope"/></svg>Coming Soon</div><div class="sk-title">Market Outlook</div><div class="sk-desc">90CL beef price, AUD/USD sensitivity, supply/demand indicators, MLA forward indicators.</div><div class="sk-pos"><div class="sk-xl sk-block"></div><div class="sk-overlay"><span class="sk-lbl">Bear / Base / Bull scenario comparison</span></div></div></div></div>
-<div id="page-pasture" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-leaf"/></svg>Coming Soon</div><div class="sk-title">Pasture Budget</div><div class="sk-desc">Full capacity calculator with adjustable parameters, rainfall integration, supplement vs destock planner.</div></div></div>
-<div id="page-weather" class="pv"><div class="sk-page"><div class="sk-badge"><svg width="12" height="12"><use href="#i-weather"/></svg>Coming Soon</div><div class="sk-title">Weather</div><div class="sk-desc">14-day BOM forecast for Nundle and Topdale, seasonal outlooks, rainfall decile tracker.</div></div></div>
+
+
+
+
 
   <div style="padding:10px 24px;border-top:1px solid var(--b0);font-size:8.5px;color:var(--t3);letter-spacing:.02em;display:flex;justify-content:space-between">
     <span>Buringal Grazing Co · Wombramurra Angus · Nundle &amp; Topdale NSW</span>
-    <span>Google Sheets · MLA · Open-Meteo · Figured · v9.0</span>
+    <span>Google Sheets · MLA · Open-Meteo · Figured · v10.0</span>
   </div>
 </main>
 </div>
@@ -4477,7 +4157,7 @@ div><div class="sk-pos"><div class="sk-sm sk-block"></div><div class="sk-overlay
   </div>
 </div>
 
-<div class="pvpill"><div class="ldot" style="width:4px;height:4px;margin-right:2px;background:var(--blue-b);box-shadow:none"></div>Preview v8 · Live</div>
+<div class="pvpill"><div class="ldot" style="width:4px;height:4px;margin-right:2px;background:var(--blue-b);box-shadow:none"></div>v10 · Live</div>
 
 <script>
 /* ══════════════════════════════════════════════════════════
@@ -4530,6 +4210,7 @@ const dark=()=>document.documentElement.dataset.theme==='dark';
 function updateTime(){
   const s=new Date().toLocaleTimeString('en-AU',{hour:'2-digit',minute:'2-digit',timeZone:'Australia/Sydney'});
   const el=document.getElementById('live-time');if(el)el.textContent=`Live · ${s} AEST`;
+  const elc=document.getElementById('live-time-cmd');if(elc)elc.textContent=s+' AEST';
   /* Update AI footer timestamp when not generating */
   const ts=document.getElementById('term-ts');
   if(ts&&!ts.dataset.busy)ts.textContent='Last updated '+s+' AEST';
@@ -4806,7 +4487,7 @@ function drawSparkSVG(svgEl,data,W,H,color,fill){
 function drawHeroSpark(){
   const svg=document.getElementById('hero-spark');if(!svg)return;
   const col=dark()?'#38bdf8':'#0284c7';
-  drawSparkSVG(svg,EYCI_30D,260,36,col,true);
+  drawSparkSVG(svg,EYCI_30D,64,22,col,true);
   const first=EYCI_30D[0],last=EYCI_30D[EYCI_30D.length-1];
   const diff=last-first,pct=((diff/first)*100).toFixed(1);
   const tEl=document.getElementById('spark-trend');
@@ -4821,16 +4502,26 @@ function drawHeroSpark(){
 function drawStatSparks(){
   const d=dark();
   const B=d?'#38bdf8':'#0284c7';
-  const W=d?'rgba(255,255,255,.55)':'rgba(0,0,0,.5)';
+  const W=d?'rgba(255,255,255,.6)':'rgba(0,0,0,.55)';
   const R=d?'#fb7185':'#e11d48';
-  /* GM/DSE declining — bad trend */
-  drawSparkSVG(document.getElementById('sp-gm'),[48,45,42,44,40,38,37,36.58],44,14,R,false);
-  /* DSE declining — planned, show in blue */
-  drawSparkSVG(document.getElementById('sp-dse'),[26618,25100,23800,22900,22100,21400,20900,20538],44,14,B,false);
-  /* Equity rising — good */
-  drawSparkSVG(document.getElementById('sp-eq'),[87.1,87.4,87.8,88.2,88.5,88.8,89.0,89.2],44,14,W,false);
-  /* GP rising */
-  drawSparkSVG(document.getElementById('sp-gp'),[0.82,0.95,1.04,1.08,1.14,1.19,1.23,1.27],44,14,W,false);
+  const A=d?'rgba(251,191,36,.9)':'rgba(217,119,6,.9)';
+  const G=d?'rgba(34,197,94,.7)':'rgba(22,163,74,.7)';
+  /* IC — critically low, flat near zero */
+  drawSparkSVG(document.getElementById('sp-ic'),[0.08,0.07,0.09,0.08,0.07,0.06,0.06,0.06],64,22,R,true);
+  /* GM/DSE — declining */
+  drawSparkSVG(document.getElementById('sp-gm'),[48,45,42,44,40,38,37,36.58],56,20,R,true);
+  /* DSE — declining (planned, use blue) */
+  drawSparkSVG(document.getElementById('sp-dse'),[26618,25100,23800,22900,22100,21400,20900,20538],56,20,B,true);
+  /* Equity — rising */
+  drawSparkSVG(document.getElementById('sp-eq'),[87.1,87.4,87.8,88.2,88.5,88.8,89.0,89.2],56,20,G,true);
+  /* GP — rising */
+  drawSparkSVG(document.getElementById('sp-gp'),[0.82,0.95,1.04,1.08,1.14,1.19,1.23,1.27],56,20,G,true);
+  /* Cash — positive and growing */
+  drawSparkSVG(document.getElementById('sp-cash'),[120,155,188,220,265,310,345,378],56,20,G,true);
+  /* Debt — flat high (bad), needs to fall */
+  drawSparkSVG(document.getElementById('sp-debt'),[3200,3180,3150,3120,3110,3100,3100,3100],56,20,A,true);
+  /* EYCI sparkline redrawn at new dimensions */
+  drawSparkSVG(document.getElementById('hero-spark'),EYCI_30D,64,22,B,true);
 }
 
 function drawSidebarSpark(){
@@ -7557,6 +7248,18 @@ updatePlanTracker();
 // Initialise on load if these pages happen to be active
 setTimeout(buildOutlookScenario, 300);
 
+
+/* ── KPI BAR ANIMATION ─────────────────────────────────── */
+function animateKPIBars(){
+  document.querySelectorAll('.bkpi-fill').forEach(bar=>{
+    const target=bar.style.width;
+    bar.style.width='0%';
+    requestAnimationFrame(()=>{
+      requestAnimationFrame(()=>{bar.style.width=target;});
+    });
+  });
+}
+setTimeout(animateKPIBars,300);
 </script>
-</body>
-</html> 
+</body> 
+</html>
